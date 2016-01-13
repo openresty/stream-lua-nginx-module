@@ -1,0 +1,67 @@
+ngx_addon_name=ngx_stream_lua_module
+STREAM_MODULES="$STREAM_MODULES ngx_stream_lua_module"
+NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
+                $ngx_addon_dir/src/ngx_stream_lua_module.c \
+                $ngx_addon_dir/src/ngx_stream_lua_directive.c \
+                $ngx_addon_dir/src/ngx_stream_lua_lex.c \
+                $ngx_addon_dir/src/ngx_stream_lua_contentby.c \
+                $ngx_addon_dir/src/ngx_stream_lua_util.c \
+                $ngx_addon_dir/src/ngx_stream_lua_cache.c \
+                $ngx_addon_dir/src/ngx_stream_lua_clfactory.c \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_tcp.c \
+                $ngx_addon_dir/src/ngx_stream_lua_exception.c \
+                $ngx_addon_dir/src/ngx_stream_lua_pcrefix.c \
+                $ngx_addon_dir/src/ngx_stream_lua_uthread.c \
+                $ngx_addon_dir/src/ngx_stream_lua_coroutine.c \
+                $ngx_addon_dir/src/ngx_stream_lua_semaphore.c \
+                $ngx_addon_dir/src/ngx_stream_lua_output.c \
+                $ngx_addon_dir/src/ngx_stream_lua_consts.c \
+                $ngx_addon_dir/src/ngx_stream_lua_log.c \
+                $ngx_addon_dir/src/ngx_stream_lua_time.c \
+                $ngx_addon_dir/src/ngx_stream_lua_string.c \
+                $ngx_addon_dir/src/ngx_stream_lua_control.c \
+                $ngx_addon_dir/src/ngx_stream_lua_sleep.c \
+                $ngx_addon_dir/src/ngx_stream_lua_phase.c \
+                $ngx_addon_dir/src/ngx_stream_lua_ctx.c \
+                $ngx_addon_dir/src/ngx_stream_lua_regex.c \
+                $ngx_addon_dir/src/ngx_stream_lua_script.c \
+                $ngx_addon_dir/src/ngx_stream_lua_shdict.c \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_udp.c \
+                $ngx_addon_dir/src/ngx_stream_lua_timer.c \
+                $ngx_addon_dir/src/ngx_stream_lua_config.c \
+                $ngx_addon_dir/src/ngx_stream_lua_worker.c \
+                $ngx_addon_dir/src/ngx_stream_lua_misc.c \
+                "
+
+NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
+                $ngx_addon_dir/src/ddebug.h \
+                $ngx_addon_dir/src/ngx_stream_lua_common.h \
+                $ngx_addon_dir/src/ngx_stream_lua_lex.h \
+                $ngx_addon_dir/src/ngx_stream_lua_contentby.h \
+                $ngx_addon_dir/src/ngx_stream_lua_util.h \
+                $ngx_addon_dir/src/ngx_stream_lua_cache.h \
+                $ngx_addon_dir/src/ngx_stream_lua_clfactory.h \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_tcp.h \
+                $ngx_addon_dir/src/ngx_stream_lua_pcrefix.h \
+                $ngx_addon_dir/src/ngx_stream_lua_uthread.h \
+                $ngx_addon_dir/src/ngx_stream_lua_coroutine.h \
+                $ngx_addon_dir/src/ngx_stream_lua_semaphore.h \
+                $ngx_addon_dir/src/ngx_stream_lua_output.h \
+                $ngx_addon_dir/src/ngx_stream_lua_consts.h \
+                $ngx_addon_dir/src/ngx_stream_lua_log.h \
+                $ngx_addon_dir/src/ngx_stream_lua_time.h \
+                $ngx_addon_dir/src/ngx_stream_lua_string.h \
+                $ngx_addon_dir/src/ngx_stream_lua_control.h \
+                $ngx_addon_dir/src/ngx_stream_lua_sleep.h \
+                $ngx_addon_dir/src/ngx_stream_lua_phase.h \
+                $ngx_addon_dir/src/ngx_stream_lua_ctx.h \
+                $ngx_addon_dir/src/ngx_stream_lua_regex.h \
+                $ngx_addon_dir/src/ngx_stream_lua_script.h \
+                $ngx_addon_dir/src/ngx_stream_lua_shdict.h \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_udp.h \
+                $ngx_addon_dir/src/ngx_stream_lua_timer.h \
+                $ngx_addon_dir/src/ngx_stream_lua_config.h \
+                $ngx_addon_dir/src/api/ngx_stream_lua_api.h \
+                $ngx_addon_dir/src/ngx_stream_lua_worker.h \
+                $ngx_addon_dir/src/ngx_stream_lua_misc.h \
+                "
