@@ -581,11 +581,10 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 static int
 ngx_stream_lua_ngx_eof(lua_State *L)
 {
-#if 0
-    /* TODO */
+    ngx_event_t               *wev;
+    ngx_connection_t          *c;
     ngx_stream_session_t      *s;
     ngx_stream_lua_ctx_t      *ctx;
-    ngx_int_t                rc;
 
     s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
@@ -613,21 +612,24 @@ ngx_stream_lua_ngx_eof(lua_State *L)
         return 2;
     }
 
+    ctx->eof = 1;
+
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+    c = s->connection;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                    "stream lua send eof");
 
-    rc = ngx_stream_lua_send_chain_link(s, ctx, NULL /* indicate last_buf */);
+    wev = c->write;
 
-    dd("send chain: %d", (int) rc);
-
-    if (rc == NGX_ERROR || rc >= NGX_STREAM_SPECIAL_RESPONSE) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "nginx output filter error");
-        return 2;
+    if (wev->active && (ngx_event_flags & NGX_USE_LEVEL_EVENT)) {
+        if (ngx_del_event(wev, NGX_WRITE_EVENT, 0) != NGX_OK) {
+            lua_pushnil(L);
+            lua_pushliteral(L, "del event failed");
+            return 2;
+        }
     }
-#endif
 
     lua_pushinteger(L, 1);
     return 1;
