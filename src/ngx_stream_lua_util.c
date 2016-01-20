@@ -522,7 +522,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT)
             && c->write->active)
         {
-            dd("done: ctx->busy: %p", ctx->busy);
+            dd("done: ctx->busy_bufs: %p", ctx->busy_bufs);
 
             if (ctx->busy_bufs == NULL) {
                 if (ngx_del_event(c->write, NGX_WRITE_EVENT, 0) != NGX_OK) {
@@ -537,13 +537,8 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
     /* rc == NGX_OK || rc == NGX_AGAIN */
 
 #if (DDEBUG)
-    dd("c->buffered: %d, busy: %p, rev ready: %d", (int) c->buffered,
-       ctx->busy, c->read->ready);
-
-    if (ctx->buffer_in) {
-        dd("buffer_in start: %p, pos: %p, last: %p", ctx->buffer_in->start,
-           ctx->buffer_in->pos, ctx->buffer_in->last);
-    }
+    dd("c->buffered: %d, busy_bufs: %p, rev ready: %d", (int) c->buffered,
+       ctx->busy_bufs, c->read->ready);
 #endif
 
     if (c->error) {
@@ -1461,8 +1456,6 @@ user_co_done:
                 /* being the entry thread aborted */
 
                 ngx_stream_lua_session_cleanup(ctx, 0);
-
-                dd("headers sent? %d", s->header_sent || ctx->header_sent);
 
                 if (ctx->no_abort) {
                     ctx->no_abort = 0;
@@ -2894,10 +2887,6 @@ ngx_stream_lua_create_fake_session(ngx_connection_t *c)
     if (s == NULL) {
         return NULL;
     }
-
-    dd("s pool allocated: %d", (int) (sizeof(ngx_stream_lua_ctx_t)
-       + sizeof(void *) * ngx_stream_max_module
-       + sizeof(ngx_stream_cleanup_t)));
 
     s->ctx = ngx_pcalloc(s->connection->pool,
                          sizeof(void *) * ngx_stream_max_module);

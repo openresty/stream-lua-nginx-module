@@ -443,8 +443,6 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
 
-    dd("requires log: %d", (int) lmcf->requires_log);
-
 #ifndef NGX_LUA_NO_FFI_API
 
     /* add the cleanup of semaphores after the lua_close */

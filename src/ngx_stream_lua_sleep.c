@@ -69,8 +69,7 @@ ngx_stream_lua_ngx_sleep(lua_State *L)
     coctx->sleep.data = coctx;
     coctx->sleep.log = s->connection->log;
 
-    dd("adding timer with delay %lu ms, s:%.*s", (unsigned long) delay,
-       (int) s->uri.len, s->uri.data);
+    dd("adding timer with delay %lu ms", (unsigned long) delay);
 
     ngx_add_timer(&coctx->sleep, (ngx_msec_t) delay);
 
