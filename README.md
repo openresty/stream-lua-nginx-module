@@ -86,4 +86,5 @@ See Also
 ========
 
 * [ngx_http_lua_module](https://github.com/openresty/lua-nginx-module)
+* [ngx_stream_echo_module](https://github.com/openresty/stream-echo-nginx-module)
 * [OpenResty](https://openresty.org/)
