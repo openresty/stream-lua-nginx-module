@@ -59,7 +59,7 @@ Yay! 123
     content_by_lua_block { ngx.echo("Hello, Lua!\n") }
 --- stream_response
 --- error_log eval
-qr/content_by_lua\(nginx\.conf:\d+\):1: attempt to call field 'echo' \(a nil value\)/
+qr/content_by_lua_block\(nginx\.conf:\d+\):1: attempt to call field 'echo' \(a nil value\)/
 
 
 

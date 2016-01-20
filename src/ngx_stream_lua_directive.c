@@ -104,8 +104,9 @@ ngx_stream_lua_content_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     if (cmd->post == ngx_stream_lua_content_handler_inline) {
-        chunkname = ngx_stream_lua_gen_chunk_name(cf, "content_by_lua",
-                                                  sizeof("content_by_lua") - 1);
+        chunkname = ngx_stream_lua_gen_chunk_name(cf, "content_by_lua_block",
+                                                  sizeof("content_by_lua_block")
+                                                  - 1);
         if (chunkname == NULL) {
             return NGX_CONF_ERROR;
         }
