@@ -52,7 +52,7 @@ a%2Bb
 
 
 
-=== TEST 6: escape a string that cannot be escaped
+=== TEST 5: escape a string that cannot be escaped
 --- stream_server_config
     content_by_lua_block { ngx.say(ngx.escape_uri('abc')) }
 --- stream_response
@@ -62,7 +62,7 @@ abc
 
 
 
-=== TEST 7: escape an empty string that cannot be escaped
+=== TEST 6: escape an empty string that cannot be escaped
 --- stream_server_config
     content_by_lua_block { ngx.say(ngx.escape_uri('')) }
 --- stream_response eval: "\n"
@@ -71,7 +71,7 @@ abc
 
 
 
-=== TEST 8: escape nil
+=== TEST 7: escape nil
 --- stream_server_config
     content_by_lua_block { ngx.say("[", ngx.escape_uri(nil), "]") }
 --- stream_response
@@ -81,7 +81,7 @@ abc
 
 
 
-=== TEST 9: escape numbers
+=== TEST 8: escape numbers
 --- stream_server_config
     content_by_lua_block { ngx.say(ngx.escape_uri(32)) }
 --- stream_response
@@ -91,7 +91,7 @@ abc
 
 
 
-=== TEST 10: unescape nil
+=== TEST 9: unescape nil
 --- stream_server_config
     content_by_lua_block { ngx.say("[", ngx.unescape_uri(nil), "]") }
 --- stream_response
@@ -101,7 +101,7 @@ abc
 
 
 
-=== TEST 11: unescape numbers
+=== TEST 10: unescape numbers
 --- stream_server_config
     content_by_lua_block { ngx.say(ngx.unescape_uri(32)) }
 --- stream_response
