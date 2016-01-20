@@ -189,65 +189,51 @@ eof failed: seen eof
 [error]
 --- error_log
 failed to say: seen eof
---- LAST
 
 
 
 === TEST 11: ngx.print table arguments (github issue #54)
---- config
-    location /t {
-        content_by_lua 'ngx.print({10, {0, 5}, 15}, 32)';
-    }
---- request
-    GET /t
---- response_body chop
+--- stream_server_config
+    content_by_lua_block { ngx.print({10, {0, 5}, 15}, 32) }
+--- stream_response chop
 10051532
+--- no_error_log
+[error]
 
 
 
 === TEST 12: ngx.say table arguments (github issue #54)
---- config
-    location /t {
-        content_by_lua 'ngx.say({10, {0, "5"}, 15}, 32)';
-    }
---- request
-    GET /t
---- response_body
+--- stream_server_config
+    content_by_lua_block { ngx.say({10, {0, "5"}, 15}, 32) }
+--- stream_response
 10051532
+--- no_error_log
+[error]
 
 
 
 === TEST 13: Lua file does not exist
---- config
-    location /lua {
-        content_by_lua_file html/test2.lua;
-    }
+--- stream_server_config
+    content_by_lua_file html/test2.lua;
 --- user_files
 >>> test.lua
 v = ngx.var["request_uri"]
 ngx.print("request_uri: ", v, "\n")
---- request
-GET /lua?a=1&b=2
---- response_body_like: 404 Not Found
---- error_code: 404
+--- stream_response
 --- error_log eval
 qr/failed to load external Lua file ".*?test2\.lua": cannot open .*? No such file or directory/
 
 
 
 === TEST 14: .lua file with shebang
---- config
-    location /lua {
-        content_by_lua_file html/test.lua;
-    }
+--- stream_server_config
+    content_by_lua_file html/test.lua;
 --- user_files
 >>> test.lua
 #!/bin/lua
 
 ngx.say("line ", debug.getinfo(1).currentline)
---- request
-GET /lua?a=1&b=2
---- response_body
+--- stream_response
 line 3
 --- no_error_log
 [error]
@@ -255,14 +241,8 @@ line 3
 
 
 === TEST 15: syntax error in inlined Lua code
---- config
-    location /lua {
-        content_by_lua 'for end';
-    }
---- request
-GET /lua
---- response_body_like: 500 Internal Server Error
---- error_code: 500
+--- stream_server_config
+    content_by_lua_block {for end}
+--- stream_response
 --- error_log eval
 qr/failed to load inlined Lua code: /
-
