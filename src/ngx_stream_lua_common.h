@@ -156,6 +156,16 @@ typedef void (*ngx_stream_lua_event_handler_pt)(ngx_stream_session_t *s,
 
 
 typedef struct {
+
+#if (NGX_STREAM_SSL)
+    ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
+    ngx_uint_t              ssl_protocols;
+    ngx_str_t               ssl_ciphers;
+    ngx_uint_t              ssl_verify_depth;
+    ngx_str_t               ssl_trusted_certificate;
+    ngx_str_t               ssl_crl;
+#endif
+
     ngx_stream_lua_handler_pt           content_handler;
 
     u_char                             *content_chunkname;

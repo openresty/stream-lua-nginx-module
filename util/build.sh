@@ -24,6 +24,7 @@ ngx-build $force $version \
             --without-http_autoindex_module \
             --without-http_auth_basic_module \
             --without-http_userid_module \
+            --with-stream_ssl_module \
             --with-stream \
             --add-module=$root/../lua-nginx-module \
             --add-module=$root/../stream-echo-nginx-module \

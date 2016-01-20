@@ -1714,7 +1714,8 @@ void
 ngx_stream_lua_finalize_fake_session(ngx_stream_session_t *s, ngx_int_t rc)
 {
     ngx_connection_t          *c;
-#if (NGX_STREAM_SSL)
+#if 0 && (NGX_STREAM_SSL)
+    /* TODO */
     ngx_ssl_conn_t            *ssl_conn;
 
     ngx_stream_lua_ssl_cert_ctx_t     *cctx;
@@ -1732,7 +1733,8 @@ ngx_stream_lua_finalize_fake_session(ngx_stream_session_t *s, ngx_int_t rc)
 
     if (rc == NGX_ERROR) {
 
-#if (NGX_STREAM_SSL)
+#if 0 && (NGX_STREAM_SSL)
+        /* TODO */
 
         if (s->connection->ssl) {
             ssl_conn = s->connection->ssl->connection;
