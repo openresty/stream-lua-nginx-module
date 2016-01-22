@@ -8,7 +8,7 @@ log_level('debug');
 
 repeat_each(3);
 
-plan tests => repeat_each() * (blocks() * 2 + 30);
+plan tests => repeat_each() * (blocks() * 3);
 
 our $HtmlDir = html_dir;
 #warn $html_dir;
@@ -80,7 +80,8 @@ Hi
 --- stream_response eval
 "
 Hi"
-
+--- no_error_log
+[error]
 
 
 === TEST 4: unexpected globals sharing by using _G
@@ -116,7 +117,8 @@ Hi"
 0
 0
 0
-
+--- no_error_log
+[error]
 
 
 === TEST 5: lua_code_cache off + setkeepalive
