@@ -285,6 +285,7 @@ struct ngx_stream_lua_co_ctx_s {
                                                      * call */
 
     unsigned                         sem_resume_status:1;
+    unsigned                         flushing:1;
 };
 
 
@@ -337,6 +338,9 @@ struct ngx_stream_lua_ctx_s {
 
     time_t                     lingering_time;
 
+    unsigned                   flushing_coros; /* number of coroutines waiting
+                                                * on ngx.flush() */
+
     int                        uthreads; /* number of active user threads */
 
     int                        ctx_ref;  /* reference to anchor
@@ -365,7 +369,7 @@ struct ngx_stream_lua_ctx_s {
                                             * ngx.exit()
                                             * and etc */
 
-    unsigned                   done:1;  /* finishes downstream response */
+    unsigned                   done:1;  /* session being finalized */
     unsigned                   eof:1;
 };
 

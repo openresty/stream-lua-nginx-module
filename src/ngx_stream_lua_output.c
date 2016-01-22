@@ -15,11 +15,7 @@ static int ngx_stream_lua_ngx_print(lua_State *L);
 static int ngx_stream_lua_ngx_flush(lua_State *L);
 static int ngx_stream_lua_ngx_eof(lua_State *L);
 static int ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline);
-static ngx_int_t ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
-    ngx_stream_lua_ctx_t *ctx, ngx_chain_t *in);
-#if 0
-static void ngx_stream_lua_flush_cleanup(void *data);
-#endif
+static void ngx_stream_lua_flush_cleanup(ngx_stream_lua_co_ctx_t *coctx);
 
 
 static int
@@ -444,17 +440,13 @@ ngx_stream_lua_copy_str_in_table(lua_State *L, int index, u_char *dst)
 static int
 ngx_stream_lua_ngx_flush(lua_State *L)
 {
-#if 0
-    /* TODO */
-    ngx_stream_session_t          *s;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_chain_t                 *cl;
-    ngx_int_t                    rc;
+    ngx_stream_session_t        *s;
+    ngx_stream_lua_ctx_t        *ctx;
     int                          n;
     unsigned                     wait = 0;
     ngx_event_t                 *wev;
-    ngx_stream_core_loc_conf_t    *clcf;
-    ngx_stream_lua_co_ctx_t       *coctx;
+    ngx_stream_lua_srv_conf_t   *lscf;
+    ngx_stream_lua_co_ctx_t     *coctx;
 
     n = lua_gettop(L);
     if (n > 1) {
@@ -464,19 +456,14 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     s = ngx_stream_lua_get_session(L);
 
-    if (n == 1 && s == s->main) {
-        luaL_checktype(L, 1, LUA_TBOOLEAN);
-        wait = lua_toboolean(L, 1);
-    }
+    wait = 1;  /* always wait */
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
         return luaL_error(L, "no session ctx found");
     }
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_REWRITE
-                                 | NGX_STREAM_LUA_CONTEXT_ACCESS
-                                 | NGX_STREAM_LUA_CONTEXT_CONTENT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
     if (ctx->acquired_raw_req_socket) {
         lua_pushnil(L);
@@ -495,37 +482,9 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         return 2;
     }
 
-#if 1
-    if (!s->header_sent && !ctx->header_sent) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "nothing to flush");
-        return 2;
-    }
-#endif
-
-    cl = ngx_stream_lua_get_flush_chain(s, ctx);
-    if (cl == NULL) {
-        return luaL_error(L, "no memory");
-    }
-
-    rc = ngx_stream_lua_send_chain_link(s, ctx, cl);
-
-    dd("send chain: %d", (int) rc);
-
-    if (rc == NGX_ERROR || rc >= NGX_STREAM_SPECIAL_RESPONSE) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "nginx output filter error");
-        return 2;
-    }
-
-    dd("wait:%d, rc:%d, buffered:0x%x", wait, (int) rc,
-       s->connection->buffered);
-
     wev = s->connection->write;
 
-    if (wait && (s->connection->buffered & NGX_STREAM_LOWLEVEL_BUFFERED
-                 || wev->delayed))
-    {
+    if (wait && (s->connection->buffered || wev->delayed)) {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                        "stream lua flush requires waiting: buffered 0x%uxd, "
                        "delayed:%d", (unsigned) s->connection->buffered,
@@ -534,21 +493,16 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         coctx->flushing = 1;
         ctx->flushing_coros++;
 
-        if (ctx->entered_content_phase) {
-            /* mimic ngx_stream_set_write_handler */
-            s->write_event_handler = ngx_stream_lua_content_wev_handler;
+        /* mimic ngx_stream_set_write_handler */
+        ctx->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-        } else {
-            s->write_event_handler = ngx_stream_core_run_phases;
-        }
-
-        clcf = ngx_stream_get_module_loc_conf(s, ngx_stream_core_module);
+        lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 
         if (!wev->delayed) {
-            ngx_add_timer(wev, clcf->send_timeout);
+            ngx_add_timer(wev, lscf->send_timeout);
         }
 
-        if (ngx_handle_write_event(wev, clcf->send_lowat) != NGX_OK) {
+        if (ngx_handle_write_event(wev, lscf->send_lowat) != NGX_OK) {
             if (wev->timer_set) {
                 wev->delayed = 0;
                 ngx_del_timer(wev);
@@ -568,7 +522,6 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua flush asynchronously");
-#endif
 
     lua_pushinteger(L, 1);
     return 1;
@@ -581,7 +534,6 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 static int
 ngx_stream_lua_ngx_eof(lua_State *L)
 {
-    ngx_event_t               *wev;
     ngx_connection_t          *c;
     ngx_stream_session_t      *s;
     ngx_stream_lua_ctx_t      *ctx;
@@ -620,16 +572,6 @@ ngx_stream_lua_ngx_eof(lua_State *L)
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                    "stream lua send eof");
-
-    wev = c->write;
-
-    if (wev->active && (ngx_event_flags & NGX_USE_LEVEL_EVENT)) {
-        if (ngx_del_event(wev, NGX_WRITE_EVENT, 0) != NGX_OK) {
-            lua_pushnil(L);
-            lua_pushliteral(L, "del event failed");
-            return 2;
-        }
-    }
 
     lua_pushinteger(L, 1);
     return 1;
@@ -709,15 +651,12 @@ ngx_stream_lua_flush_resume_helper(ngx_stream_session_t *s,
 }
 
 
-#if 0
 static void
-ngx_stream_lua_flush_cleanup(void *data)
+ngx_stream_lua_flush_cleanup(ngx_stream_lua_co_ctx_t *coctx)
 {
-    /* TODO */
     ngx_stream_session_t                      *s;
-    ngx_event_t                             *wev;
+    ngx_event_t                               *wev;
     ngx_stream_lua_ctx_t                      *ctx;
-    ngx_stream_lua_co_ctx_t                   *coctx = data;
 
     coctx->flushing = 0;
 
@@ -739,7 +678,6 @@ ngx_stream_lua_flush_cleanup(void *data)
 
     ctx->flushing_coros--;
 }
-#endif
 
 
 ngx_int_t
@@ -749,7 +687,7 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
     ngx_int_t                     rc;
 
 #if 1
-    if (ctx->acquired_raw_req_socket || ctx->eof) {
+    if (ctx->acquired_raw_req_socket || (in && ctx->eof)) {
         dd("ctx->eof already set or raw req socket already acquired");
         return NGX_OK;
     }
@@ -760,6 +698,8 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
     ngx_chain_update_chains(s->connection->pool, &ctx->free_bufs,
                             &ctx->busy_bufs, &in,
                             (ngx_buf_tag_t) &ngx_stream_lua_module);
+
+    ngx_stream_lua_assert(rc != NGX_AGAIN || s->connection->buffered);
 
     return rc;
 }
