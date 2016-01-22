@@ -44,3 +44,6 @@ echo
 reindex
 go
 t/servroot/
+*.plist
+Makefile
+t/*.t_
