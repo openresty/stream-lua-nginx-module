@@ -79,7 +79,7 @@ typedef struct {
 
 typedef struct {
     ngx_pool_cleanup_pt     *cleanup;
-    ngx_stream_session_t      *session;
+    ngx_stream_session_t    *session;
     pcre                    *regex;
     pcre_extra              *regex_sd;
     int                      ncaptures;
@@ -675,7 +675,7 @@ ngx_stream_lua_ngx_re_gmatch(lua_State *L)
     ngx_pool_t                  *pool, *old_pool;
     u_char                       errstr[NGX_MAX_CONF_ERRSTR + 1];
     pcre_extra                  *sd = NULL;
-    ngx_pool_cleanup_t          *cln;
+    ngx_stream_lua_cleanup_t    *cln;
 
     ngx_stream_lua_regex_compile_t      re_comp;
 
@@ -946,7 +946,7 @@ compiled:
         lua_setfield(L, -2, "__gc");
         lua_setmetatable(L, -2);
 
-        cln = ngx_pool_cleanup_add(s->connection->pool, 0);
+        cln = ngx_stream_lua_cleanup_add(s, 0);
         if (cln == NULL) {
             msg = "no memory";
             goto error;

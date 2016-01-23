@@ -140,6 +140,9 @@ ngx_stream_lua_ngx_timer_at(lua_State *L)
         return luaL_error(L, "no session");
     }
 
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                   "stream lua creating new timer with delay %M", delay);
+
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
 
     if (ngx_exiting && delay > 0) {
@@ -347,15 +350,13 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
     ngx_connection_t        *c = NULL;
     ngx_stream_session_t    *s = NULL;
     ngx_stream_lua_ctx_t    *ctx;
-    ngx_pool_cleanup_t      *cln;
-    ngx_pool_cleanup_t      *pcln;
+
+    ngx_pool_cleanup_t            *pcln;
+    ngx_stream_lua_cleanup_t      *cln;
 
     ngx_stream_lua_timer_ctx_t         tctx;
     ngx_stream_lua_main_conf_t        *lmcf;
     ngx_stream_core_srv_conf_t        *cscf;
-
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                   "stream lua ngx.timer expired");
 
     ngx_memcpy(&tctx, ev->data, sizeof(ngx_stream_lua_timer_ctx_t));
     ngx_free(ev);
@@ -363,11 +364,15 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     lmcf = tctx.lmcf;
 
+    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                   "stream lua ngx.timer expired (running: %i, max: %i)",
+                   lmcf->running_timers, lmcf->max_running_timers);
+
     lmcf->pending_timers--;
 
     if (lmcf->running_timers >= lmcf->max_running_timers) {
         ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-                      "%i lua_max_running_timers are not enough",
+                      "stream lua: %i lua_max_running_timers are not enough",
                       lmcf->max_running_timers);
         goto failed;
     }
@@ -438,14 +443,13 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     L = ngx_stream_lua_get_lua_vm(s, ctx);
 
-    cln = ngx_pool_cleanup_add(s->connection->pool, 0);
+    cln = ngx_stream_lua_cleanup_add(s, 0);
     if (cln == NULL) {
         goto failed;
     }
 
     cln->handler = ngx_stream_lua_session_cleanup_handler;
     cln->data = ctx;
-    ctx->cleanup = &cln->handler;
 
     ctx->entered_content_phase = 1;
     ctx->context = NGX_STREAM_LUA_CONTEXT_TIMER;
@@ -461,6 +465,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
     /*  save the session in coroutine globals table */
     ngx_stream_lua_set_session(tctx.co, s);
 
+    dd("running_timers++");
     lmcf->running_timers++;
 
     lua_pushboolean(tctx.co, tctx.premature);
@@ -707,5 +712,3 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
     }
 #endif
 }
-
-/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

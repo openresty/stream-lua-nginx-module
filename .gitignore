@@ -40,6 +40,7 @@ src/timer.[ch]
 src/config.[ch]
 src/worker.[ch]
 src/misc.[ch]
+src/initby.[ch]
 echo
 reindex
 go

@@ -84,6 +84,7 @@ Hi"
 [error]
 
 
+
 === TEST 4: unexpected globals sharing by using _G
 --- stream_server_config
     content_by_lua_block {
@@ -119,6 +120,7 @@ Hi"
 0
 --- no_error_log
 [error]
+
 
 
 === TEST 5: lua_code_cache off + setkeepalive

@@ -15,6 +15,7 @@
 #include "ngx_stream_lua_directive.h"
 #include "ngx_stream_lua_contentby.h"
 #include "ngx_stream_lua_semaphore.h"
+#include "ngx_stream_lua_initby.h"
 #include "ngx_stream_lua_util.h"
 
 
@@ -60,6 +61,20 @@ static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
 
 static ngx_command_t  ngx_stream_lua_commands[] = {
 
+    { ngx_string("init_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_init_by_lua_block,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_init_by_inline },
+
+    { ngx_string("init_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_init_by_lua,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_init_by_file },
+
     { ngx_string("content_by_lua_block"),
       NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
       ngx_stream_lua_content_by_lua_block,
@@ -74,6 +89,19 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       0,
       (void *) ngx_stream_lua_content_handler_file },
 
+    { ngx_string("lua_max_running_timers"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, max_running_timers),
+      NULL },
+
+    { ngx_string("lua_max_pending_timers"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, max_pending_timers),
+      NULL },
 
     { ngx_string("lua_resolver"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,

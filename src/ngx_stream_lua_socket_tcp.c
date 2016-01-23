@@ -962,7 +962,7 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t                *ctx;
     ngx_peer_connection_t               *pc;
     ngx_connection_t                    *c;
-    ngx_pool_cleanup_t                  *cln;
+    ngx_stream_lua_cleanup_t            *cln;
     ngx_stream_lua_resolved_t           *ur;
     ngx_int_t                            rc;
     ngx_stream_lua_co_ctx_t             *coctx;
@@ -3917,8 +3917,8 @@ ngx_stream_lua_req_socket(lua_State *L)
     ngx_connection_t                *c;
     ngx_stream_session_t            *s;
     ngx_stream_lua_ctx_t            *ctx;
-    ngx_pool_cleanup_t              *cln;
     ngx_stream_lua_co_ctx_t         *coctx;
+    ngx_stream_lua_cleanup_t        *cln;
 
     ngx_stream_lua_socket_tcp_upstream_t  *u;
 
@@ -4380,8 +4380,8 @@ ngx_stream_lua_get_keepalive_peer(ngx_stream_session_t *s, lua_State *L,
     int                                  top;
     ngx_queue_t                         *q;
     ngx_connection_t                    *c;
-    ngx_pool_cleanup_t                  *cln;
     ngx_peer_connection_t               *pc;
+    ngx_stream_lua_cleanup_t            *cln;
     ngx_stream_lua_socket_pool_t        *spool;
     ngx_stream_lua_socket_pool_item_t   *item;
 

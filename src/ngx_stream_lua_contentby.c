@@ -78,12 +78,12 @@ ngx_stream_lua_content_handler_inline(ngx_stream_session_t *s)
 ngx_int_t
 ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_session_t *s)
 {
-    int                      co_ref;
-    ngx_int_t                rc;
-    lua_State               *co;
-    ngx_connection_t        *c;
-    ngx_stream_lua_ctx_t    *ctx;
-    ngx_pool_cleanup_t      *cln;
+    int                          co_ref;
+    ngx_int_t                    rc;
+    lua_State                   *co;
+    ngx_connection_t            *c;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_cleanup_t    *cln;
 
     ngx_stream_lua_srv_conf_t      *lscf;
 
@@ -133,16 +133,13 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_session_t *s)
 #endif
 
     /*  {{{ register session cleanup hooks */
-    if (ctx->cleanup == NULL) {
-        cln = ngx_pool_cleanup_add(s->connection->pool, 0);
-        if (cln == NULL) {
-            return NGX_ERROR;
-        }
-
-        cln->handler = ngx_stream_lua_session_cleanup_handler;
-        cln->data = ctx;
-        ctx->cleanup = &cln->handler;
+    cln = ngx_stream_lua_cleanup_add(s, 0);
+    if (cln == NULL) {
+        return NGX_ERROR;
     }
+
+    cln->handler = ngx_stream_lua_session_cleanup_handler;
+    cln->data = ctx;
     /*  }}} */
 
     ctx->context = NGX_STREAM_LUA_CONTEXT_CONTENT;

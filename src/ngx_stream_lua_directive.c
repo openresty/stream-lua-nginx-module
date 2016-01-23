@@ -16,6 +16,7 @@
 #include "ngx_stream_lua_lex.h"
 #include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_contentby.h"
+#include "ngx_stream_lua_initby.h"
 
 
 static u_char *ngx_stream_lua_gen_chunk_name(ngx_conf_t *cf, const char *tag,
@@ -50,6 +51,73 @@ enum {
     FOUND_DOUBLE_QUOTED,
     FOUND_SINGLE_QUOTED
 };
+
+
+char *
+ngx_stream_lua_init_by_lua_block(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    char        *rv;
+    ngx_conf_t   save;
+
+    save = *cf;
+    cf->handler = ngx_stream_lua_init_by_lua;
+    cf->handler_conf = conf;
+
+    rv = ngx_stream_lua_conf_lua_block_parse(cf, cmd);
+
+    *cf = save;
+
+    return rv;
+}
+
+
+char *
+ngx_stream_lua_init_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    u_char                      *name;
+    ngx_str_t                   *value;
+    ngx_stream_lua_main_conf_t    *lmcf = conf;
+
+    dd("enter");
+
+    /*  must specifiy a content handler */
+    if (cmd->post == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (lmcf->init_handler) {
+        return "is duplicate";
+    }
+
+    value = cf->args->elts;
+
+    if (value[1].len == 0) {
+        /*  Oops...Invalid location conf */
+        ngx_conf_log_error(NGX_LOG_ERR, cf, 0,
+                           "invalid location config: no runnable Lua code");
+        return NGX_CONF_ERROR;
+    }
+
+    lmcf->init_handler = (ngx_stream_lua_main_conf_handler_pt) cmd->post;
+
+    if (cmd->post == ngx_stream_lua_init_by_file) {
+        name = ngx_stream_lua_rebase_path(cf->pool, value[1].data,
+                                          value[1].len);
+        if (name == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        lmcf->init_src.data = name;
+        lmcf->init_src.len = ngx_strlen(name);
+
+    } else {
+        lmcf->init_src = value[1];
+    }
+
+    return NGX_CONF_OK;
+}
 
 
 char *

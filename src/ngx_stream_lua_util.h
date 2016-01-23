@@ -54,7 +54,7 @@ ngx_stream_lua_co_ctx_t *ngx_stream_lua_create_co_ctx(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t *ctx);
 void ngx_stream_lua_free_fake_session(ngx_stream_session_t *s);
 void ngx_stream_lua_close_fake_connection(ngx_connection_t *c);
-ngx_pool_cleanup_t *ngx_stream_lua_cleanup_add(ngx_stream_session_t *s,
+ngx_stream_lua_cleanup_t *ngx_stream_lua_cleanup_add(ngx_stream_session_t *s,
     size_t size);
 void ngx_stream_lua_cleanup_free(ngx_stream_session_t *s,
     ngx_pool_cleanup_pt *cleanup);
@@ -66,6 +66,10 @@ void ngx_stream_lua_unescape_uri(u_char **dst, u_char **src, size_t size,
     ngx_uint_t type);
 ngx_connection_t *ngx_stream_lua_create_fake_connection(ngx_pool_t *pool);
 ngx_stream_session_t *ngx_stream_lua_create_fake_session(ngx_connection_t *c);
+int ngx_stream_lua_do_call(ngx_log_t *log, lua_State *L);
+ngx_int_t ngx_stream_lua_report(ngx_log_t *log, lua_State *L, int status,
+    const char *prefix);
+void ngx_stream_lua_free_session(ngx_stream_session_t *s);
 
 
 #ifndef NGX_UNESCAPE_URI_COMPONENT

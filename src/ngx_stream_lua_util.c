@@ -294,8 +294,9 @@ ngx_stream_lua_cleanup_vm(void *data)
 #endif
 
     if (state) {
-        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0, "decrementing "
-                       "the reference count for Lua VM: %i", state->count);
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                       "stream lua decrementing the reference count "
+                       "for Lua VM: %i", state->count);
 
         if (--state->count == 0) {
             L = state->vm;
@@ -441,16 +442,12 @@ ngx_stream_lua_session_cleanup(ngx_stream_lua_ctx_t *ctx, int forcible)
         return;
     }
 
-    if (ctx->cleanup) {
-        *ctx->cleanup = NULL;
-        ctx->cleanup = NULL;
-    }
-
     lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
 
 #if 1
     if (s->connection->fd == (ngx_socket_t) -1) {
         /* being a fake session */
+        dd("running_timers--");
         lmcf->running_timers--;
     }
 #endif
@@ -493,7 +490,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
                    "stream lua finalize: rc=%i", rc);
 
     if (rc == NGX_ERROR || rc == NGX_DECLINED) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -501,14 +498,14 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
     if (rc == NGX_DONE) {   /* yield */
 
         if (ctx->done) {
-            ngx_stream_close_connection(c);
+            ngx_stream_lua_free_session(s);
             return;
         }
 
@@ -519,7 +516,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
             if (ctx->busy_bufs == NULL) {
                 if (ngx_del_event(c->write, NGX_WRITE_EVENT, 0) != NGX_OK) {
-                    ngx_stream_close_connection(c);
+                    ngx_stream_lua_free_session(s);
                 }
             }
         }
@@ -546,7 +543,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
         }
 
         if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
-            ngx_stream_close_connection(c);
+            ngx_stream_lua_free_session(s);
         }
 
         ctx->write_event_handler = ngx_stream_lua_content_wev_handler;
@@ -560,7 +557,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 #endif
 
     if (c->error) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -575,7 +572,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
     dd("closing connection upon successful completion");
 
-    ngx_stream_close_connection(c);
+    ngx_stream_lua_free_session(s);
     return;
 }
 
@@ -599,7 +596,7 @@ ngx_stream_lua_set_lingering_close(ngx_stream_session_t *s,
     ngx_add_timer(rev, lscf->lingering_timeout);
 
     if (ngx_handle_read_event(rev, 0) != NGX_OK) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -608,7 +605,7 @@ ngx_stream_lua_set_lingering_close(ngx_stream_session_t *s,
 
     if (wev->active && (ngx_event_flags & NGX_USE_LEVEL_EVENT)) {
         if (ngx_del_event(wev, NGX_WRITE_EVENT, 0) != NGX_OK) {
-            ngx_stream_close_connection(c);
+            ngx_stream_lua_free_session(s);
             return;
         }
     }
@@ -616,7 +613,7 @@ ngx_stream_lua_set_lingering_close(ngx_stream_session_t *s,
     if (ngx_shutdown_socket(c->fd, NGX_WRITE_SHUTDOWN) == -1) {
         ngx_connection_error(c, ngx_socket_errno,
                              ngx_shutdown_socket_n " failed");
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -644,7 +641,7 @@ ngx_stream_lua_lingering_close_handler(ngx_event_t *rev)
                    "stream lua lingering close handler");
 
     if (rev->timedout) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -655,7 +652,7 @@ ngx_stream_lua_lingering_close_handler(ngx_event_t *rev)
 
     timer = (ngx_msec_t) ctx->lingering_time - (ngx_msec_t) ngx_time();
     if ((ngx_msec_int_t) timer <= 0) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -666,7 +663,7 @@ ngx_stream_lua_lingering_close_handler(ngx_event_t *rev)
                        "stream lua lingering read: %d", n);
 
         if (n == NGX_ERROR || n == 0) {
-            ngx_stream_close_connection(c);
+            ngx_stream_lua_free_session(s);
             return;
         }
 
@@ -684,7 +681,7 @@ ngx_stream_lua_lingering_close_handler(ngx_event_t *rev)
     } while (rev->ready);
 
     if (ngx_handle_read_event(rev, 0) != NGX_OK) {
-        ngx_stream_close_connection(c);
+        ngx_stream_lua_free_session(s);
         return;
     }
 
@@ -1744,7 +1741,6 @@ ngx_stream_lua_finalize_fake_session(ngx_stream_session_t *s, ngx_int_t rc)
                    "stream lua finalize fake session: %d", rc);
 
     if (rc == NGX_DONE) {
-        ngx_stream_lua_close_fake_session(s);
         return;
     }
 
@@ -1801,9 +1797,32 @@ ngx_stream_lua_close_fake_session(ngx_stream_session_t *s)
 void
 ngx_stream_lua_free_fake_session(ngx_stream_session_t *s)
 {
-    ngx_log_t                 *log;
+    ngx_log_t                   *log;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_cleanup_t    *cln;
 
     log = s->connection->log;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, log, 0,
+                   "stream lua free fake sesson");
+
+    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        goto done;
+    }
+
+    cln = ctx->cleanup;
+    ctx->cleanup = NULL;
+
+    while (cln) {
+        if (cln->handler) {
+            cln->handler(cln->data);
+        }
+
+        cln = cln->next;
+    }
+
+done:
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, log, 0, "stream lua close fake "
                    "session");
@@ -2295,37 +2314,48 @@ ngx_stream_lua_create_co_ctx(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 }
 
 
-ngx_pool_cleanup_t *
+ngx_stream_lua_cleanup_t *
 ngx_stream_lua_cleanup_add(ngx_stream_session_t *s, size_t size)
 {
-    ngx_pool_t              *p;
-    ngx_pool_cleanup_t      *cln;
-    ngx_stream_lua_ctx_t    *ctx;
+    ngx_stream_lua_cleanup_t      *cln;
+    ngx_stream_lua_ctx_t          *ctx;
 
-    p = s->connection->pool;
+    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        return NULL;
+    }
 
-    if (size == 0) {
-        ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    if (ctx->free_cleanup) {
+        cln = ctx->free_cleanup;
+        ctx->free_cleanup = cln->next;
 
-        if (ctx != NULL && ctx->free_cleanup) {
-            cln = ctx->free_cleanup;
-            ctx->free_cleanup = cln->next;
+        dd("reuse cleanup: %p", cln);
 
-            dd("reuse cleanup: %p", cln);
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                       "stream lua stream cleanup reuse: %p", cln);
 
-            ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                           "stream lua stream cleanup reuse: %p", cln);
-
-            cln->handler = NULL;
-            cln->next = p->cleanup;
-
-            p->cleanup = cln;
-
-            return cln;
+    } else {
+        cln = ngx_palloc(s->connection->pool, sizeof(ngx_stream_lua_cleanup_t));
+        if (cln == NULL) {
+            return NULL;
         }
     }
 
-    return ngx_pool_cleanup_add(p, size);
+    if (size) {
+        cln->data = ngx_palloc(s->connection->pool, size);
+        if (cln->data == NULL) {
+            return NULL;
+        }
+
+    } else {
+        cln->data = NULL;
+    }
+
+    cln->handler = NULL;
+    cln->next = ctx->cleanup;
+    ctx->cleanup = cln;
+
+    return cln;
 }
 
 
@@ -2333,25 +2363,22 @@ void
 ngx_stream_lua_cleanup_free(ngx_stream_session_t *s,
     ngx_pool_cleanup_pt *cleanup)
 {
-    ngx_pool_t               *p;
-    ngx_pool_cleanup_t      **last;
-    ngx_pool_cleanup_t       *cln;
-    ngx_stream_lua_ctx_t     *ctx;
-
-    p = s->connection->pool;
+    ngx_stream_lua_cleanup_t      **last;
+    ngx_stream_lua_cleanup_t       *cln;
+    ngx_stream_lua_ctx_t           *ctx;
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
         return;
     }
 
-    cln = (ngx_pool_cleanup_t *)
-              ((u_char *) cleanup - offsetof(ngx_pool_cleanup_t, handler));
+    cln = (ngx_stream_lua_cleanup_t *)
+          ((u_char *) cleanup - offsetof(ngx_stream_lua_cleanup_t, handler));
 
     dd("cln: %p, cln->handler: %p, &cln->handler: %p",
        cln, cln->handler, &cln->handler);
 
-    last = &p->cleanup;
+    last = &ctx->cleanup;
 
     while (*last) {
         if (*last == cln) {
@@ -2905,8 +2932,7 @@ ngx_stream_lua_create_fake_session(ngx_connection_t *c)
         return NULL;
     }
 
-    s->ctx = ngx_pcalloc(s->connection->pool,
-                         sizeof(void *) * ngx_stream_max_module);
+    s->ctx = ngx_pcalloc(c->pool, sizeof(void *) * ngx_stream_max_module);
     if (s->ctx == NULL) {
         return NULL;
     }
@@ -2919,4 +2945,128 @@ ngx_stream_lua_create_fake_session(ngx_connection_t *c)
     dd("created fake session %p", s);
 
     return s;
+}
+
+
+int
+ngx_stream_lua_do_call(ngx_log_t *log, lua_State *L)
+{
+    int                 status, base;
+#if (NGX_PCRE)
+    ngx_pool_t         *old_pool;
+#endif
+
+    base = lua_gettop(L);  /* function index */
+
+    lua_pushcfunction(L, ngx_stream_lua_traceback);
+                                                 /* push traceback function */
+
+    lua_insert(L, base);  /* put it under chunk and args */
+
+#if (NGX_PCRE)
+    old_pool = ngx_stream_lua_pcre_malloc_init(ngx_cycle->pool);
+#endif
+
+    status = lua_pcall(L, 0, 0, base);
+
+#if (NGX_PCRE)
+    ngx_stream_lua_pcre_malloc_done(old_pool);
+#endif
+
+    lua_remove(L, base);
+
+    return status;
+}
+
+
+ngx_int_t
+ngx_stream_lua_report(ngx_log_t *log, lua_State *L, int status,
+    const char *prefix)
+{
+    const char      *msg;
+
+    if (status && !lua_isnil(L, -1)) {
+        msg = lua_tostring(L, -1);
+        if (msg == NULL) {
+            msg = "unknown error";
+        }
+
+        ngx_log_error(NGX_LOG_ERR, log, 0, "%s error: %s", prefix, msg);
+        lua_pop(L, 1);
+    }
+
+    /* force a full garbage-collection cycle */
+    lua_gc(L, LUA_GCCOLLECT, 0);
+
+    return status == 0 ? NGX_OK : NGX_ERROR;
+}
+
+
+ngx_stream_lua_cleanup_t *
+ngx_stream_cleanup_add(ngx_stream_session_t *s, size_t size)
+{
+    ngx_connection_t            *c;
+    ngx_stream_lua_cleanup_t    *cln;
+    ngx_stream_lua_ctx_t        *ctx;
+
+    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        return NULL;
+    }
+
+    c = s->connection;
+
+    cln = ngx_palloc(c->pool, sizeof(ngx_stream_lua_cleanup_t));
+    if (cln == NULL) {
+        return NULL;
+    }
+
+    if (size) {
+        cln->data = ngx_palloc(c->pool, size);
+        if (cln->data == NULL) {
+            return NULL;
+        }
+
+    } else {
+        cln->data = NULL;
+    }
+
+    cln->handler = NULL;
+    cln->next = ctx->cleanup;
+    ctx->cleanup = cln;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                   "stream lua cleanup add: %p", cln);
+
+    return cln;
+}
+
+
+void
+ngx_stream_lua_free_session(ngx_stream_session_t *s)
+{
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_cleanup_t    *cln;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, s->connection->log, 0,
+                   "stream lua free sesson");
+
+    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        ngx_stream_close_connection(s->connection);
+        return;
+    }
+
+    cln = ctx->cleanup;
+    ctx->cleanup = NULL;
+
+    while (cln) {
+        if (cln->handler) {
+            cln->handler(cln->data);
+        }
+
+        cln = cln->next;
+    }
+
+    ngx_stream_close_connection(s->connection);
 }

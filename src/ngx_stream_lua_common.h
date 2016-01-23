@@ -74,6 +74,17 @@
 #define NGX_STREAM_CLIENT_CLOSED_REQUEST     499
 
 
+typedef void (*ngx_stream_lua_cleanup_pt)(void *data);
+
+typedef struct ngx_stream_lua_cleanup_s  ngx_stream_lua_cleanup_t;
+
+struct ngx_stream_lua_cleanup_s {
+    ngx_stream_lua_cleanup_pt               handler;
+    void                                   *data;
+    ngx_stream_lua_cleanup_t               *next;
+};
+
+
 typedef struct {
     ngx_str_t                        host;
     in_port_t                        port;
@@ -323,9 +334,9 @@ struct ngx_stream_lua_ctx_s {
     ngx_chain_t               *busy_bufs;
     ngx_chain_t               *free_recv_bufs;
 
-    ngx_pool_cleanup_pt       *cleanup;
+    ngx_stream_lua_cleanup_t  *cleanup;
 
-    ngx_pool_cleanup_t        *free_cleanup; /* free list of cleanup records */
+    ngx_stream_lua_cleanup_t  *free_cleanup; /* free list of cleanup records */
 
     ngx_int_t                  exit_code;
 
