@@ -371,8 +371,8 @@ ngx_stream_lua_script_copy_len_code(ngx_stream_lua_script_engine_t *e)
 static void
 ngx_stream_lua_script_copy_code(ngx_stream_lua_script_engine_t *e)
 {
-    u_char                           *p;
-    ngx_stream_lua_script_copy_code_t  *code;
+    u_char                              *p;
+    ngx_stream_lua_script_copy_code_t   *code;
 
     code = (ngx_stream_lua_script_copy_code_t *) e->ip;
 
@@ -445,10 +445,10 @@ ngx_stream_lua_script_copy_capture_len_code(ngx_stream_lua_script_engine_t *e)
 static void
 ngx_stream_lua_script_copy_capture_code(ngx_stream_lua_script_engine_t *e)
 {
-    int                                  *cap;
-    u_char                               *p, *pos;
-    ngx_uint_t                            n;
-    ngx_stream_lua_script_capture_code_t   *code;
+    int                                     *cap;
+    u_char                                  *p, *pos;
+    ngx_uint_t                               n;
+    ngx_stream_lua_script_capture_code_t    *code;
 
     code = (ngx_stream_lua_script_capture_code_t *) e->ip;
 

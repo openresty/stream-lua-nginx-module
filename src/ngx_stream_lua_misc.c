@@ -36,10 +36,10 @@ ngx_stream_lua_inject_misc_api(lua_State *L)
 static int
 ngx_stream_lua_ngx_get(lua_State *L)
 {
-    ngx_stream_session_t          *s;
+    ngx_stream_session_t        *s;
     u_char                      *p;
     size_t                       len;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_ctx_t        *ctx;
 
     s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
@@ -73,7 +73,7 @@ ngx_stream_lua_ngx_get(lua_State *L)
 static int
 ngx_stream_lua_ngx_set(lua_State *L)
 {
-    ngx_stream_session_t          *s;
+    ngx_stream_session_t        *s;
     u_char                      *p;
     size_t                       len;
 

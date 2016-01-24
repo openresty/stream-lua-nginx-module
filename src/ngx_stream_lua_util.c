@@ -481,8 +481,8 @@ static void
 ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 {
     ngx_connection_t            *c;
-    ngx_stream_lua_ctx_t       *ctx;
-    ngx_stream_lua_srv_conf_t  *lscf;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_srv_conf_t   *lscf;
 
     c = s->connection;
 
@@ -1543,7 +1543,7 @@ ngx_stream_lua_run_posted_threads(ngx_connection_t *c, lua_State *L,
     ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 {
     ngx_int_t                        rc;
-    ngx_stream_lua_posted_thread_t    *pt;
+    ngx_stream_lua_posted_thread_t  *pt;
 
     for ( ;; ) {
         if (c->destroyed) {

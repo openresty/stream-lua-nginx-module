@@ -78,7 +78,7 @@ ngx_stream_lua_init_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 {
     u_char                      *name;
     ngx_str_t                   *value;
-    ngx_stream_lua_main_conf_t    *lmcf = conf;
+    ngx_stream_lua_main_conf_t  *lmcf = conf;
 
     dd("enter");
 

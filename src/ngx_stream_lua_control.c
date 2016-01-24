@@ -39,8 +39,8 @@ static int
 ngx_stream_lua_ngx_exit(lua_State *L)
 {
     ngx_int_t                    rc;
-    ngx_stream_session_t          *s;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_session_t        *s;
+    ngx_stream_lua_ctx_t        *ctx;
 
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "expecting one argument");

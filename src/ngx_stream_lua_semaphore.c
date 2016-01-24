@@ -50,8 +50,8 @@ ngx_stream_lua_alloc_semaphore(void)
 {
     ngx_stream_lua_semaphore_t            *sem, *iter;
     ngx_stream_lua_main_conf_t            *lmcf;
-    ngx_queue_t                         *q;
-    ngx_uint_t                           i, n;
+    ngx_queue_t                           *q;
+    ngx_uint_t                             i, n;
     ngx_stream_lua_semaphore_mm_block_t   *block;
     ngx_stream_lua_semaphore_mm_t         *mm;
 
@@ -131,9 +131,9 @@ void
 ngx_stream_lua_cleanup_semaphore_mm(void *data)
 {
     ngx_stream_lua_semaphore_t            *sem, *iter;
-    ngx_uint_t                           i;
+    ngx_uint_t                             i;
     ngx_stream_lua_main_conf_t            *lmcf;
-    ngx_queue_t                         *q;
+    ngx_queue_t                           *q;
     ngx_stream_lua_semaphore_mm_block_t   *block;
     ngx_stream_lua_semaphore_mm_t         *mm;
 
@@ -176,7 +176,7 @@ static void
 ngx_stream_lua_free_semaphore(ngx_stream_lua_semaphore_t *sem)
 {
     ngx_stream_lua_semaphore_t            *iter;
-    ngx_uint_t                           i, mid_epoch;
+    ngx_uint_t                             i, mid_epoch;
     ngx_stream_lua_semaphore_mm_block_t   *block;
     ngx_stream_lua_semaphore_mm_t         *mm;
 
@@ -324,9 +324,9 @@ int
 ngx_stream_lua_ffi_semaphore_wait(ngx_stream_session_t *s,
     ngx_stream_lua_semaphore_t *sem, int wait_ms, u_char *err, size_t *errlen)
 {
-    ngx_stream_lua_ctx_t           *ctx;
-    ngx_stream_lua_co_ctx_t        *wait_co_ctx;
-    ngx_int_t                     rc;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_co_ctx_t     *wait_co_ctx;
+    ngx_int_t                    rc;
 
     ngx_log_debug4(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua semaphore wait: %p, timeout: %d, "
