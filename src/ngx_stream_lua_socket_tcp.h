@@ -62,7 +62,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     ngx_stream_lua_srv_conf_t         *conf;
     ngx_pool_cleanup_pt               *cleanup;
     ngx_stream_session_t              *request;
-    ngx_peer_connection_t            peer;
+    ngx_peer_connection_t              peer;
 
     ngx_msec_t                       read_timeout;
     ngx_msec_t                       send_timeout;

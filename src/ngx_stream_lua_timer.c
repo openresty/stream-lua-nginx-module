@@ -111,9 +111,9 @@ ngx_stream_lua_ngx_timer_at(lua_State *L)
     lua_State               *co;
     ngx_msec_t               delay;
     ngx_event_t             *ev = NULL;
-    ngx_stream_session_t      *s;
+    ngx_stream_session_t    *s;
     ngx_connection_t        *saved_c = NULL;
-    ngx_stream_lua_ctx_t      *ctx;
+    ngx_stream_lua_ctx_t    *ctx;
 #if 0
     ngx_stream_connection_t   *hc;
 #endif
@@ -561,8 +561,8 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
     ngx_event_t                **events;
     ngx_connection_t            *c, *saved_c = NULL;
     ngx_rbtree_node_t           *cur, *prev, *next, *sentinel, *temp;
-    ngx_stream_lua_timer_ctx_t    *tctx;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_timer_ctx_t  *tctx;
+    ngx_stream_lua_main_conf_t  *lmcf;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua abort pending timers");

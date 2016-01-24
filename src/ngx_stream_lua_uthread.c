@@ -109,11 +109,11 @@ ngx_stream_lua_uthread_spawn(lua_State *L)
 static int
 ngx_stream_lua_uthread_wait(lua_State *L)
 {
-    int                           i, nargs, nrets;
-    lua_State                    *sub_co;
-    ngx_stream_session_t          *s;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx, *sub_coctx;
+    int                          i, nargs, nrets;
+    lua_State                   *sub_co;
+    ngx_stream_session_t        *s;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_co_ctx_t     *coctx, *sub_coctx;
 
     s = ngx_stream_lua_get_session(L);
     if (s == NULL) {

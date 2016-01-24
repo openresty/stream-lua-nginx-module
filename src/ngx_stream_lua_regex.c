@@ -140,11 +140,11 @@ ngx_stream_lua_ngx_re_match_helper(lua_State *L, int wantcaps)
 {
     /* u_char                      *p; */
     int                          res_tb_idx = 0;
-    ngx_stream_session_t          *s;
+    ngx_stream_session_t        *s;
     ngx_str_t                    subj;
     ngx_str_t                    pat;
     ngx_str_t                    opts;
-    ngx_stream_lua_regex_t        *re;
+    ngx_stream_lua_regex_t      *re;
     const char                  *msg;
     ngx_int_t                    rc;
     ngx_uint_t                   n;
@@ -155,7 +155,7 @@ ngx_stream_lua_ngx_re_match_helper(lua_State *L, int wantcaps)
     int                          ovecsize;
     ngx_uint_t                   flags;
     ngx_pool_t                  *pool, *old_pool;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_main_conf_t  *lmcf;
     u_char                       errstr[NGX_MAX_CONF_ERRSTR + 1];
     pcre_extra                  *sd = NULL;
     int                          name_entry_size = 0, name_count;
@@ -659,14 +659,14 @@ error:
 static int
 ngx_stream_lua_ngx_re_gmatch(lua_State *L)
 {
-    ngx_stream_lua_main_conf_t    *lmcf;
-    ngx_stream_session_t          *s;
+    ngx_stream_lua_main_conf_t  *lmcf;
+    ngx_stream_session_t        *s;
     ngx_str_t                    subj;
     ngx_str_t                    pat;
     ngx_str_t                    opts;
     int                          ovecsize;
-    ngx_stream_lua_regex_t        *re;
-    ngx_stream_lua_regex_ctx_t    *ctx;
+    ngx_stream_lua_regex_t      *re;
+    ngx_stream_lua_regex_ctx_t  *ctx;
     const char                  *msg;
     int                          nargs;
     ngx_int_t                    flags;
@@ -992,8 +992,8 @@ error:
 static int
 ngx_stream_lua_ngx_re_gmatch_iterator(lua_State *L)
 {
-    ngx_stream_lua_regex_ctx_t    *ctx;
-    ngx_stream_session_t          *s;
+    ngx_stream_lua_regex_ctx_t  *ctx;
+    ngx_stream_session_t        *s;
     int                         *cap;
     ngx_int_t                    rc;
     ngx_uint_t                   n;
@@ -1291,13 +1291,13 @@ ngx_stream_lua_ngx_re_gsub(lua_State *L)
 static int
 ngx_stream_lua_ngx_re_sub_helper(lua_State *L, unsigned global)
 {
-    ngx_stream_lua_regex_t        *re;
-    ngx_stream_session_t          *s;
+    ngx_stream_lua_regex_t      *re;
+    ngx_stream_session_t        *s;
     ngx_str_t                    subj;
     ngx_str_t                    pat;
     ngx_str_t                    opts;
     ngx_str_t                    tpl;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_main_conf_t  *lmcf;
     ngx_pool_t                  *pool, *old_pool;
     const char                  *msg;
     ngx_int_t                    rc;
@@ -2123,7 +2123,7 @@ ngx_stream_lua_ffi_compile_regex(const unsigned char *pat, size_t pat_len,
     const char              *msg;
     ngx_pool_t              *pool, *old_pool;
     pcre_extra              *sd = NULL;
-    ngx_stream_lua_regex_t    *re;
+    ngx_stream_lua_regex_t  *re;
 
     ngx_stream_lua_main_conf_t         *lmcf;
     ngx_stream_lua_regex_compile_t      re_comp;
@@ -2358,8 +2358,8 @@ ngx_stream_lua_ffi_compile_replace_template(ngx_stream_lua_regex_t *re,
 {
     ngx_int_t                                rc;
     ngx_str_t                                tpl;
-    ngx_stream_lua_complex_value_t            *ctpl;
-    ngx_stream_lua_compile_complex_value_t     ccv;
+    ngx_stream_lua_complex_value_t          *ctpl;
+    ngx_stream_lua_compile_complex_value_t   ccv;
 
     ctpl = ngx_palloc(re->pool, sizeof(ngx_stream_lua_complex_value_t));
     if (ctpl == NULL) {

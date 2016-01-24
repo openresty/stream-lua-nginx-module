@@ -417,7 +417,7 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
 {
     ngx_stream_session_t                *s;
     ngx_connection_t                    *c;
-    ngx_stream_lua_resolved_t      *ur;
+    ngx_stream_lua_resolved_t           *ur;
     ngx_stream_lua_ctx_t                *lctx;
     lua_State                           *L;
     u_char                              *p;
@@ -762,15 +762,15 @@ ngx_stream_lua_socket_error_retval_handler(ngx_stream_session_t *s,
 static int
 ngx_stream_lua_socket_udp_send(lua_State *L)
 {
-    ssize_t                              n;
-    ngx_stream_session_t                  *s;
-    u_char                              *p;
-    size_t                               len;
-    ngx_stream_lua_socket_udp_upstream_t  *u;
-    int                                  type;
-    const char                          *msg;
-    ngx_str_t                            query;
-    ngx_stream_lua_srv_conf_t             *lscf;
+    ssize_t                               n;
+    ngx_stream_session_t                 *s;
+    u_char                               *p;
+    size_t                                len;
+    ngx_stream_lua_socket_udp_upstream_t *u;
+    int                                   type;
+    const char                           *msg;
+    ngx_str_t                             query;
+    ngx_stream_lua_srv_conf_t            *lscf;
 
     if (lua_gettop(L) != 2) {
         return luaL_error(L, "expecting 2 arguments (including the object), "
@@ -892,11 +892,11 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
 {
     ngx_stream_session_t                  *s;
     ngx_stream_lua_socket_udp_upstream_t  *u;
-    ngx_int_t                            rc;
+    ngx_int_t                              rc;
     ngx_stream_lua_ctx_t                  *ctx;
     ngx_stream_lua_co_ctx_t               *coctx;
-    size_t                               size;
-    int                                  nargs;
+    size_t                                 size;
+    int                                    nargs;
     ngx_stream_lua_srv_conf_t             *lscf;
 
     nargs = lua_gettop(L);
@@ -1175,7 +1175,7 @@ ngx_stream_lua_socket_udp_read_handler(ngx_stream_session_t *s,
     ngx_stream_lua_socket_udp_upstream_t *u)
 {
     ngx_connection_t            *c;
-    ngx_stream_lua_srv_conf_t     *lscf;
+    ngx_stream_lua_srv_conf_t   *lscf;
 
     c = u->udp_connection.connection;
 
@@ -1270,7 +1270,7 @@ static void
 ngx_stream_lua_socket_udp_handler(ngx_event_t *ev)
 {
     ngx_connection_t                *c;
-    ngx_stream_session_t              *s;
+    ngx_stream_session_t            *s;
 
     ngx_stream_lua_socket_udp_upstream_t  *u;
 
@@ -1486,7 +1486,7 @@ ngx_stream_lua_socket_udp_resume(ngx_stream_session_t *s,
     lua_State                   *vm;
     ngx_int_t                    rc;
     ngx_connection_t            *c;
-    ngx_stream_lua_co_ctx_t       *coctx;
+    ngx_stream_lua_co_ctx_t     *coctx;
 
     ngx_stream_lua_socket_udp_upstream_t      *u;
 
@@ -1542,7 +1542,7 @@ static void
 ngx_stream_lua_udp_resolve_cleanup(ngx_stream_lua_co_ctx_t *coctx)
 {
     ngx_resolver_ctx_t                      *rctx;
-    ngx_stream_lua_socket_udp_upstream_t      *u;
+    ngx_stream_lua_socket_udp_upstream_t    *u;
 
     u = coctx->data;
     if (u == NULL) {
