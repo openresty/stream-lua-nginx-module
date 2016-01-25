@@ -48,3 +48,7 @@ t/servroot/
 *.plist
 Makefile
 t/*.t_
+html_out/
+ebooks.sh
+*.pdf
+*.patch
