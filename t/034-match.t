@@ -492,18 +492,18 @@ regex: (?:>[\w\s]*</?\w{2,}>)
 === TEST 30: bad pattern
 --- stream_server_config
     content_by_lua_block {
-            local m, err = ngx.re.match("hello, 1234", "([0-9]+")
-            if m then
-                ngx.say(m[0])
+        local m, err = ngx.re.match("hello, 1234", "([0-9]+")
+        if m then
+            ngx.say(m[0])
+
+        else
+            if err then
+                ngx.say("error: ", err)
 
             else
-                if err then
-                    ngx.say("error: ", err)
-
-                else
-                    ngx.say("not matched!")
-                end
+                ngx.say("not matched!")
             end
+        end
     }
 --- stream_response
 error: pcre_compile() failed: missing ) in "([0-9]+"
@@ -516,12 +516,12 @@ error: pcre_compile() failed: missing ) in "([0-9]+"
 === TEST 31: long brackets containing [...]
 --- stream_server_config
     content_by_lua_block {
-            m = ngx.re.match("hello, 1234", [[([0-9]+)]])
-            if m then
-                ngx.say(m[0])
-            else
-                ngx.say("not matched!")
-            end
+        m = ngx.re.match("hello, 1234", [[([0-9]+)]])
+        if m then
+            ngx.say(m[0])
+        else
+            ngx.say("not matched!")
+        end
     }
 --- stream_response
 1234
@@ -691,12 +691,12 @@ hello-world
 === TEST 40: Javascript compatible mode
 --- stream_server_config
     content_by_lua_block {
-            local m = ngx.re.match("章", [[\u7AE0]], "uJ")
-            if m then
-                ngx.say("matched: ", m[0])
-            else
-                ngx.say("not matched!")
-            end
+        local m = ngx.re.match("章", [[\u7AE0]], "uJ")
+        if m then
+            ngx.say("matched: ", m[0])
+        else
+            ngx.say("not matched!")
+        end
     }
 --- stream_response
 matched: 章
@@ -708,14 +708,14 @@ matched: 章
 === TEST 41: empty duplicate captures
 --- stream_server_config
     content_by_lua_block {
-            local target = 'test'
-            local regex = '^(?:(?<group1>(?:foo))|(?<group2>(?:bar))|(?<group3>(?:test)))$'
+        local target = 'test'
+        local regex = '^(?:(?<group1>(?:foo))|(?<group2>(?:bar))|(?<group3>(?:test)))$'
 
-            -- Note the D here
-            local m = ngx.re.match(target, regex, 'D')
+        -- Note the D here
+        local m = ngx.re.match(target, regex, 'D')
 
-            ngx.say(type(m.group1))
-            ngx.say(type(m.group2))
+        ngx.say(type(m.group1))
+        ngx.say(type(m.group2))
     }
 --- stream_response
 nil
@@ -728,22 +728,22 @@ nil
 === TEST 42: bad UTF-8
 --- stream_server_config
     content_by_lua_block {
-            local target = "你好"
-            local regex = "你好"
+        local target = "你好"
+        local regex = "你好"
 
-            -- Note the D here
-            local m, err = ngx.re.match(string.sub(target, 1, 4), regex, "u")
+        -- Note the D here
+        local m, err = ngx.re.match(string.sub(target, 1, 4), regex, "u")
 
-            if err then
-                ngx.say("error: ", err)
-                return
-            end
+        if err then
+            ngx.say("error: ", err)
+            return
+        end
 
-            if m then
-                ngx.say("matched: ", m[0])
-            else
-                ngx.say("not matched")
-            end
+        if m then
+            ngx.say("matched: ", m[0])
+        else
+            ngx.say("not matched")
+        end
     }
 --- stream_response_like chop
 ^error: pcre_exec\(\) failed: -10$
@@ -756,12 +756,12 @@ nil
 === TEST 43: UTF-8 mode without UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
-            local m = ngx.re.match("你好", ".", "U")
-            if m then
-                ngx.say(m[0])
-            else
-                ngx.say("not matched!")
-            end
+        local m = ngx.re.match("你好", ".", "U")
+        if m then
+            ngx.say(m[0])
+        else
+            ngx.say("not matched!")
+        end
     }
 --- stap
 probe process("$LIBPCRE_PATH").function("pcre_compile") {
@@ -786,12 +786,12 @@ exec opts: 2000
 === TEST 44: UTF-8 mode with UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
-            local m = ngx.re.match("你好", ".", "u")
-            if m then
-                ngx.say(m[0])
-            else
-                ngx.say("not matched!")
-            end
+        local m = ngx.re.match("你好", ".", "u")
+        if m then
+            ngx.say(m[0])
+        else
+            ngx.say("not matched!")
+        end
     }
 --- stap
 probe process("$LIBPCRE_PATH").function("pcre_compile") {
@@ -890,22 +890,22 @@ failed to match
 === TEST 47: extra table argument
 --- stream_server_config
     content_by_lua_block {
-            local res = {}
-            local s = "hello, 1234"
-            m = ngx.re.match(s, [[(\d)(\d)]], "o", nil, res)
-            if m then
-                ngx.say("1: m size: ", #m)
-                ngx.say("1: res size: ", #res)
-            else
-                ngx.say("1: not matched!")
-            end
-            m = ngx.re.match(s, [[(\d)]], "o", nil, res)
-            if m then
-                ngx.say("2: m size: ", #m)
-                ngx.say("2: res size: ", #res)
-            else
-                ngx.say("2: not matched!")
-            end
+        local res = {}
+        local s = "hello, 1234"
+        m = ngx.re.match(s, [[(\d)(\d)]], "o", nil, res)
+        if m then
+            ngx.say("1: m size: ", #m)
+            ngx.say("1: res size: ", #res)
+        else
+            ngx.say("1: not matched!")
+        end
+        m = ngx.re.match(s, [[(\d)]], "o", nil, res)
+        if m then
+            ngx.say("2: m size: ", #m)
+            ngx.say("2: res size: ", #res)
+        else
+            ngx.say("2: not matched!")
+        end
     }
 --- stream_response
 1: m size: 2
@@ -923,11 +923,11 @@ failed to match
         m = ngx.re.match("hello, 1234", [[(\d+)]])
 --- stream_server_config
     content_by_lua_block {
-            if m then
-                ngx.say(m[0])
-            else
-                ngx.say("not matched!")
-            end
+        if m then
+            ngx.say(m[0])
+        else
+            ngx.say("not matched!")
+        end
     }
 --- stream_response
 1234
