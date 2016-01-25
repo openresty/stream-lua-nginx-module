@@ -32,12 +32,12 @@ while (<>) {
         next;
     }
 
-    if (/^\s*(content|rewrite|access)_by_lua (['"])(.*?)\2;/) {
+    if (/^\s*(set|init|log|init_worker|content|rewrite|access)_by_lua (['"])(.*?)\2;/) {
         print "    ${1}_by_lua_block { $3 }\n";
         next;
     }
 
-    if (/^\s*(content|rewrite|access)_by_lua (['"])\s*$/) {
+    if (/^\s*(set|init|log|init_worker|content|rewrite|access)_by_lua (['"])\s*$/) {
         print "    ${1}_by_lua_block {\n";
         next;
     }
