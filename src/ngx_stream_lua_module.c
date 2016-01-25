@@ -103,6 +103,22 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       offsetof(ngx_stream_lua_main_conf_t, max_pending_timers),
       NULL },
 
+#if (NGX_PCRE)
+    { ngx_string("lua_regex_cache_max_entries"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, regex_cache_max_entries),
+      NULL },
+
+    { ngx_string("lua_regex_match_limit"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, regex_match_limit),
+      NULL },
+#endif
+
     { ngx_string("lua_resolver"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,
       ngx_stream_lua_resolver,
