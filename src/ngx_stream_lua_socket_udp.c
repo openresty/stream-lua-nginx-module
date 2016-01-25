@@ -626,7 +626,7 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_session_t *s,
     ngx_stream_lua_co_ctx_t         *coctx;
     ngx_udp_connection_t            *uc;
     ngx_connection_t                *c;
-    ngx_pool_cleanup_t              *cln;
+    ngx_stream_lua_cleanup_t        *cln;
     ngx_stream_lua_resolved_t       *ur;
     ngx_int_t                        rc;
 
@@ -659,7 +659,7 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_session_t *s,
     }
 
     if (u->cleanup == NULL) {
-        cln = ngx_pool_cleanup_add(s->connection->pool, 0);
+        cln = ngx_stream_lua_cleanup_add(s, 0);
         if (cln == NULL) {
             u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_ERROR;
             lua_pushnil(L);
@@ -1064,6 +1064,7 @@ ngx_stream_lua_socket_udp_finalize(ngx_stream_session_t *s,
 
     if (u->cleanup) {
         *u->cleanup = NULL;
+        ngx_stream_lua_cleanup_free(s, u->cleanup);
         u->cleanup = NULL;
     }
 
