@@ -51,7 +51,7 @@ __DATA__
 
 
 
-=== TEST 5: single capture
+=== TEST 3: single capture
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "([0-9]{2})[0-9]+")
@@ -70,7 +70,7 @@ __DATA__
 
 
 
-=== TEST 6: multiple captures
+=== TEST 4: multiple captures
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "([a-z]+).*?([0-9]{2})[0-9]+", "")
@@ -91,7 +91,7 @@ hello
 
 
 
-=== TEST 7: multiple captures (with o)
+=== TEST 5: multiple captures (with o)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "([a-z]+).*?([0-9]{2})[0-9]+", "o")
@@ -112,7 +112,7 @@ hello
 
 
 
-=== TEST 8: not matched
+=== TEST 6: not matched
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "foo")
@@ -129,7 +129,7 @@ not matched: nil
 
 
 
-=== TEST 9: case sensitive by default
+=== TEST 7: case sensitive by default
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "HELLO")
@@ -146,7 +146,7 @@ not matched: nil
 
 
 
-=== TEST 10: case insensitive
+=== TEST 8: case insensitive
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "HELLO", "i")
@@ -163,7 +163,7 @@ hello
 
 
 
-=== TEST 11: UTF-8 mode
+=== TEST 9: UTF-8 mode
 --- stream_server_config
     content_by_lua_block {
         rc, err = pcall(ngx.re.match, "hello章亦春", "HELLO.{2}", "iu")
@@ -185,7 +185,7 @@ hello
 
 
 
-=== TEST 12: multi-line mode (^ at line head)
+=== TEST 10: multi-line mode (^ at line head)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello\nworld", "^world", "m")
@@ -202,7 +202,7 @@ world
 
 
 
-=== TEST 13: multi-line mode (. does not match \n)
+=== TEST 11: multi-line mode (. does not match \n)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello\nworld", ".*", "m")
@@ -219,7 +219,7 @@ hello
 
 
 
-=== TEST 14: single-line mode (^ as normal)
+=== TEST 12: single-line mode (^ as normal)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello\nworld", "^world", "s")
@@ -236,7 +236,7 @@ not matched: nil
 
 
 
-=== TEST 15: single-line mode (dot all)
+=== TEST 13: single-line mode (dot all)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello\nworld", ".*", "s")
@@ -254,7 +254,7 @@ world
 
 
 
-=== TEST 16: extended mode (ignore whitespaces)
+=== TEST 14: extended mode (ignore whitespaces)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello\nworld", [[\w     \w]], "x")
@@ -271,7 +271,7 @@ he
 
 
 
-=== TEST 17: bad pattern
+=== TEST 15: bad pattern
 --- stream_server_config
     content_by_lua_block {
         local m, err = ngx.re.match("hello\nworld", "(abc")
@@ -294,7 +294,7 @@ error: pcre_compile() failed: missing ) in "(abc"
 
 
 
-=== TEST 18: bad option
+=== TEST 16: bad option
 --- stream_server_config
     content_by_lua_block {
         rc, m = pcall(ngx.re.match, "hello\nworld", ".*", "Hm")
@@ -313,7 +313,7 @@ error: .*?unknown flag "H" \(flags "Hm"\)
 
 
 
-=== TEST 19: extended mode (ignore whitespaces)
+=== TEST 17: extended mode (ignore whitespaces)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, world", "(world)|(hello)", "x")
@@ -334,7 +334,7 @@ hello
 
 
 
-=== TEST 20: optional trailing captures
+=== TEST 18: optional trailing captures
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "([0-9]+)(h?)")
@@ -356,7 +356,7 @@ hello
 
 
 
-=== TEST 21: anchored match (failed)
+=== TEST 19: anchored match (failed)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", "([0-9]+)", "a")
@@ -373,7 +373,7 @@ not matched!
 
 
 
-=== TEST 22: anchored match (succeeded)
+=== TEST 20: anchored match (succeeded)
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("1234, hello", "([0-9]+)", "a")
@@ -390,7 +390,7 @@ not matched!
 
 
 
-=== TEST 23: match with ctx but no pos
+=== TEST 21: match with ctx but no pos
 --- stream_server_config
     content_by_lua_block {
         local ctx = {}
@@ -411,7 +411,7 @@ not matched!
 
 
 
-=== TEST 24: match with ctx and a pos
+=== TEST 22: match with ctx and a pos
 --- stream_server_config
     content_by_lua_block {
         local ctx = { pos = 3 }
@@ -432,7 +432,7 @@ not matched!
 
 
 
-=== TEST 26: match (look-behind assertion)
+=== TEST 23: match (look-behind assertion)
 --- stream_server_config
     content_by_lua_block {
         local ctx = {}
@@ -450,7 +450,7 @@ baz
 
 
 
-=== TEST 28: escaping sequences
+=== TEST 24: escaping sequences
 --- stream_server_config
     content_by_lua_file html/a.lua;
 --- user_files
@@ -472,7 +472,7 @@ regex: (?:>[\w\s]*</?\w{2,}>)
 
 
 
-=== TEST 29: long brackets
+=== TEST 25: long brackets
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", [[\d+]])
@@ -489,7 +489,7 @@ regex: (?:>[\w\s]*</?\w{2,}>)
 
 
 
-=== TEST 30: bad pattern
+=== TEST 26: bad pattern
 --- stream_server_config
     content_by_lua_block {
         local m, err = ngx.re.match("hello, 1234", "([0-9]+")
@@ -513,7 +513,7 @@ error: pcre_compile() failed: missing ) in "([0-9]+"
 
 
 
-=== TEST 31: long brackets containing [...]
+=== TEST 27: long brackets containing [...]
 --- stream_server_config
     content_by_lua_block {
         m = ngx.re.match("hello, 1234", [[([0-9]+)]])
@@ -530,7 +530,7 @@ error: pcre_compile() failed: missing ) in "([0-9]+"
 
 
 
-=== TEST 32: bug report (github issue #72)
+=== TEST 28: bug report (github issue #72)
 --- stream_server_config
     content_by_lua_block {
         local m, err = ngx.re.match("hello", "hello", "j")
@@ -549,7 +549,7 @@ done: no
 
 
 
-=== TEST 34: non-empty subject, empty pattern
+=== TEST 29: non-empty subject, empty pattern
 --- stream_server_config
     content_by_lua_block {
         local ctx = {}
@@ -569,7 +569,7 @@ m:
 
 
 
-=== TEST 35: named subpatterns w/ extraction
+=== TEST 30: named subpatterns w/ extraction
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("hello, 1234", "(?<first>[a-z]+), [0-9]+")
@@ -592,7 +592,7 @@ nil
 
 
 
-=== TEST 36: duplicate named subpatterns w/ extraction
+=== TEST 31: duplicate named subpatterns w/ extraction
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("hello, 1234", "(?<first>[a-z]+), (?<first>[0-9]+)", "D")
@@ -615,7 +615,7 @@ hello-1234
 
 
 
-=== TEST 37: named captures are empty strings
+=== TEST 32: named captures are empty strings
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("1234", "(?<first>[a-z]*)([0-9]+)")
@@ -638,7 +638,7 @@ hello-1234
 
 
 
-=== TEST 38: named captures are nil
+=== TEST 33: named captures are nil
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("hello, world", "(world)|(hello)|(?<named>howdy)")
@@ -663,7 +663,7 @@ nil
 
 
 
-=== TEST 39: duplicate named subpatterns
+=== TEST 34: duplicate named subpatterns
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("hello, world",
@@ -688,7 +688,7 @@ hello-world
 
 
 
-=== TEST 40: Javascript compatible mode
+=== TEST 35: Javascript compatible mode
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("章", [[\u7AE0]], "uJ")
@@ -705,7 +705,7 @@ matched: 章
 
 
 
-=== TEST 41: empty duplicate captures
+=== TEST 36: empty duplicate captures
 --- stream_server_config
     content_by_lua_block {
         local target = 'test'
@@ -725,7 +725,7 @@ nil
 
 
 
-=== TEST 42: bad UTF-8
+=== TEST 37: bad UTF-8
 --- stream_server_config
     content_by_lua_block {
         local target = "你好"
@@ -753,7 +753,7 @@ nil
 
 
 
-=== TEST 43: UTF-8 mode without UTF-8 sequence checks
+=== TEST 38: UTF-8 mode without UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("你好", ".", "U")
@@ -783,7 +783,7 @@ exec opts: 2000
 
 
 
-=== TEST 44: UTF-8 mode with UTF-8 sequence checks
+=== TEST 39: UTF-8 mode with UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local m = ngx.re.match("你好", ".", "u")
@@ -813,7 +813,7 @@ exec opts: 0
 
 
 
-=== TEST 45: just hit match limit
+=== TEST 40: just hit match limit
 --- stream_config
     lua_regex_match_limit 5600;
 --- stream_server_config
@@ -849,7 +849,7 @@ error: pcre_exec() failed: -8
 
 
 
-=== TEST 46: just not hit match limit
+=== TEST 41: just not hit match limit
 --- stream_config
     lua_regex_match_limit 5700;
 --- stream_server_config
@@ -887,7 +887,7 @@ failed to match
 
 
 
-=== TEST 47: extra table argument
+=== TEST 42: extra table argument
 --- stream_server_config
     content_by_lua_block {
         local res = {}
@@ -917,7 +917,7 @@ failed to match
 
 
 
-=== TEST 48: init_by_lua
+=== TEST 43: init_by_lua
 --- stream_config
     init_by_lua_block {
         m = ngx.re.match("hello, 1234", [[(\d+)]])

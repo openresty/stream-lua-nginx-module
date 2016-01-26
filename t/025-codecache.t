@@ -729,32 +729,32 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
-            local s = ""
+        local s = ""
 
-            local function fail(...)
-                ngx.log(ngx.ERR, ...)
-            end
+        local function fail(...)
+            ngx.log(ngx.ERR, ...)
+        end
 
-            local function g()
-                s = s .. "[g]"
-                print("trace: ", s)
-            end
+        local function g()
+            s = s .. "[g]"
+            print("trace: ", s)
+        end
 
-            local function f()
-                s = s .. "[f]"
-            end
-            local ok, err = ngx.timer.at(0.01, f)
-            if not ok then
-                fail("failed to set timer: ", err)
-                return
-            end
-            local ok, err = ngx.timer.at(0.01, g)
-            if not ok then
-                fail("failed to set timer: ", err)
-                return
-            end
-            ngx.say("registered timer")
-            s = "[m]"
+        local function f()
+            s = s .. "[f]"
+        end
+        local ok, err = ngx.timer.at(0.01, f)
+        if not ok then
+            fail("failed to set timer: ", err)
+            return
+        end
+        local ok, err = ngx.timer.at(0.01, g)
+        if not ok then
+            fail("failed to set timer: ", err)
+            return
+        end
+        ngx.say("registered timer")
+        s = "[m]"
     }
 --- stream_response
 registered timer
@@ -911,35 +911,35 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
-            local s = ""
+        local s = ""
 
-            local function fail(...)
-                ngx.log(ngx.ERR, ...)
-            end
+        local function fail(...)
+            ngx.log(ngx.ERR, ...)
+        end
 
-            local f, g
+        local f, g
 
-            g = function ()
-                ngx.sleep(0.01)
-                collectgarbage()
-            end
+        g = function ()
+            ngx.sleep(0.01)
+            collectgarbage()
+        end
 
-            f = function ()
-                ngx.sleep(0.01)
-                collectgarbage()
-            end
-            local ok, err = ngx.timer.at(0, f)
-            if not ok then
-                ngx.say("failed to set timer f: ", err)
-                return
-            end
-            local ok, err = ngx.timer.at(0, g)
-            if not ok then
-                ngx.say("failed to set timer g: ", err)
-                return
-            end
-            ngx.say("registered timer")
-            s = "[m]"
+        f = function ()
+            ngx.sleep(0.01)
+            collectgarbage()
+        end
+        local ok, err = ngx.timer.at(0, f)
+        if not ok then
+            ngx.say("failed to set timer f: ", err)
+            return
+        end
+        local ok, err = ngx.timer.at(0, g)
+        if not ok then
+            ngx.say("failed to set timer g: ", err)
+            return
+        end
+        ngx.say("registered timer")
+        s = "[m]"
     }
 --- stream_response
 registered timer

@@ -60,9 +60,9 @@ bad argument #1 to 'say' (non-array table found)
 === TEST 4: bad data type in table
 --- stream_server_config
     content_by_lua_block {
-            local f = function () return end
-            local table = {1, 3, f}
-            ngx.say(table)
+        local f = function () return end
+        local table = {1, 3, f}
+        ngx.say(table)
     }
 --- stream_response
 --- error_log

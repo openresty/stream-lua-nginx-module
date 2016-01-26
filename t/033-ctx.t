@@ -78,13 +78,13 @@ nil
 === TEST 4: overriding ctx
 --- stream_server_config
     content_by_lua_block {
-            ngx.ctx = { foo = 32, bar = 54 };
-            ngx.say(ngx.ctx.foo)
-            ngx.say(ngx.ctx.bar)
+        ngx.ctx = { foo = 32, bar = 54 };
+        ngx.say(ngx.ctx.foo)
+        ngx.say(ngx.ctx.bar)
 
-            ngx.ctx = { baz = 56  };
-            ngx.say(ngx.ctx.foo)
-            ngx.say(ngx.ctx.baz)
+        ngx.ctx = { baz = 56  };
+        ngx.say(ngx.ctx.foo)
+        ngx.say(ngx.ctx.baz)
     }
 --- stream_response
 32
