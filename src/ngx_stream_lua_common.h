@@ -331,7 +331,8 @@ struct ngx_stream_lua_ctx_s {
                                                  * on_abort thread */
 
     ngx_chain_t               *free_bufs;
-    ngx_chain_t               *busy_bufs;
+    ngx_chain_t               *downstream_busy_bufs;
+    ngx_chain_t               *upstream_busy_bufs;
     ngx_chain_t               *free_recv_bufs;
 
     ngx_stream_lua_cleanup_t  *cleanup;

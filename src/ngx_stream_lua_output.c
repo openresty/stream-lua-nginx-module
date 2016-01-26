@@ -484,11 +484,10 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     wev = s->connection->write;
 
-    if (wait && (s->connection->buffered || wev->delayed)) {
+    if (wait && (ctx->downstream_busy_bufs || wev->delayed)) {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                       "stream lua flush requires waiting: buffered 0x%uxd, "
-                       "delayed:%d", (unsigned) s->connection->buffered,
-                       wev->delayed);
+                       "stream lua flush requires waiting: busy bufs %p, "
+                       "delayed %d", ctx->downstream_busy_bufs, wev->delayed);
 
         coctx->flushing = 1;
         ctx->flushing_coros++;
@@ -696,7 +695,7 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
     rc = ngx_chain_writer(&ctx->out_writer, in);
 
     ngx_chain_update_chains(s->connection->pool, &ctx->free_bufs,
-                            &ctx->busy_bufs, &in,
+                            &ctx->downstream_busy_bufs, &in,
                             (ngx_buf_tag_t) &ngx_stream_lua_module);
 
     ngx_stream_lua_assert(rc != NGX_AGAIN || s->connection->buffered);

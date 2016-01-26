@@ -68,6 +68,8 @@ static void ngx_stream_lua_empty_handler(ngx_event_t *wev);
 static void ngx_stream_lua_inject_ngx_api(lua_State *L,
     ngx_stream_lua_main_conf_t *lmcf, ngx_log_t *log);
 static int ngx_stream_lua_get_raw_phase_context(lua_State *L);
+static ngx_int_t ngx_stream_lua_process_flushing_coroutines(
+    ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx);
 
 
 enum {
@@ -156,6 +158,7 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
     ngx_int_t                    rc;
     ngx_event_t                 *wev;
     ngx_connection_t            *c;
+    ngx_stream_lua_srv_conf_t   *lscf;
 
     ngx_stream_lua_socket_tcp_upstream_t *u;
 
@@ -166,6 +169,32 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
                    "stream lua run write event handler: "
                    "timedout:%ud, ready:%ud, writing_raw_req_socket:%ud",
                    wev->timedout, wev->ready, ctx->writing_raw_req_socket);
+
+    if (wev->timedout && !ctx->writing_raw_req_socket) {
+        if (!wev->delayed) {
+            ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT,
+                          "stream lua client timed out");
+            c->timedout = 1;
+
+            goto flush_coros;
+        }
+
+        wev->timedout = 0;
+        wev->delayed = 0;
+
+        if (!wev->ready) {
+            lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
+
+            ngx_add_timer(wev, lscf->send_timeout);
+
+            if (ngx_handle_write_event(wev, lscf->send_lowat) != NGX_OK) {
+                if (ctx->entered_content_phase) {
+                    ngx_stream_lua_finalize_session(s, NGX_ERROR);
+                }
+                return NGX_ERROR;
+            }
+        }
+    }
 
     if (!wev->ready && !wev->timedout) {
         goto useless;
@@ -183,7 +212,7 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
         return NGX_DONE;
     }
 
-    if (ctx->busy_bufs) {
+    if (ctx->downstream_busy_bufs) {
         rc = ngx_stream_lua_flush_pending_output(s, ctx);
 
         dd("flush pending output returned %d, c->error: %d", (int) rc,
@@ -195,10 +224,20 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 
         /* when rc == NGX_ERROR, c->error must be set */
 
-        if (!ctx->busy_bufs && ctx->done) {
+        if (!ctx->downstream_busy_bufs && ctx->done) {
             ngx_stream_lua_finalize_session(s, NGX_DONE);
         }
     }
+
+flush_coros:
+
+    dd("ctx->flushing_coros: %d", (int) ctx->flushing_coros);
+
+    if (ctx->flushing_coros) {
+        return ngx_stream_lua_process_flushing_coroutines(s, ctx);
+    }
+
+    /* ctx->flushing_coros == 0 */
 
 useless:
 
@@ -206,7 +245,88 @@ useless:
                    "useless lua write event handler");
 
     if (ctx->entered_content_phase) {
+        if ((c->timedout || c->error) && ctx->done) {
+            ngx_stream_lua_finalize_session(s, NGX_DONE);
+        }
         return NGX_OK;
+    }
+
+    return NGX_DONE;
+}
+
+
+static ngx_int_t
+ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
+    ngx_stream_lua_ctx_t *ctx)
+{
+    ngx_int_t                    rc, n;
+    ngx_uint_t                   i;
+    ngx_list_part_t             *part;
+    ngx_stream_lua_co_ctx_t     *coctx;
+
+    dd("processing flushing coroutines");
+
+    coctx = &ctx->entry_co_ctx;
+    n = ctx->flushing_coros;
+
+    if (coctx->flushing) {
+        coctx->flushing = 0;
+
+        ctx->flushing_coros--;
+        n--;
+        ctx->cur_co_ctx = coctx;
+
+        rc = ngx_stream_lua_flush_resume_helper(s, ctx);
+        if (rc == NGX_ERROR || rc >= NGX_OK) {
+            return rc;
+        }
+
+        /* rc == NGX_DONE */
+    }
+
+    if (n) {
+
+        if (ctx->user_co_ctx == NULL) {
+            return NGX_ERROR;
+        }
+
+        part = &ctx->user_co_ctx->part;
+        coctx = part->elts;
+
+        for (i = 0; /* void */; i++) {
+
+            if (i >= part->nelts) {
+                if (part->next == NULL) {
+                    break;
+                }
+
+                part = part->next;
+                coctx = part->elts;
+                i = 0;
+            }
+
+            if (coctx[i].flushing) {
+                coctx[i].flushing = 0;
+                ctx->cur_co_ctx = &coctx[i];
+
+                rc = ngx_stream_lua_flush_resume_helper(s, ctx);
+                if (rc == NGX_ERROR || rc >= NGX_OK) {
+                    return rc;
+                }
+
+                /* rc == NGX_DONE */
+
+                ctx->flushing_coros--;
+                n--;
+                if (n == 0) {
+                    return NGX_DONE;
+                }
+            }
+        }
+    }
+
+    if (n) {
+        return NGX_ERROR;
     }
 
     return NGX_DONE;
@@ -512,9 +632,10 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT)
             && c->write->active)
         {
-            dd("done: ctx->busy_bufs: %p", ctx->busy_bufs);
+            dd("done: ctx->downstream_busy_bufs: %p",
+               ctx->downstream_busy_bufs);
 
-            if (ctx->busy_bufs == NULL) {
+            if (ctx->downstream_busy_bufs == NULL) {
                 if (ngx_del_event(c->write, NGX_WRITE_EVENT, 0) != NGX_OK) {
                     ngx_stream_lua_free_session(s);
                 }
@@ -530,7 +651,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
     ctx->done = 1;
 
-    if (ctx->busy_bufs) {
+    if (ctx->downstream_busy_bufs) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                        "stream lua having pending data to flush to "
                        "downstream");
@@ -857,7 +978,7 @@ static ngx_int_t
 ngx_stream_lua_flush_pending_output(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t *ctx)
 {
-    if (ctx->busy_bufs) {
+    if (ctx->downstream_busy_bufs) {
         return ngx_stream_lua_send_chain_link(s, ctx, NULL);
     }
 
@@ -1803,7 +1924,7 @@ ngx_stream_lua_free_fake_session(ngx_stream_session_t *s)
 
     log = s->connection->log;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, log, 0,
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, log, 0,
                    "stream lua free fake sesson");
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
@@ -3035,7 +3156,7 @@ ngx_stream_cleanup_add(ngx_stream_session_t *s, size_t size)
     cln->next = ctx->cleanup;
     ctx->cleanup = cln;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
                    "stream lua cleanup add: %p", cln);
 
     return cln;
@@ -3048,7 +3169,7 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
     ngx_stream_lua_ctx_t        *ctx;
     ngx_stream_lua_cleanup_t    *cln;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, s->connection->log, 0,
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua free sesson");
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
