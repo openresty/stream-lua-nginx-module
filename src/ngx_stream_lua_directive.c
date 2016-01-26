@@ -17,6 +17,7 @@
 #include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_contentby.h"
 #include "ngx_stream_lua_initby.h"
+#include "ngx_stream_lua_shdict.h"
 
 
 static u_char *ngx_stream_lua_gen_chunk_name(ngx_conf_t *cf, const char *tag,
@@ -809,6 +810,94 @@ ngx_stream_lua_package_path(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     lmcf->lua_path.len = value[1].len;
     lmcf->lua_path.data = value[1].data;
+
+    return NGX_CONF_OK;
+}
+
+
+char *
+ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_stream_lua_main_conf_t   *lmcf = conf;
+
+    ngx_str_t                    *value, name;
+    ngx_shm_zone_t               *zone;
+    ngx_shm_zone_t              **zp;
+    ngx_stream_lua_shdict_ctx_t  *ctx;
+    ssize_t                       size;
+
+    if (lmcf->shm_zones == NULL) {
+        lmcf->shm_zones = ngx_palloc(cf->pool, sizeof(ngx_array_t));
+        if (lmcf->shm_zones == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        if (ngx_array_init(lmcf->shm_zones, cf->pool, 2,
+                           sizeof(ngx_shm_zone_t *))
+            != NGX_OK)
+        {
+            return NGX_CONF_ERROR;
+        }
+    }
+
+    value = cf->args->elts;
+
+    ctx = NULL;
+
+    if (value[1].len == 0) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "stream lua: invalid lua shared dict name \"%V\"",
+                           &value[1]);
+        return NGX_CONF_ERROR;
+    }
+
+    name = value[1];
+
+    size = ngx_parse_size(&value[2]);
+
+    if (size <= 8191) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "stream lua: invalid lua shared dict size "
+                           "\"%V\"", &value[2]);
+        return NGX_CONF_ERROR;
+    }
+
+    ctx = ngx_pcalloc(cf->pool, sizeof(ngx_stream_lua_shdict_ctx_t));
+    if (ctx == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    ctx->name = name;
+    ctx->main_conf = lmcf;
+    ctx->log = &cf->cycle->new_log;
+    ctx->cycle = cf->cycle;
+
+    zone = ngx_shared_memory_add(cf, &name, (size_t) size,
+                                 &ngx_stream_lua_module);
+    if (zone == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (zone->data) {
+        ctx = zone->data;
+
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "stream lua_shared_dict \"%V\" is already "
+                           "defined as \"%V\"", &name, &ctx->name);
+        return NGX_CONF_ERROR;
+    }
+
+    zone->init = ngx_stream_lua_shdict_init_zone;
+    zone->data = ctx;
+
+    zp = ngx_array_push(lmcf->shm_zones);
+    if (zp == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    *zp = zone;
+
+    lmcf->requires_shm = 1;
 
     return NGX_CONF_OK;
 }

@@ -294,7 +294,7 @@ nil
 
 
 
-=== TEST 20: matched and with variables w/o using named patterns in sub
+=== TEST 19: matched and with variables w/o using named patterns in sub
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("a b c d", "(?<first>b) (?<second>c)", "[$0] [$1] [$2] [$3] [$134]")
@@ -307,7 +307,7 @@ a [b c] [b] [c] [] [] d
 
 
 
-=== TEST 21: matched and with variables using named patterns in func
+=== TEST 20: matched and with variables using named patterns in func
 --- stream_server_config
     error_log /tmp/nginx_error debug;
     content_by_lua_block {
@@ -329,7 +329,7 @@ a [b c] [b] [c] d
 
 
 
-=== TEST 22: matched and with variables w/ using named patterns in sub
+=== TEST 21: matched and with variables w/ using named patterns in sub
 This is still a TODO
 --- SKIP
 --- stream_server_config
@@ -346,7 +346,7 @@ a [b c] [b] [c] [] [] d
 
 
 
-=== TEST 23: $0 without parens
+=== TEST 22: $0 without parens
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("a b c d", [[\w]], "[$0]")
@@ -361,7 +361,7 @@ a [b c] [b] [c] [] [] d
 
 
 
-=== TEST 24: bad pattern
+=== TEST 23: bad pattern
 --- stream_server_config
     content_by_lua_block {
         local s, n, err = ngx.re.sub("hello\\nworld", "(abc", "")
@@ -379,7 +379,7 @@ error: pcre_compile() failed: missing ) in "(abc"
 
 
 
-=== TEST 25: bad UTF-8
+=== TEST 24: bad UTF-8
 --- stream_server_config
     content_by_lua_block {
         local target = "你好"
@@ -402,7 +402,7 @@ error: pcre_exec\(\) failed: -10
 
 
 
-=== TEST 26: UTF-8 mode without UTF-8 sequence checks
+=== TEST 25: UTF-8 mode without UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local s, n, err = ngx.re.sub("你好", ".", "a", "U")
@@ -430,7 +430,7 @@ s: a好
 
 
 
-=== TEST 27: UTF-8 mode with UTF-8 sequence checks
+=== TEST 26: UTF-8 mode with UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local s, n, err = ngx.re.sub("你好", ".", "a", "u")
@@ -458,7 +458,7 @@ s: a好
 
 
 
-=== TEST 28: just hit match limit
+=== TEST 27: just hit match limit
 --- stream_config
     lua_regex_match_limit 5600;
 --- stream_server_config
@@ -491,7 +491,7 @@ error: pcre_exec() failed: -8
 
 
 
-=== TEST 29: just not hit match limit
+=== TEST 28: just not hit match limit
 --- stream_config
     lua_regex_match_limit 5700;
 --- stream_server_config
@@ -524,7 +524,7 @@ sub: 0
 
 
 
-=== TEST 30: bug: sub incorrectly swallowed a character is the first character
+=== TEST 29: bug: sub incorrectly swallowed a character is the first character
 Original bad result: estCase
 --- stream_server_config
     content_by_lua_block {
@@ -538,7 +538,7 @@ TestCase
 
 
 
-=== TEST 31: bug: sub incorrectly swallowed a character is not the first character
+=== TEST 30: bug: sub incorrectly swallowed a character is not the first character
 Original bad result: .b.d
 --- stream_server_config
     content_by_lua_block {
@@ -552,7 +552,7 @@ ab.cd
 
 
 
-=== TEST 32: ngx.re.gsub: recursive calling (github #445)
+=== TEST 31: ngx.re.gsub: recursive calling (github #445)
 --- stream_server_config
 
     content_by_lua_block {

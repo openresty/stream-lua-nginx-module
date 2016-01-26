@@ -115,7 +115,7 @@ hello, world
 
 
 
-=== TEST 9: look-behind assertion
+=== TEST 8: look-behind assertion
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("{foobarbaz}", "(?<=foo)bar|(?<=bar)baz", "h$0")
@@ -128,7 +128,7 @@ hello, world
 
 
 
-=== TEST 10: gsub with a patch matching an empty substring (string template)
+=== TEST 9: gsub with a patch matching an empty substring (string template)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("hello", "a|", "b")
@@ -143,7 +143,7 @@ n: 6
 
 
 
-=== TEST 11: gsub with a patch matching an empty substring (string template, empty subj)
+=== TEST 10: gsub with a patch matching an empty substring (string template, empty subj)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("", "a|", "b")
@@ -158,7 +158,7 @@ n: 1
 
 
 
-=== TEST 12: gsub with a patch matching an empty substring (func)
+=== TEST 11: gsub with a patch matching an empty substring (func)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("hello", "a|", function () return "b" end)
@@ -173,7 +173,7 @@ n: 6
 
 
 
-=== TEST 13: gsub with a patch matching an empty substring (func, empty subj)
+=== TEST 12: gsub with a patch matching an empty substring (func, empty subj)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("", "a|", function () return "b" end)
@@ -188,7 +188,7 @@ n: 1
 
 
 
-=== TEST 14: big subject string exceeding the luabuf chunk size (with trailing unmatched data, func repl)
+=== TEST 13: big subject string exceeding the luabuf chunk size (with trailing unmatched data, func repl)
 --- stream_server_config
     content_by_lua_block {
         local subj = string.rep("a", 8000)
@@ -215,7 +215,7 @@ n: 1
 
 
 
-=== TEST 15: big subject string exceeding the luabuf chunk size (without trailing unmatched data, func repl)
+=== TEST 14: big subject string exceeding the luabuf chunk size (without trailing unmatched data, func repl)
 --- stream_server_config
     content_by_lua_block {
         local subj = string.rep("a", 8000)
@@ -239,7 +239,7 @@ n: 1
 
 
 
-=== TEST 16: big subject string exceeding the luabuf chunk size (with trailing unmatched data, str repl)
+=== TEST 15: big subject string exceeding the luabuf chunk size (with trailing unmatched data, str repl)
 --- stream_server_config
     content_by_lua_block {
         local subj = string.rep("a", 8000)
@@ -261,7 +261,7 @@ n: 1
 
 
 
-=== TEST 17: big subject string exceeding the luabuf chunk size (without trailing unmatched data, str repl)
+=== TEST 16: big subject string exceeding the luabuf chunk size (without trailing unmatched data, str repl)
 --- stream_server_config
     content_by_lua_block {
         local subj = string.rep("a", 8000)
@@ -280,7 +280,7 @@ n: 1
 
 
 
-=== TEST 18: named pattern repl w/ callback
+=== TEST 17: named pattern repl w/ callback
 --- stream_server_config
     content_by_lua_block {
         local repl = function (m)
@@ -297,7 +297,7 @@ n: 1
 
 
 
-=== TEST 19: $0 without parens
+=== TEST 18: $0 without parens
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("a b c d", [[\w]], "[$0]")
@@ -312,7 +312,7 @@ n: 1
 
 
 
-=== TEST 20: bad UTF-8
+=== TEST 19: bad UTF-8
 --- stream_server_config
     content_by_lua_block {
         local target = "你好"
@@ -335,7 +335,7 @@ error: pcre_exec\(\) failed: -10
 
 
 
-=== TEST 21: UTF-8 mode without UTF-8 sequence checks
+=== TEST 20: UTF-8 mode without UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local s, n, err = ngx.re.gsub("你好", ".", "a", "U")
@@ -365,7 +365,7 @@ s: aa
 
 
 
-=== TEST 22: UTF-8 mode with UTF-8 sequence checks
+=== TEST 21: UTF-8 mode with UTF-8 sequence checks
 --- stream_server_config
     content_by_lua_block {
         local s, n, err = ngx.re.gsub("你好", ".", "a", "u")
@@ -395,7 +395,7 @@ s: aa
 
 
 
-=== TEST 23: just hit match limit
+=== TEST 22: just hit match limit
 --- stream_config
     lua_regex_match_limit 5600;
 --- stream_server_config
@@ -428,7 +428,7 @@ error: pcre_exec() failed: -8
 
 
 
-=== TEST 24: just not hit match limit
+=== TEST 23: just not hit match limit
 --- stream_config
     lua_regex_match_limit 5700;
 --- stream_server_config
@@ -462,7 +462,7 @@ gsub: 0
 
 
 
-=== TEST 25: bug: gsub incorrectly swallowed a character is the first character
+=== TEST 24: bug: gsub incorrectly swallowed a character is the first character
 Original bad result: estCase
 --- stream_server_config
     content_by_lua_block {
@@ -476,7 +476,7 @@ TestCase
 
 
 
-=== TEST 26: bug: gsub incorrectly swallowed a character is not the first character
+=== TEST 25: bug: gsub incorrectly swallowed a character is not the first character
 Original bad result: .b.d
 --- stream_server_config
     content_by_lua_block {

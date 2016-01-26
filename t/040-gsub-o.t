@@ -115,7 +115,7 @@ hello, world
 
 
 
-=== TEST 9: look-behind assertion
+=== TEST 8: look-behind assertion
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.gsub("{foobarbaz}", "(?<=foo)bar|(?<=bar)baz", "h$0", "o")
@@ -128,7 +128,7 @@ hello, world
 
 
 
-=== TEST 10: named pattern repl w/ callback
+=== TEST 9: named pattern repl w/ callback
 --- stream_server_config
     content_by_lua_block {
         local repl = function (m)

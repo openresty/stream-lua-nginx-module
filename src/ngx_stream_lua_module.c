@@ -103,6 +103,13 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       offsetof(ngx_stream_lua_main_conf_t, max_pending_timers),
       NULL },
 
+    { ngx_string("lua_shared_dict"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE2,
+      ngx_stream_lua_shared_dict,
+      0,
+      0,
+      NULL },
+
 #if (NGX_PCRE)
     { ngx_string("lua_regex_cache_max_entries"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,

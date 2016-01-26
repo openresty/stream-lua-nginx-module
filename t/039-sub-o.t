@@ -298,7 +298,7 @@ nil
 
 
 
-=== TEST 20: with regex cache (with text replace)
+=== TEST 19: with regex cache (with text replace)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("hello, 1234", "([A-Z]+)", "baz", "io")
@@ -330,7 +330,7 @@ hi, 1234
 
 
 
-=== TEST 21: with regex cache (with func replace)
+=== TEST 20: with regex cache (with func replace)
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("hello, 1234", "([A-Z]+)", "baz", "io")
@@ -361,7 +361,7 @@ hi, 1234
 
 
 
-=== TEST 22: exceeding regex cache max entries
+=== TEST 21: exceeding regex cache max entries
 --- stream_config
     lua_regex_cache_max_entries 2;
 --- stream_server_config
@@ -388,7 +388,7 @@ hiya, hello
 
 
 
-=== TEST 23: disable regex cache completely
+=== TEST 22: disable regex cache completely
 --- stream_config
     lua_regex_cache_max_entries 0;
 --- stream_server_config
@@ -415,7 +415,7 @@ hiya, hello
 
 
 
-=== TEST 24: empty replace
+=== TEST 23: empty replace
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("hello, 1234", "([0-9]+)", "", "o")
@@ -434,7 +434,7 @@ hi,
 
 
 
-=== TEST 25: matched and with variables w/o using named patterns in sub
+=== TEST 24: matched and with variables w/o using named patterns in sub
 --- stream_server_config
     content_by_lua_block {
         local s, n = ngx.re.sub("a b c d", "(?<first>b) (?<second>c)", "[$0] [$1] [$2] [$3] [$134]", "o")
@@ -447,7 +447,7 @@ a [b c] [b] [c] [] [] d
 
 
 
-=== TEST 26: matched and with variables using named patterns in func
+=== TEST 25: matched and with variables using named patterns in func
 --- stream_server_config
     error_log /tmp/nginx_error debug;
     content_by_lua_block {

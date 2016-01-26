@@ -29,6 +29,8 @@ char *ngx_stream_lua_package_cpath(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 char *ngx_stream_lua_package_path(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
+char *ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
 
 #endif /* _NGX_STREAM_LUA_DIRECTIVE_H_INCLUDED_ */
