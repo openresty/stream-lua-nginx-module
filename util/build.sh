@@ -26,7 +26,11 @@ ngx-build $force $version \
             --without-http_userid_module \
             --with-stream_ssl_module \
             --with-stream \
+            --with-ipv6 \
             --add-module=$root/../lua-nginx-module \
+            --add-module=$root/../echo-nginx-module \
+            --add-module=$root/../memc-nginx-module \
+            --add-module=$root/../headers-more-nginx-module \
             --add-module=$root/../stream-echo-nginx-module \
             --add-module=$root $opts \
             --with-poll_module \
