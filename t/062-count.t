@@ -36,7 +36,7 @@ ngx: 53
 
 
 
-=== TEST 5: entries under ngx.req (content by lua)
+=== TEST 2: entries under ngx.req (content by lua)
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -52,7 +52,7 @@ n = 1
 
 
 
-=== TEST 9: entries under ngx.socket
+=== TEST 3: entries under ngx.socket
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -68,7 +68,7 @@ n = 3
 
 
 
-=== TEST 10: entries under ngx._tcp_meta
+=== TEST 4: entries under ngx._tcp_meta
 --- SKIP
 --- stream_server_config
     content_by_lua_block {
@@ -85,7 +85,7 @@ n = 10
 
 
 
-=== TEST 11: entries under the metatable of req sockets
+=== TEST 5: entries under the metatable of req sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -107,7 +107,7 @@ n = 5
 
 
 
-=== TEST 12: shdict metatable
+=== TEST 6: shdict metatable
 --- stream_config
     lua_shared_dict dogs 1m;
 --- stream_server_config
@@ -127,7 +127,7 @@ n = 13
 
 
 
-=== TEST 14: entries under ngx.timer
+=== TEST 7: entries under ngx.timer
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -143,7 +143,7 @@ n = 3
 
 
 
-=== TEST 15: entries under ngx.config
+=== TEST 8: entries under ngx.config
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -159,7 +159,7 @@ n = 5
 
 
 
-=== TEST 16: entries under ngx.re
+=== TEST 9: entries under ngx.re
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -175,7 +175,7 @@ n = 5
 
 
 
-=== TEST 17: entries under coroutine. (content by lua)
+=== TEST 10: entries under coroutine. (content by lua)
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -199,7 +199,7 @@ coroutine: 14
 
 
 
-=== TEST 18: entries under ngx.thread. (content by lua)
+=== TEST 11: entries under ngx.thread. (content by lua)
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -222,7 +222,7 @@ thread: 3
 
 
 
-=== TEST 19: entries under ngx.worker
+=== TEST 12: entries under ngx.worker
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -238,7 +238,7 @@ worker: 4
 
 
 
-=== TEST 20: entries under the metatable of udp sockets
+=== TEST 13: entries under the metatable of udp sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -255,7 +255,7 @@ n = 6
 
 
 
-=== TEST 21: entries under the metatable of req raw sockets
+=== TEST 14: entries under the metatable of req raw sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
