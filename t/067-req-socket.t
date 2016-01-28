@@ -48,6 +48,8 @@ received: d! my
 --- no_error_log
 [error]
 
+
+
 === TEST 2: multipart rfc sample (just partial streaming)
 --- stream_server_config
     content_by_lua_block {
@@ -145,6 +147,7 @@ It DOES end with a linebreak.
 found the end of the stream
 --- no_error_log
 [error]
+
 
 
 === TEST 3: multipart rfc sample (completely streaming)
@@ -436,7 +439,7 @@ done
 
 
 
-=== TEST 8: pipelined requests, big buffer, small steps
+=== TEST 7: pipelined requests, big buffer, small steps
 --- stream_server_config
         lua_socket_buffer_size 5;
     content_by_lua_block {
@@ -483,7 +486,7 @@ received: be
 
 
 
-=== TEST 13: failing reread after reading timeout happens
+=== TEST 8: failing reread after reading timeout happens
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket()
@@ -518,7 +521,7 @@ stream lua tcp socket read timed out
 
 
 
-=== TEST 14: successful reread after reading timeout happens (receive -> receive)
+=== TEST 9: successful reread after reading timeout happens (receive -> receive)
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -607,7 +610,7 @@ lua tcp socket read timed out
 
 
 
-=== TEST 15: successful reread after reading timeout happens (receive -> receiveuntil)
+=== TEST 10: successful reread after reading timeout happens (receive -> receiveuntil)
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -696,7 +699,7 @@ lua tcp socket read timed out
 
 
 
-=== TEST 16: successful reread after reading timeout happens (receiveuntil -> receive)
+=== TEST 11: successful reread after reading timeout happens (receiveuntil -> receive)
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -785,7 +788,7 @@ lua tcp socket read timed out
 
 
 
-=== TEST 17: req socket GC'd
+=== TEST 12: req socket GC'd
 --- stream_server_config
     content_by_lua_block {
         do
