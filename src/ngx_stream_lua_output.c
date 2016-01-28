@@ -63,11 +63,13 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
+#if 0
     if (ctx->acquired_raw_req_socket) {
         lua_pushnil(L);
         lua_pushliteral(L, "raw session socket acquired");
         return 2;
     }
+#endif
 
     if (ctx->eof) {
         lua_pushnil(L);
@@ -465,11 +467,13 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
+#if 0
     if (ctx->acquired_raw_req_socket) {
         lua_pushnil(L);
         lua_pushliteral(L, "raw session socket acquired");
         return 2;
     }
+#endif
 
     coctx = ctx->cur_co_ctx;
     if (coctx == NULL) {
@@ -551,11 +555,13 @@ ngx_stream_lua_ngx_eof(lua_State *L)
         return luaL_error(L, "no ctx found");
     }
 
+#if 0
     if (ctx->acquired_raw_req_socket) {
         lua_pushnil(L);
         lua_pushliteral(L, "raw session socket acquired");
         return 2;
     }
+#endif
 
     if (ctx->eof) {
         lua_pushnil(L);
@@ -685,7 +691,7 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
 {
     ngx_int_t                     rc;
 
-#if 1
+#if 0
     if (ctx->acquired_raw_req_socket || (in && ctx->eof)) {
         dd("ctx->eof already set or raw req socket already acquired");
         return NGX_OK;

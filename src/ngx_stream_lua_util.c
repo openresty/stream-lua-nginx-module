@@ -70,6 +70,7 @@ static void ngx_stream_lua_inject_ngx_api(lua_State *L,
 static int ngx_stream_lua_get_raw_phase_context(lua_State *L);
 static ngx_int_t ngx_stream_lua_process_flushing_coroutines(
     ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx);
+static void ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L);
 
 
 enum {
@@ -2626,7 +2627,7 @@ static void
 ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
     ngx_log_t *log)
 {
-    lua_createtable(L, 0 /* narr */, 116 /* nrec */);    /* ngx.* */
+    lua_createtable(L, 0 /* narr */, 53 /* nrec */);    /* ngx.* */
 
     lua_pushcfunction(L, ngx_stream_lua_get_raw_phase_context);
     lua_setfield(L, -2, "_phase_ctx");
@@ -2645,6 +2646,7 @@ ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
     ngx_stream_lua_inject_regex_api(L);
 #endif
 
+    ngx_stream_lua_inject_req_api(log, L);
     ngx_stream_lua_inject_shdict_api(lmcf, L);
     ngx_stream_lua_inject_socket_tcp_api(log, L);
     ngx_stream_lua_inject_socket_udp_api(log, L);
@@ -3190,4 +3192,17 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
     }
 
     ngx_stream_close_connection(s->connection);
+}
+
+
+static void
+ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
+{
+    /* ngx.req table */
+
+    lua_createtable(L, 0 /* narr */, 1 /* nrec */);    /* .req */
+
+    ngx_stream_lua_inject_req_socket_api(L);
+
+    lua_setfield(L, -2, "req");
 }

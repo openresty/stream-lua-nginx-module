@@ -189,7 +189,9 @@ enum {
     }
 
 
+#if 0
 static char ngx_stream_lua_req_socket_metatable_key;
+#endif
 static char ngx_stream_lua_raw_req_socket_metatable_key;
 static char ngx_stream_lua_tcp_socket_metatable_key;
 static char ngx_stream_lua_upstream_udata_metatable_key;
@@ -230,6 +232,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 
     lua_setfield(L, -2, "socket");
 
+#if 0
     /* {{{req socket object metatable */
     lua_pushlightuserdata(L, &ngx_stream_lua_req_socket_metatable_key);
     lua_createtable(L, 0 /* narr */, 4 /* nrec */);
@@ -248,6 +251,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 
     lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
+#endif
 
     /* {{{raw req socket object metatable */
     lua_pushlightuserdata(L, &ngx_stream_lua_raw_req_socket_metatable_key);
@@ -3952,7 +3956,7 @@ ngx_stream_lua_req_socket(lua_State *L)
     lua_pushliteral(L, "nginx version too old");
     return 2;
 #else
-    if (c->buffered) {
+    if (ctx->downstream_busy_bufs) {
         lua_pushnil(L);
         lua_pushliteral(L, "pending data to write");
         return 2;
