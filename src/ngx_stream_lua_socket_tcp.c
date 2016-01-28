@@ -3737,7 +3737,7 @@ ngx_stream_lua_socket_read_until(void *data, ssize_t bytes)
     while (i < bytes) {
         c = b->pos[i];
 
-        dd("%d: read char %d, state: %d", i, c, state);
+        dd("%d: read char %d (%c), state: %d", i, c, c, state);
 
         if (c == pat[state]) {
             i++;
