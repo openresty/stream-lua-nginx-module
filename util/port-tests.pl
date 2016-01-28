@@ -5,7 +5,7 @@ use warnings;
 
 my $ignore_value;
 while (<>) {
-    if (/use Test::Nginx::Socket::Lua([^:]*)/) {
+    if (/use Test::Nginx::Socket::Lua([^:].*)/) {
         print "use Test::Nginx::Socket::Lua::Stream$1";
         next;
     }
