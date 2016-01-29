@@ -15,7 +15,7 @@ while (<>) {
         print;
         next;
     }
-    if (/^\s*set \$port (\$TEST_NGINX_\w+);/) {
+    if (/^\s*set \$port (\$TEST_NGINX_\w+|\d+);/) {
         $port_var = $1;
         next;
     }
