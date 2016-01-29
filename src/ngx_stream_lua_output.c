@@ -722,7 +722,7 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
                             &ctx->downstream_busy_bufs, &in,
                             (ngx_buf_tag_t) &ngx_stream_lua_module);
 
-    ngx_stream_lua_assert(rc != NGX_AGAIN || s->connection->buffered);
+    ngx_stream_lua_assert(rc != NGX_AGAIN || ctx->downstream_busy_bufs);
 
     return rc;
 }
