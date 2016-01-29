@@ -144,7 +144,7 @@ closed
 
 
 
-=== TEST 3: no resolver defined
+=== TEST 3: no lua_resolver defined
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -167,7 +167,7 @@ closed
         ngx.say("request sent: ", bytes)
     }
 --- stream_response
-failed to connect: no resolver defined to resolve "agentzh.org"
+failed to connect: no lua_resolver defined to resolve "agentzh.org"
 connected: nil
 failed to send request: closed
 --- error_log

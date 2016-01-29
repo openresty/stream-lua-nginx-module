@@ -16,6 +16,7 @@
 #include "ngx_stream_lua_contentby.h"
 #include "ngx_stream_lua_semaphore.h"
 #include "ngx_stream_lua_initby.h"
+#include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_util.h"
 
 
@@ -74,6 +75,20 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       NGX_STREAM_MAIN_CONF_OFFSET,
       0,
       (void *) ngx_stream_lua_init_by_file },
+
+    { ngx_string("init_worker_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_init_worker_by_lua_block,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_init_worker_by_inline },
+
+    { ngx_string("init_worker_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_init_worker_by_lua,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_init_worker_by_file },
 
     { ngx_string("content_by_lua_block"),
       NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -299,7 +314,7 @@ ngx_module_t  ngx_stream_lua_module = {
     NGX_STREAM_MODULE,                     /* module type */
     NULL,                                  /* init master */
     NULL,                                  /* init module */
-    NULL,                                  /* init process */
+    ngx_stream_lua_init_worker,            /* init process */
     NULL,                                  /* init thread */
     NULL,                                  /* exit thread */
     NULL,                                  /* exit process */

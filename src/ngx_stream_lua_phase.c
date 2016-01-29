@@ -39,6 +39,8 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         return luaL_error(L, "no sessiong ctx found");
     }
 
+    dd("context: %d", (int) ctx->context);
+
     switch (ctx->context) {
     case NGX_STREAM_LUA_CONTEXT_INIT_WORKER:
         lua_pushliteral(L, "init_worker");

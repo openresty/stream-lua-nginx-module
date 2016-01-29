@@ -42,6 +42,7 @@ src/worker.[ch]
 src/misc.[ch]
 src/initby.[ch]
 src/shdict.[ch]
+src/initworkerby.[ch]
 echo
 reindex
 go

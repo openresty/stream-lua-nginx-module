@@ -579,7 +579,7 @@ lua udp socket receive buffer size: 8192
 
 
 
-=== TEST 14: datagram unix domain socket
+=== TEST 12: datagram unix domain socket
 --- stream_server_config
 
     content_by_lua_block {
@@ -638,7 +638,7 @@ probe syscall.socket.return, syscall.connect.return {
 
 
 
-=== TEST 15: bad request tries to setpeer
+=== TEST 13: bad request tries to setpeer
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -684,7 +684,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad session/
 
 
 
-=== TEST 16: bad request tries to send
+=== TEST 14: bad request tries to send
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -730,7 +730,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad session/
 
 
 
-=== TEST 17: bad request tries to receive
+=== TEST 15: bad request tries to receive
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -779,7 +779,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad session/
 
 
 
-=== TEST 18: bad request tries to close
+=== TEST 16: bad request tries to close
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -825,7 +825,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad session/
 
 
 
-=== TEST 19: bad request tries to receive
+=== TEST 17: bad request tries to receive
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
