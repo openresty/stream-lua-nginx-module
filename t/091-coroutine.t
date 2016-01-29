@@ -644,7 +644,7 @@ exit
 
 
 
-=== TEST 17: resume coroutines from within another one that is not its parent
+=== TEST 15: resume coroutines from within another one that is not its parent
 --- stream_server_config
     content_by_lua_block {
         local print = ngx.say
@@ -681,7 +681,7 @@ f 2
 
 
 
-=== TEST 18: infinite recursive calls of coroutine.resume
+=== TEST 16: infinite recursive calls of coroutine.resume
 --- stream_server_config
     content_by_lua_block {
         local print = ngx.say
@@ -720,7 +720,7 @@ f 2
 
 
 
-=== TEST 19: resume running (entry) coroutines
+=== TEST 17: resume running (entry) coroutines
 --- stream_server_config
     content_by_lua_block {
         ngx.say(coroutine.status(coroutine.running()))
@@ -736,7 +736,7 @@ falsecannot resume running coroutine
 
 
 
-=== TEST 20: resume running (user) coroutines
+=== TEST 18: resume running (user) coroutines
 --- stream_server_config
     content_by_lua_block {
         local co
@@ -760,7 +760,7 @@ chunk: true
 
 
 
-=== TEST 21: user coroutine end with errors, and the parent coroutine gets the right status
+=== TEST 19: user coroutine end with errors, and the parent coroutine gets the right status
 --- stream_server_config
     content_by_lua_block {
         local co
@@ -784,7 +784,7 @@ qr/stream lua coroutine: runtime error: content_by_lua_block\(nginx\.conf:\d+\):
 
 
 
-=== TEST 22: entry coroutine is yielded by hand and still gets the right status
+=== TEST 20: entry coroutine is yielded by hand and still gets the right status
 --- stream_server_config
     content_by_lua_block {
         local co = coroutine.running()
@@ -802,7 +802,7 @@ status: running
 
 
 
-=== TEST 23: github issue #208: coroutine as iterator doesn't work
+=== TEST 21: github issue #208: coroutine as iterator doesn't work
 --- stream_server_config
     content_by_lua_block {
         local say = ngx.say
@@ -857,7 +857,7 @@ test10
 
 
 
-=== TEST 24: init_by_lua + our own coroutines in content_by_lua
+=== TEST 22: init_by_lua + our own coroutines in content_by_lua
 --- stream_config
     init_by_lua_block { return }
 --- stream_server_config
@@ -908,7 +908,7 @@ successfully connected to: agentzh.org
 
 
 
-=== TEST 25: init_by_lua_file + our own coroutines in content_by_lua
+=== TEST 23: init_by_lua_file + our own coroutines in content_by_lua
 --- stream_config
     init_by_lua_file html/init.lua;
 
@@ -964,7 +964,7 @@ successfully connected to: agentzh.org
 
 
 
-=== TEST 26: mixing coroutine.* API between init_by_lua and other contexts (github #304) - init_by_lua
+=== TEST 24: mixing coroutine.* API between init_by_lua and other contexts (github #304) - init_by_lua
 --- stream_config
     init_by_lua_block {
         co_wrap = coroutine.wrap
@@ -994,7 +994,7 @@ data
 
 
 
-=== TEST 27: mixing coroutine.* API between init_by_lua and other contexts (github #304) - init_by_lua_file
+=== TEST 25: mixing coroutine.* API between init_by_lua and other contexts (github #304) - init_by_lua_file
 --- stream_config
     init_by_lua_file html/init.lua;
 
@@ -1026,7 +1026,7 @@ data
 
 
 
-=== TEST 28: coroutine context collicisions
+=== TEST 26: coroutine context collicisions
 --- stream_server_config
     content_by_lua_block {
         local cc, cr, cy = coroutine.create, coroutine.resume, coroutine.yield
@@ -1056,7 +1056,7 @@ ok
 
 
 
-=== TEST 29: require "coroutine"
+=== TEST 27: require "coroutine"
 --- stream_server_config
     content_by_lua_block {
         local coroutine = require "coroutine"
