@@ -448,7 +448,7 @@ stream client prematurely closed connection
 
 
 
-=== TEST 17: sleep (default off)
+=== TEST 15: sleep (default off)
 --- stream_server_config
     content_by_lua_block {
         ngx.sleep(1)
@@ -471,7 +471,7 @@ receive stream response error: timeout
 
 
 
-=== TEST 18: ngx.say
+=== TEST 16: ngx.say
 --- stream_server_config
     #postpone_output 1;
     content_by_lua_block {
@@ -497,7 +497,7 @@ say failed: broken pipe
 
 
 
-=== TEST 19: ngx.print
+=== TEST 17: ngx.print
 --- stream_server_config
     #postpone_output 1;
     content_by_lua_block {
@@ -523,7 +523,7 @@ print failed: broken pipe
 
 
 
-=== TEST 20: ngx.flush
+=== TEST 18: ngx.flush
 --- stream_server_config
     #postpone_output 1;
     content_by_lua_block {
@@ -549,7 +549,7 @@ flush succeeded
 
 
 
-=== TEST 21: ngx.eof
+=== TEST 19: ngx.eof
 --- stream_server_config
     #postpone_output 1;
     content_by_lua_block {

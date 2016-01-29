@@ -103,7 +103,7 @@ ngx_stream_lua_on_abort(lua_State *L)
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
     if (!lscf->check_client_abort) {
         lua_pushnil(L);
-        lua_pushliteral(L, "stream lua_check_client_abort is off");
+        lua_pushliteral(L, "lua_check_client_abort is off");
         return 2;
     }
 
