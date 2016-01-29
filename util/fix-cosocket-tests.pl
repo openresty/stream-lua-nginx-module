@@ -20,6 +20,9 @@ while (<>) {
         next;
     }
     if (defined $section && $section eq 'stream_server_config') {
+        if (/^\s*\#?set\s+\$\w+\s+\S+/) {
+            next;
+        }
         if (/^\s*server_tokens .*/) {
             $tokens_stmt = $_;
             next;
@@ -29,11 +32,11 @@ while (<>) {
             print;
             next;
         }
-        if (/^(\s*)local port = ngx\.var\.port$/) {
+        if (/^(.*)\bngx\.var\.port\b(.*)/) {
             if (!defined $port_var) {
                 die "No port variable defined";
             }
-            print "${1}local port = $port_var\n";
+            print "${1}$port_var$2\n";
             next;
         }
         if (!$uri && m{\bGET (/\S+) }) {
@@ -47,7 +50,8 @@ while (<>) {
                 print $tokens_stmt;
             }
             if (!defined $uri) {
-                die "No uri found";
+                next;
+                #die "No uri found";
             }
             print "    location = $uri {";
             next;

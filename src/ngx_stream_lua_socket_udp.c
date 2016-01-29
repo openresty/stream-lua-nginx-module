@@ -352,7 +352,8 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
     if (rctx == NGX_NO_RESOLVER) {
         u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_RESOLVER;
         lua_pushnil(L);
-        lua_pushfstring(L, "no resolver defined to resolve \"%s\"", host.data);
+        lua_pushfstring(L, "no lua_resolver defined to resolve \"%s\"",
+                        host.data);
         return 2;
     }
 
