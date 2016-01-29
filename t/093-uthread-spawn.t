@@ -714,7 +714,7 @@ after)$
 
 
 
-=== TEST 19: simple user thread with ngx.req.socket()
+=== TEST 18: simple user thread with ngx.req.socket()
 --- stream_server_config
     content_by_lua_block {
         function f()
@@ -761,7 +761,7 @@ body: hello world)$
 
 
 
-=== TEST 20: simple user thread with args
+=== TEST 19: simple user thread with args
 --- stream_server_config
     content_by_lua_block {
         function f(a, b)
@@ -791,7 +791,7 @@ after
 
 
 
-=== TEST 21: simple user thread without I/O
+=== TEST 20: simple user thread without I/O
 --- stream_server_config
     content_by_lua_block {
         function f()
