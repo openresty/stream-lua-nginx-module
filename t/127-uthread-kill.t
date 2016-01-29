@@ -236,7 +236,7 @@ stream lua finalize socket
 
 
 
-=== TEST 8: kill a thread already terminated
+=== TEST 5: kill a thread already terminated
 --- stream_server_config
     content_by_lua_block {
         function f()
@@ -274,7 +274,7 @@ lua tcp socket abort resolver
 
 
 
-=== TEST 9: kill self
+=== TEST 6: kill self
 --- stream_server_config
     content_by_lua_block {
         local ok, err = ngx.thread.kill(coroutine.running())

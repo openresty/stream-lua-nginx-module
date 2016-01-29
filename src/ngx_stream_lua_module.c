@@ -269,6 +269,13 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       offsetof(ngx_stream_lua_srv_conf_t, ssl_protocols),
       &ngx_stream_lua_ssl_protocols },
 
+    { ngx_string("lua_ssl_ciphers"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_str_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, ssl_ciphers),
+      NULL },
+
     { ngx_string("lua_ssl_verify_depth"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -457,6 +464,10 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
     conf->lingering_close = NGX_CONF_UNSET_UINT;
     conf->lingering_time = NGX_CONF_UNSET_MSEC;
     conf->lingering_timeout = NGX_CONF_UNSET_MSEC;
+
+#if (NGX_STREAM_SSL)
+    conf->ssl_verify_depth = NGX_CONF_UNSET_UINT;
+#endif
 
     return conf;
 }
