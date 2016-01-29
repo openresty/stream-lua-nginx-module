@@ -827,6 +827,9 @@ ngx_stream_lua_rd_check_broken_connection(ngx_stream_session_t *s,
     ngx_event_t                *rev;
     ngx_connection_t           *c;
 
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                   "stream lua read check broken connection");
+
     c = s->connection;
 
     rc = ngx_stream_lua_check_broken_connection(s, c->read);
@@ -969,7 +972,7 @@ ngx_stream_lua_check_broken_connection(ngx_stream_session_t *s, ngx_event_t *ev)
     ev->eof = 1;
 
     ngx_log_error(NGX_LOG_INFO, ev->log, err,
-                  "client prematurely closed connection");
+                  "stream client prematurely closed connection");
 
     return NGX_STREAM_CLIENT_CLOSED_REQUEST;
 }

@@ -154,6 +154,12 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_session_t *s)
     if (lscf->check_client_abort) {
         ctx->read_event_handler = ngx_stream_lua_rd_check_broken_connection;
 
+        if (!c->read->active) {
+            if (ngx_add_event(c->read, NGX_READ_EVENT, 0) != NGX_OK) {
+                return NGX_ERROR;
+            }
+        }
+
     } else {
         ctx->read_event_handler = ngx_stream_lua_block_reading;
     }

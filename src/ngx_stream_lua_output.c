@@ -18,6 +18,9 @@ static int ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline);
 static void ngx_stream_lua_flush_cleanup(ngx_stream_lua_co_ctx_t *coctx);
 
 
+#define NGX_STREAM_LUA_MAX_ERROR_STR   128
+
+
 static int
 ngx_stream_lua_ngx_print(lua_State *L)
 {
@@ -48,7 +51,9 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
     int                          i;
     int                          nargs;
     int                          type;
+    ngx_err_t                    err;
     const char                  *msg;
+    u_char                       errbuf[NGX_STREAM_LUA_MAX_ERROR_STR];
 
     s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
@@ -217,11 +222,24 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
                    newline ? "stream lua say response"
                            : "stream lua print response");
 
+    ngx_set_errno(0);
+
     rc = ngx_stream_lua_send_chain_link(s, ctx, cl);
 
     if (rc == NGX_ERROR) {
+        err = ngx_errno;
+
         lua_pushnil(L);
-        lua_pushliteral(L, "nginx output filter error");
+
+        if (err) {
+            size = ngx_strerror(err, errbuf, sizeof(errbuf)) - errbuf;
+            ngx_strlow(errbuf, errbuf, size);
+            lua_pushlstring(L, (char *) errbuf, size);
+
+        } else {
+            lua_pushliteral(L, "unknown");
+        }
+
         return 2;
     }
 
