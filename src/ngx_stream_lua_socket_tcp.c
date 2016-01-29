@@ -2397,7 +2397,7 @@ ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_session_t *s,
 
             dd("rev active: %d", ev->active);
 
-            if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && !ev->active) {
+            if (!ev->active) {
                 if (ngx_add_event(ev, NGX_READ_EVENT, 0) != NGX_OK) {
                     lua_pushnil(L);
                     lua_pushliteral(L, "failed to add event");
