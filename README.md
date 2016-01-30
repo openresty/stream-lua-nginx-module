@@ -162,8 +162,10 @@ Many Lua API functions are ported from the `ngx_http_lua_module`. Check out the 
 `ngx_http_lua_module` for more details on these Lua API functions.
 
 * [Core constants](https://github.com/openresty/lua-nginx-module#core-constants)
+
     `ngx.OK`, `ngx.ERROR`, and etc.
 * [Nginx log level constants](https://github.com/openresty/lua-nginx-module#nginx-log-level-constants)
+
     `ngx.ERR`, `ngx.WARN`, and etc.
 * [print](https://github.com/openresty/lua-nginx-module#print)
 * [ngx.ctx](https://github.com/openresty/lua-nginx-module#ngxctx)
