@@ -16,7 +16,13 @@ Table of Contents
     * [Directives](#directives)
     * [Nginx API for Lua](#nginx-api-for-lua)
 * [TODO](#todo)
+* [Nginx Compatibility](#nginx-compatibility)
 * [Installation](#installation)
+* [Community](#community)
+    * [English Mailing List](#english-mailing-list)
+    * [Chinese Mailing List](#chinese-mailing-list)
+* [Code Repository](#code-repository)
+* [Bugs and Patches](#bugs-and-patches)
 * [Copyright and License](#copyright-and-license)
 * [See Also](#see-also)
 
@@ -252,8 +258,27 @@ of `lua_shared_dict`.
 
 [Back to TOC](#table-of-contents)
 
+Nginx Compatibility
+===================
+
+The latest version of this module is compatible with the following versions of Nginx:
+
+* 1.9.x >= 1.9.7 (last tested: 1.9.7)
+
+Nginx cores older than 1.9.7 (exclusive) are *not* supported.
+
+[Back to TOC](#table-of-contents)
+
 Installation
 ============
+
+This module can be manually compiled into Nginx or OpenResty:
+
+1. Install LuaJIT 2.0 or 2.1 (recommended) or Lua 5.1 (Lua 5.2+ are *not* supported yet). LuaJIT can be downloaded from the [the LuaJIT project website](http://luajit.org/download.html) and Lua 5.1, from the [Lua project website](http://www.lua.org/).  Some distribution package managers also distribute LuaJIT and/or Lua.
+1. Download the latest version of ngx_stream_lua [HERE](https://github.com/openresty/lua-nginx-module/tags).
+1. Download the latest supported version of NGINX [HERE](http://nginx.org/) (See [Nginx Compatibility](#nginx-compatibility)) or the OpenResty bundle from [HERE](https://openresty.org/).
+
+Build the source of NGINX or OpenResty with this module, like below:
 
 ```bash
 wget 'http://nginx.org/download/nginx-1.9.7.tar.gz'
@@ -280,6 +305,41 @@ export LUAJIT_INC=/path/to/luajit/include/luajit-2.1
         --add-module=/path/to/stream-lua-nginx-module
 ```
 
+[Back to TOC](#table-of-contents)
+
+Community
+=========
+
+[Back to TOC](#table-of-contents)
+
+English Mailing List
+--------------------
+
+The [openresty-en](https://groups.google.com/group/openresty-en) mailing list is for English speakers.
+
+[Back to TOC](#table-of-contents)
+
+Chinese Mailing List
+--------------------
+
+The [openresty](https://groups.google.com/group/openresty) mailing list is for Chinese speakers.
+
+[Back to TOC](#table-of-contents)
+
+Code Repository
+===============
+
+The code repository of this project is hosted on github at [openresty/stream-lua-nginx-module](https://github.com/openresty/stream-lua-nginx-module).
+
+[Back to TOC](#table-of-contents)
+
+Bugs and Patches
+================
+
+Please submit bug reports, wishlists, or patches by
+
+1. creating a ticket on the [GitHub Issue Tracker](https://github.com/openresty/stream-lua-nginx-module/issues),
+1. or posting to the [OpenResty community](#community).
 
 [Back to TOC](#table-of-contents)
 
