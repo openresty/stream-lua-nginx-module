@@ -61,36 +61,36 @@ Directives
 The following directives are ported directly from `ngx_http_lua_module`. Please check the
 documentation of `ngx_http_lua_module` for more details about their usage and behavior.
 
-* lua_code_cache
-* lua_regex_cache_max_entries
-* lua_package_path
-* lua_package_cpath
-* init_by_lua_block
-* init_by_lua_file
-* init_worker_by_lua_block
-* init_worker_by_lua_file
-* content_by_lua_block
-* content_by_lua_file
-* lua_shared_dict
-* lua_socket_connect_timeout
-* lua_socket_buffer_size
-* lua_socket_pool_size
-* lua_socket_keepalive_timeout
-* lua_socket_log_errors
-* lua_ssl_ciphers
-* lua_ssl_crl
-* lua_ssl_protocols
-* lua_ssl_trusted_certificate
-* lua_ssl_verify_depth
-* lua_check_client_abort
-* lua_max_pending_timers
-* lua_max_running_timers
+* [lua_code_cache](https://github.com/openresty/lua-nginx-module#lua_code_cache)
+* [lua_regex_cache_max_entries](https://github.com/openresty/lua-nginx-module#lua_regex_cache_max_entries)
+* [lua_package_path](https://github.com/openresty/lua-nginx-module#lua_package_path)
+* [lua_package_cpath](https://github.com/openresty/lua-nginx-module#lua_package_cpath)
+* [init_by_lua_block](https://github.com/openresty/lua-nginx-module#init_by_lua_block)
+* [init_by_lua_file](https://github.com/openresty/lua-nginx-module#init_by_lua_file)
+* [init_worker_by_lua_block](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_block)
+* [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
+* [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
+* [content_by_lua_file](https://github.com/openresty/lua-nginx-module#content_by_lua_file)
+* [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
+* [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
+* [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
+* [lua_socket_pool_size](https://github.com/openresty/lua-nginx-module#lua_socket_pool_size)
+* [lua_socket_keepalive_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_keepalive_timeout)
+* [lua_socket_log_errors](https://github.com/openresty/lua-nginx-module#lua_socket_log_errors)
+* [lua_ssl_ciphers](https://github.com/openresty/lua-nginx-module#lua_ssl_ciphers)
+* [lua_ssl_crl](https://github.com/openresty/lua-nginx-module#lua_ssl_crl)
+* [lua_ssl_protocols](https://github.com/openresty/lua-nginx-module#lua_ssl_protocols)
+* [lua_ssl_trusted_certificate](https://github.com/openresty/lua-nginx-module#lua_ssl_trusted_certificate)
+* [lua_ssl_verify_depth](https://github.com/openresty/lua-nginx-module#lua_ssl_verify_depth)
+* [lua_check_client_abort](https://github.com/openresty/lua-nginx-module#lua_check_client_abort)
+* [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
+* [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
 
 In addition, `ngx_stream_lua_module` provides the following directives:
 
-* lua_resolver
+* [lua_resolver](https://github.com/openresty/lua-nginx-module#lua_resolver)
     Just an equivalent to the [resolver](http://nginx.org/r/resolver) directive in the NGINX "http" subsystem.
-* lua_resolver_timeout
+* [lua_resolver_timeout](https://github.com/openresty/lua-nginx-module#lua_resolver_timeout)
     Just an equivalent to the [resolver_timeout](http://nginx.org/r/resolver_timeout) directive in the NGINX "http" subsystem.
 
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the NGINX "http" subsystem is missing in the "stream" subsystem. So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
@@ -103,71 +103,76 @@ Nginx API for Lua
 Many Lua API functions are ported from the `ngx_http_lua_module`. Check out the official manual of
 `ngx_http_lua_module` for more details on these Lua API functions.
 
-* Core constants
+* [Core constants](https://github.com/openresty/lua-nginx-module#core-constants)
     `ngx.OK`, `ngx.ERROR`, and etc.
-* Nginx log level constants
+* [Nginx log level constants](https://github.com/openresty/lua-nginx-module#nginx-log-level-constants)
     `ngx.ERR`, `ngx.WARN`, and etc.
-* print
-* ngx.ctx
-* ngx.req.socket
-* ngx.print
-* ngx.say
-* ngx.log
-* ngx.flush
-* ngx.exit
-* ngx.eof
-* ngx.sleep
-* ngx.escape_uri
-* ngx.unescape_uri
-* ngx.encode_args
-* ngx.decode_args
-* ngx.encode_base64
-* ngx.decode_base64
-* ngx.crc32_short
-* ngx.crc32_long
-* ngx.hmac_sha1
-* ngx.md5
-* ngx.md5_bin
-* ngx.sha1_bin
-* ngx.quote_sql_str
-* ngx.today
-* ngx.time
-* ngx.now
-* ngx.update_time
-* ngx.localtime
-* ngx.utctime
-* ngx.re.match
-* ngx.re.find
-* ngx.re.gmatch
-* ngx.re.sub
-* ngx.re.gsub
-* ngx.shared.DICT
-* ngx.socket.udp
-* ngx.socket.udp
-* ngx.socket.connect
-* ngx.get_phase
-* ngx.thread.spawn
-* ngx.thread.wait
-* ngx.thread.kill
-* ngx.on_abort
-* ngx.timer.at
-* ngx.timer.running_count
-* ngx.timer.pending_count
-* ngx.config.debug
-* ngx.config.prefix
-* ngx.config.nginx_version
-* ngx.config.nginx_configure
-* ngx.config.ngx_lua_version
-* ngx.worker.exiting
-* ngx.worker.pid
-* ngx.worker.count
-* ngx.worker.id
-* coroutine.create
-* coroutine.resume
-* coroutine.yield
-* coroutine.wrap
-* coroutine.running
-* coroutine.status
+* [print](https://github.com/openresty/lua-nginx-module#print)
+* [ngx.ctx](https://github.com/openresty/lua-nginx-module#ngxctx)
+* [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
+
+    Only raw request sockets are supported, for obvious reasons. The `raw` argument value
+is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_module`,
+you can still call output API functions like `ngx.say`, `ngx.print`, and `ngx.flush`
+after acquiring the raw request socket via this function.
+* [ngx.print](https://github.com/openresty/lua-nginx-module#ngxprint)
+* [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
+* [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
+* [ngx.flush](https://github.com/openresty/lua-nginx-module#ngxflush)
+* [ngx.exit](https://github.com/openresty/lua-nginx-module#ngxexit)
+* [ngx.eof](https://github.com/openresty/lua-nginx-module#ngxeof)
+* [ngx.sleep](https://github.com/openresty/lua-nginx-module#ngxsleep)
+* [ngx.escape_uri](https://github.com/openresty/lua-nginx-module#ngxescape_uri)
+* [ngx.unescape_uri](https://github.com/openresty/lua-nginx-module#ngxunescape_uri)
+* [ngx.encode_args](https://github.com/openresty/lua-nginx-module#ngxencode_args)
+* [ngx.decode_args](https://github.com/openresty/lua-nginx-module#ngxdecode_args)
+* [ngx.encode_base64](https://github.com/openresty/lua-nginx-module#ngxencode_base64)
+* [ngx.decode_base64](https://github.com/openresty/lua-nginx-module#ngxdecode_base64)
+* [ngx.crc32_short](https://github.com/openresty/lua-nginx-module#ngxcrc32_short)
+* [ngx.crc32_long](https://github.com/openresty/lua-nginx-module#ngxcrc32_long)
+* [ngx.hmac_sha1](https://github.com/openresty/lua-nginx-module#ngxhmac_sha1)
+* [ngx.md5](https://github.com/openresty/lua-nginx-module#ngxmd5)
+* [ngx.md5_bin](https://github.com/openresty/lua-nginx-module#ngxmd5_bin)
+* [ngx.sha1_bin](https://github.com/openresty/lua-nginx-module#ngxsha1_bin)
+* [ngx.quote_sql_str](https://github.com/openresty/lua-nginx-module#ngxquote_sql_str)
+* [ngx.today](https://github.com/openresty/lua-nginx-module#ngxtoday)
+* [ngx.time](https://github.com/openresty/lua-nginx-module#ngxtime)
+* [ngx.now](https://github.com/openresty/lua-nginx-module#ngxnow)
+* [ngx.update_time](https://github.com/openresty/lua-nginx-module#ngxupdate_time)
+* [ngx.localtime](https://github.com/openresty/lua-nginx-module#ngxlocaltime)
+* [ngx.utctime](https://github.com/openresty/lua-nginx-module#ngxutctime)
+* [ngx.re.match](https://github.com/openresty/lua-nginx-module#ngxrematch)
+* [ngx.re.find](https://github.com/openresty/lua-nginx-module#ngxrefind)
+* [ngx.re.gmatch](https://github.com/openresty/lua-nginx-module#ngxregmatch)
+* [ngx.re.sub](https://github.com/openresty/lua-nginx-module#ngxresub)
+* [ngx.re.gsub](https://github.com/openresty/lua-nginx-module#ngxregsub)
+* [ngx.shared.DICT](https://github.com/openresty/lua-nginx-module#ngxshareddict)
+* [ngx.socket.tcp](https://github.com/openresty/lua-nginx-module#ngxsockettcp)
+* [ngx.socket.udp](https://github.com/openresty/lua-nginx-module#ngxsocketudp)
+* [ngx.socket.connect](https://github.com/openresty/lua-nginx-module#ngxsocketconnect)
+* [ngx.get_phase](https://github.com/openresty/lua-nginx-module#ngxget_phase)
+* [ngx.thread.spawn](https://github.com/openresty/lua-nginx-module#ngxthreadspawn)
+* [ngx.thread.wait](https://github.com/openresty/lua-nginx-module#ngxthreadwait)
+* [ngx.thread.kill](https://github.com/openresty/lua-nginx-module#ngxthreadkill)
+* [ngx.on_abort](https://github.com/openresty/lua-nginx-module#ngxon_abort)
+* [ngx.timer.at](https://github.com/openresty/lua-nginx-module#ngxtimerat)
+* [ngx.timer.running_count](https://github.com/openresty/lua-nginx-module#ngxtimerrunning_count)
+* [ngx.timer.pending_count](https://github.com/openresty/lua-nginx-module#ngxtimerpending_count)
+* [ngx.config.debug](https://github.com/openresty/lua-nginx-module#ngxconfigdebug)
+* [ngx.config.prefix](https://github.com/openresty/lua-nginx-module#ngxconfigprefix)
+* [ngx.config.nginx_version](https://github.com/openresty/lua-nginx-module#ngxconfignginx_version)
+* [ngx.config.nginx_configure](https://github.com/openresty/lua-nginx-module#ngxconfignginx_configure)
+* [ngx.config.ngx_lua_version](https://github.com/openresty/lua-nginx-module#ngxconfigngx_lua_version)
+* [ngx.worker.exiting](https://github.com/openresty/lua-nginx-module#ngxworkerexiting)
+* [ngx.worker.pid](https://github.com/openresty/lua-nginx-module#ngxworkerpid)
+* [ngx.worker.count](https://github.com/openresty/lua-nginx-module#ngxworkercount)
+* [ngx.worker.id](https://github.com/openresty/lua-nginx-module#ngxworkerid)
+* [coroutine.create](https://github.com/openresty/lua-nginx-module#coroutinecreate)
+* [coroutine.resume](https://github.com/openresty/lua-nginx-module#coroutineresume)
+* [coroutine.yield](https://github.com/openresty/lua-nginx-module#coroutineyield)
+* [coroutine.wrap](https://github.com/openresty/lua-nginx-module#coroutinewrap)
+* [coroutine.running](https://github.com/openresty/lua-nginx-module#coroutinerunning)
+* [coroutine.status](https://github.com/openresty/lua-nginx-module#coroutinestatus)
 
 [Back to TOC](#table-of-contents)
 
@@ -176,7 +181,13 @@ TODO
 
 * Add new directives `access_by_lua_block` and `access_by_lua_file`.
 * Add new directives `log_by_lua_block` and `log_by_lua_file`.
+* Add new directives `balancer_by_lua_block` and `balancer_by_lua_file`.
+* Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
 * Add pseudo NGINX variable API to allow `ngx.var.remote_addr`, `ngx.var.binary_remote_addr`, `ngx.var.pid`, and etc.
+* Add `ngx.semaphore` API.
+* Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
+of `lua_shared_dict`.
+* Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
 
 [Back to TOC](#table-of-contents)
 
