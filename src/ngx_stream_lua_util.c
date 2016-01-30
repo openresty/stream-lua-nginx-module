@@ -24,6 +24,7 @@
 #include "ngx_stream_lua_sleep.h"
 #include "ngx_stream_lua_phase.h"
 #include "ngx_stream_lua_regex.h"
+#include "ngx_stream_lua_variable.h"
 #include "ngx_stream_lua_shdict.h"
 #include "ngx_stream_lua_socket_udp.h"
 #include "ngx_stream_lua_timer.h"
@@ -2637,7 +2638,7 @@ static void
 ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
     ngx_log_t *log)
 {
-    lua_createtable(L, 0 /* narr */, 53 /* nrec */);    /* ngx.* */
+    lua_createtable(L, 0 /* narr */, 54 /* nrec */);    /* ngx.* */
 
     lua_pushcfunction(L, ngx_stream_lua_get_raw_phase_context);
     lua_setfield(L, -2, "_phase_ctx");
@@ -2657,6 +2658,7 @@ ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
 #endif
 
     ngx_stream_lua_inject_req_api(log, L);
+    ngx_stream_lua_inject_variable_api(L);
     ngx_stream_lua_inject_shdict_api(lmcf, L);
     ngx_stream_lua_inject_socket_tcp_api(log, L);
     ngx_stream_lua_inject_socket_udp_api(log, L);

@@ -327,6 +327,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
                 $ngx_addon_dir/src/ngx_stream_lua_regex.c \
                 $ngx_addon_dir/src/ngx_stream_lua_script.c \
                 $ngx_addon_dir/src/ngx_stream_lua_shdict.c \
+                $ngx_addon_dir/src/ngx_stream_lua_variable.c \
                 $ngx_addon_dir/src/ngx_stream_lua_socket_udp.c \
                 $ngx_addon_dir/src/ngx_stream_lua_timer.c \
                 $ngx_addon_dir/src/ngx_stream_lua_config.c \
@@ -361,6 +362,7 @@ NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
                 $ngx_addon_dir/src/ngx_stream_lua_regex.h \
                 $ngx_addon_dir/src/ngx_stream_lua_script.h \
                 $ngx_addon_dir/src/ngx_stream_lua_shdict.h \
+                $ngx_addon_dir/src/ngx_stream_lua_variable.h \
                 $ngx_addon_dir/src/ngx_stream_lua_socket_udp.h \
                 $ngx_addon_dir/src/ngx_stream_lua_timer.h \
                 $ngx_addon_dir/src/ngx_stream_lua_config.h \
