@@ -55,7 +55,7 @@ ngx_stream_lua_ngx_log(lua_State *L)
     /* remove log-level param from stack */
     lua_remove(L, 1);
 
-    return log_wrapper(log, "[lua] ", (ngx_uint_t) level, L);
+    return log_wrapper(log, "stream [lua] ", (ngx_uint_t) level, L);
 }
 
 
@@ -81,7 +81,7 @@ ngx_stream_lua_print(lua_State *L)
         log = ngx_cycle->log;
     }
 
-    return log_wrapper(log, "[lua] ", NGX_LOG_NOTICE, L);
+    return log_wrapper(log, "stream [lua] ", NGX_LOG_NOTICE, L);
 }
 
 

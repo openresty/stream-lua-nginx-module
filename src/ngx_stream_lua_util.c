@@ -177,6 +177,11 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
                           "stream lua client timed out");
             c->timedout = 1;
 
+            if (ctx->done) {
+                ngx_stream_lua_finalize_session(s, NGX_DONE);
+                return NGX_OK;
+            }
+
             goto flush_coros;
         }
 
@@ -652,6 +657,11 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
     ctx->done = 1;
 
+    if (c->error || c->timedout) {
+        ngx_stream_lua_free_session(s);
+        return;
+    }
+
     if (ctx->downstream_busy_bufs) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                        "stream lua having pending data to flush to "
@@ -675,13 +685,8 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
 #if (DDEBUG)
     dd("c->buffered: %d, busy_bufs: %p, rev ready: %d", (int) c->buffered,
-       ctx->busy_bufs, c->read->ready);
+       ctx->downstream_busy_bufs, c->read->ready);
 #endif
-
-    if (c->error) {
-        ngx_stream_lua_free_session(s);
-        return;
-    }
 
     if (lscf->lingering_close == NGX_STREAM_LUA_LINGERING_ALWAYS
         || (lscf->lingering_close == NGX_STREAM_LUA_LINGERING_ON
@@ -1931,7 +1936,7 @@ ngx_stream_lua_free_fake_session(ngx_stream_session_t *s)
     log = s->connection->log;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, log, 0,
-                   "stream lua free fake sesson");
+                   "stream lua free fake session");
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -3177,7 +3182,7 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
     ngx_stream_lua_cleanup_t    *cln;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                   "stream lua free sesson");
+                   "stream lua free session");
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
