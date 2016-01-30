@@ -6,6 +6,19 @@ ngx_stream_lua_module - Embed the power of Lua into Nginx stream/TCP Servers.
 
 *This module is not distributed with the Nginx source.* See [the installation instructions](#installation).
 
+Table of Contents
+=================
+
+* [Name](#name)
+* [Status](#status)
+* [Synopsis](#synopsis)
+* [Description](#description)
+    * [Directives](#directives)
+    * [Nginx API for Lua](#nginx-api-for-lua)
+* [TODO](#todo)
+* [Installation](#installation)
+* [Copyright and License](#copyright-and-license)
+* [See Also](#see-also)
 
 Status
 ======
@@ -31,6 +44,141 @@ stream {
     }
 }
 ```
+
+Description
+===========
+
+This is a port of the [ngx_http_lua_module](https://github.com/openresty/lua-nginx-module#readme) to the NGINX "stream" subsystem so
+as to support generic stream/TCP clients in the downstream.
+
+Lua APIs and directive names rename the same as the `ngx_http_lua_module`.
+
+[Back to TOC](#table-of-contents)
+
+Directives
+----------
+
+The following directives are ported directly from `ngx_http_lua_module`. Please check the
+documentation of `ngx_http_lua_module` for more details about their usage and behavior.
+
+* lua_code_cache
+* lua_regex_cache_max_entries
+* lua_package_path
+* lua_package_cpath
+* init_by_lua_block
+* init_by_lua_file
+* init_worker_by_lua_block
+* init_worker_by_lua_file
+* content_by_lua_block
+* content_by_lua_file
+* lua_shared_dict
+* lua_socket_connect_timeout
+* lua_socket_buffer_size
+* lua_socket_pool_size
+* lua_socket_keepalive_timeout
+* lua_socket_log_errors
+* lua_ssl_ciphers
+* lua_ssl_crl
+* lua_ssl_protocols
+* lua_ssl_trusted_certificate
+* lua_ssl_verify_depth
+* lua_check_client_abort
+* lua_max_pending_timers
+* lua_max_running_timers
+
+In addition, `ngx_stream_lua_module` provides the following directives:
+
+* lua_resolver
+    Just an equivalent to the [resolver](http://nginx.org/r/resolver) directive in the NGINX "http" subsystem.
+* lua_resolver_timeout
+    Just an equivalent to the [resolver_timeout](http://nginx.org/r/resolver_timeout) directive in the NGINX "http" subsystem.
+
+The [send_timeout](http://nginx.org/r/send_timeout) directive in the NGINX "http" subsystem is missing in the "stream" subsystem. So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
+
+[Back to TOC](#table-of-contents)
+
+Nginx API for Lua
+-----------------
+
+Many Lua API functions are ported from the `ngx_http_lua_module`. Check out the official manual of
+`ngx_http_lua_module` for more details on these Lua API functions.
+
+* Core constants
+    `ngx.OK`, `ngx.ERROR`, and etc.
+* Nginx log level constants
+    `ngx.ERR`, `ngx.WARN`, and etc.
+* print
+* ngx.ctx
+* ngx.req.socket
+* ngx.print
+* ngx.say
+* ngx.log
+* ngx.flush
+* ngx.exit
+* ngx.eof
+* ngx.sleep
+* ngx.escape_uri
+* ngx.unescape_uri
+* ngx.encode_args
+* ngx.decode_args
+* ngx.encode_base64
+* ngx.decode_base64
+* ngx.crc32_short
+* ngx.crc32_long
+* ngx.hmac_sha1
+* ngx.md5
+* ngx.md5_bin
+* ngx.sha1_bin
+* ngx.quote_sql_str
+* ngx.today
+* ngx.time
+* ngx.now
+* ngx.update_time
+* ngx.localtime
+* ngx.utctime
+* ngx.re.match
+* ngx.re.find
+* ngx.re.gmatch
+* ngx.re.sub
+* ngx.re.gsub
+* ngx.shared.DICT
+* ngx.socket.udp
+* ngx.socket.udp
+* ngx.socket.connect
+* ngx.get_phase
+* ngx.thread.spawn
+* ngx.thread.wait
+* ngx.thread.kill
+* ngx.on_abort
+* ngx.timer.at
+* ngx.timer.running_count
+* ngx.timer.pending_count
+* ngx.config.debug
+* ngx.config.prefix
+* ngx.config.nginx_version
+* ngx.config.nginx_configure
+* ngx.config.ngx_lua_version
+* ngx.worker.exiting
+* ngx.worker.pid
+* ngx.worker.count
+* ngx.worker.id
+* coroutine.create
+* coroutine.resume
+* coroutine.yield
+* coroutine.wrap
+* coroutine.running
+* coroutine.status
+
+[Back to TOC](#table-of-contents)
+
+TODO
+====
+
+* Add new directives `access_by_lua_block` and `access_by_lua_file`.
+* Add new directives `log_by_lua_block` and `log_by_lua_file`.
+* Add pseudo NGINX variable API to allow `ngx.var.remote_addr`, `ngx.var.binary_remote_addr`, `ngx.var.pid`, and etc.
+
+[Back to TOC](#table-of-contents)
 
 Installation
 ============
@@ -61,6 +209,8 @@ export LUAJIT_INC=/path/to/luajit/include/luajit-2.1
 ```
 
 
+[Back to TOC](#table-of-contents)
+
 Copyright and License
 =====================
 
@@ -88,3 +238,6 @@ See Also
 * [ngx_http_lua_module](https://github.com/openresty/lua-nginx-module)
 * [ngx_stream_echo_module](https://github.com/openresty/stream-echo-nginx-module)
 * [OpenResty](https://openresty.org/)
+
+[Back to TOC](#table-of-contents)
+
