@@ -45,6 +45,51 @@ stream {
 }
 ```
 
+Set up as an SSL TCP server:
+
+```nginx
+stream {
+    server {
+        listen 4343 ssl;
+
+        ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers         AES128-SHA:AES256-SHA:RC4-SHA:DES-CBC3-SHA:RC4-MD5;
+        ssl_certificate     /path/to/cert.pem;
+        ssl_certificate_key /path/to/cert.key;
+        ssl_session_cache   shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()  -- read a line from downstream
+            if data == "thunder!" then
+                ngx.say("flash!")  -- output data
+            else
+                ngx.say("boom!")
+            end
+            ngx.say("the end...")
+        }
+    }
+}
+```
+
+Listening on a UNIX domain socket is also supported:
+
+```nginx
+stream {
+    server {
+        listen unix:/tmp/nginx.sock;
+
+        content_by_lua_block {
+            ngx.say("What's up?")
+            ngx.flush(true)  -- flush any pending output and wait
+            ngx.sleep(3)  -- sleeping for 3 sec
+            ngx.say("Bye bye...")
+        }
+    }
+}
+```
+
 Description
 ===========
 
@@ -88,12 +133,25 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 
 In addition, `ngx_stream_lua_module` provides the following directives:
 
-* [lua_resolver](https://github.com/openresty/lua-nginx-module#lua_resolver)
-    Just an equivalent to the [resolver](http://nginx.org/r/resolver) directive in the NGINX "http" subsystem.
-* [lua_resolver_timeout](https://github.com/openresty/lua-nginx-module#lua_resolver_timeout)
-    Just an equivalent to the [resolver_timeout](http://nginx.org/r/resolver_timeout) directive in the NGINX "http" subsystem.
+* `lua_resolver`
 
-The [send_timeout](http://nginx.org/r/send_timeout) directive in the NGINX "http" subsystem is missing in the "stream" subsystem. So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
+    Just an equivalent to the [resolver](http://nginx.org/r/resolver) directive in the NGINX "http" subsystem.
+* `lua_resolver_timeout`
+
+    Just an equivalent to the [resolver_timeout](http://nginx.org/r/resolver_timeout) directive in the NGINX "http" subsystem.
+* `lua_lingering_close`
+
+    Just an equivalent to the [lingering_close](http://nginx.org/r/lingering_close] directive in the NGINX "http" subsystem.
+* `lua_lingering_time`
+
+    Just an equivalent to the [lingering_time](http://nginx.org/r/lingering_time] directive in the NGINX "http" subsystem.
+
+* `lua_lingering_timeout`
+
+    Just an equivalent to the [lingering_timeout](http://nginx.org/r/lingering_timeout] directive in the NGINX "http" subsystem.
+
+The [send_timeout](http://nginx.org/r/send_timeout) directive in the NGINX "http" subsystem is missing in the "stream" subsystem.
+So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
 
 [Back to TOC](#table-of-contents)
 
@@ -188,6 +246,7 @@ TODO
 * Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
 of `lua_shared_dict`.
 * Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
+* Add `lua_postpone_output` to emulate the [postpone_output](http://nginx.org/r/postpone_output) directive.
 
 [Back to TOC](#table-of-contents)
 
