@@ -23,7 +23,7 @@ Table of Contents
 Status
 ======
 
-Work in progress and highly experimental.
+Quite usable but still experimental.
 
 Synopsis
 ========
