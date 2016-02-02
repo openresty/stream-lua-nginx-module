@@ -79,53 +79,54 @@ ngx_stream_lua_var_get(lua_State *L)
 
     p = (u_char *) lua_tolstring(L, -1, &len);
 
-    if (len == sizeof("pid") - 1
-        && ngx_strncmp(p, "pid", sizeof("pid") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_pid(L);
-    }
+    switch (len) {
 
-    if (len == sizeof("remote_addr") - 1
-        && ngx_strncmp(p, "remote_addr", sizeof("remote_addr") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_remote_addr(L, s);
-    }
+    case sizeof("pid") - 1:
+        if (ngx_strncmp(p, "pid", sizeof("pid") - 1) == 0) {
+            return ngx_stream_lua_variable_pid(L);
+        }
+        break;
 
-    if (len == sizeof("binary_remote_addr") - 1
-        && ngx_strncmp(p, "binary_remote_addr",
+    case sizeof("binary_remote_addr") - 1:
+        if (ngx_strncmp(p, "binary_remote_addr",
                        sizeof("binary_remote_addr") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_binary_remote_addr(L, s);
-    }
+        {
+            return ngx_stream_lua_variable_binary_remote_addr(L, s);
+        }
+        break;
 
-    if (len == sizeof("remote_port") - 1
-        && ngx_strncmp(p, "remote_port", sizeof("remote_port") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_remote_port(L, s);
-    }
+    case sizeof("remote_addr") - 1:
+        if (ngx_strncmp(p, "remote_addr", sizeof("remote_addr") - 1) == 0) {
+            return ngx_stream_lua_variable_remote_addr(L, s);
+        }
 
-    if (len == sizeof("server_addr") - 1
-        && ngx_strncmp(p, "server_addr", sizeof("server_addr") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_server_addr(L, s);
-    }
+        if (ngx_strncmp(p, "remote_port", sizeof("remote_port") - 1) == 0) {
+            return ngx_stream_lua_variable_remote_port(L, s);
+        }
 
-    if (len == sizeof("server_port") - 1
-        && ngx_strncmp(p, "server_port", sizeof("server_port") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_server_port(L, s);
-    }
+        if (ngx_strncmp(p, "server_addr", sizeof("server_addr") - 1) == 0) {
+            return ngx_stream_lua_variable_server_addr(L, s);
+        }
 
-    if (len == sizeof("connection") - 1
-        && ngx_strncmp(p, "connection", sizeof("connection") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_connection(L, s);
-    }
+        if (ngx_strncmp(p, "server_port", sizeof("server_port") - 1) == 0) {
+            return ngx_stream_lua_variable_server_port(L, s);
+        }
+        break;
 
-    if (len == sizeof("nginx_version") - 1
-        && ngx_strncmp(p, "nginx_version", sizeof("nginx_version") - 1) == 0)
-    {
-        return ngx_stream_lua_variable_nginx_version(L);
+    case sizeof("connection") - 1:
+        if (ngx_strncmp(p, "connection", sizeof("connection") - 1) == 0) {
+            return ngx_stream_lua_variable_connection(L, s);
+        }
+        break;
+
+    case sizeof("nginx_version") - 1:
+        if (ngx_strncmp(p, "nginx_version", sizeof("nginx_version") - 1) == 0) {
+            return ngx_stream_lua_variable_nginx_version(L);
+        }
+        break;
+
+    default:
+        break;
     }
 
     lua_pushnil(L);
