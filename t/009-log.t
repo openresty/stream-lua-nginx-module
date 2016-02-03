@@ -27,7 +27,7 @@ __DATA__
 before log
 after log
 --- error_log eval
-qr/\[\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -42,7 +42,7 @@ qr/\[\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12
 before log
 after log
 --- error_log eval
-qr/\[emerg\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[emerg\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -57,7 +57,7 @@ qr/\[emerg\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, 
 before log
 after log
 --- error_log eval
-qr/\[alert\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[alert\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -72,7 +72,7 @@ qr/\[alert\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, 
 before log
 after log
 --- error_log eval
-qr/\[crit\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[crit\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -87,7 +87,7 @@ qr/\[crit\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, l
 before log
 after log
 --- error_log eval
-qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[error\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -102,7 +102,7 @@ qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, 
 before log
 after log
 --- error_log eval
-qr/\[warn\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[warn\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -117,7 +117,7 @@ qr/\[warn\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, l
 before log
 after log
 --- error_log eval
-qr/\[notice\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[notice\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -132,7 +132,7 @@ qr/\[notice\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello,
 before log
 after log
 --- error_log eval
-qr/\[info\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[info\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -147,7 +147,7 @@ qr/\[info\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, l
 before log
 after log
 --- error_log eval
-qr/\[debug\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[debug\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -162,7 +162,7 @@ qr/\[debug\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, 
 before log
 after log
 --- error_log eval
-qr/\[notice\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
+qr/\[notice\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):3: hello, log12343.14159/
 
 
 
@@ -194,7 +194,7 @@ qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):4: nil: nil while/,
 --- stream_response
 32
 --- error_log eval
-qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):2: truefalsenil while/
+qr/\[error\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):2: truefalsenil while/
 
 
 
@@ -227,7 +227,7 @@ qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):2: truefal
 --- stream_response
 done
 --- error_log eval
-qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):7: bar\(\): hello, log12343.14159/
+qr/\[error\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):7: bar\(\): hello, log12343.14159/
 
 
 
@@ -253,7 +253,7 @@ qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):7: bar\(\)
 --- stream_response
 done
 --- error_log eval
-qr/\[error\] \S+: \S+ \[lua\] content_by_lua_block\(nginx\.conf:\d+\):8:(?: foo\(\):)? hello, log12343.14159/
+qr/\[error\] \S+: \S+ stream \[lua\] content_by_lua_block\(nginx\.conf:\d+\):8:(?: foo\(\):)? hello, log12343.14159/
 
 
 
@@ -276,7 +276,7 @@ ngx.say("done")
 --- stream_response
 done
 --- error_log eval
-qr/\[error\] \S+: \S+ \[lua\] test.lua:6: bar\(\): hello, log12343.14159/
+qr/\[error\] \S+: \S+ stream \[lua\] test.lua:6: bar\(\): hello, log12343.14159/
 
 
 
