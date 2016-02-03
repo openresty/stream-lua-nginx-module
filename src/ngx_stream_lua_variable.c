@@ -87,11 +87,9 @@ ngx_stream_lua_var_get(lua_State *L)
         }
         break;
 
-    case sizeof("binary_remote_addr") - 1:
-        if (ngx_strncmp(p, "binary_remote_addr",
-                       sizeof("binary_remote_addr") - 1) == 0)
-        {
-            return ngx_stream_lua_variable_binary_remote_addr(L, s);
+    case sizeof("connection") - 1:
+        if (ngx_strncmp(p, "connection", sizeof("connection") - 1) == 0) {
+            return ngx_stream_lua_variable_connection(L, s);
         }
         break;
 
@@ -113,15 +111,17 @@ ngx_stream_lua_var_get(lua_State *L)
         }
         break;
 
-    case sizeof("connection") - 1:
-        if (ngx_strncmp(p, "connection", sizeof("connection") - 1) == 0) {
-            return ngx_stream_lua_variable_connection(L, s);
-        }
-        break;
-
     case sizeof("nginx_version") - 1:
         if (ngx_strncmp(p, "nginx_version", sizeof("nginx_version") - 1) == 0) {
             return ngx_stream_lua_variable_nginx_version(L);
+        }
+        break;
+
+    case sizeof("binary_remote_addr") - 1:
+        if (ngx_strncmp(p, "binary_remote_addr",
+                       sizeof("binary_remote_addr") - 1) == 0)
+        {
+            return ngx_stream_lua_variable_binary_remote_addr(L, s);
         }
         break;
 
