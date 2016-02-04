@@ -115,7 +115,7 @@ typedef struct ngx_stream_lua_balancer_peer_data_s
 typedef ngx_int_t (*ngx_stream_lua_main_conf_handler_pt)(ngx_log_t *log,
     ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
 	
-typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(ngx_log_t *log,
+typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(ngx_stream_session_t *s, ngx_log_t *log,
     ngx_stream_lua_srv_conf_t *lscf, lua_State *L);
 
 

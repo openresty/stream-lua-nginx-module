@@ -45,13 +45,13 @@ static ngx_int_t ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *r,
 static ngx_int_t ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc,
     void *data);
 static ngx_int_t ngx_stream_lua_balancer_by_chunk(lua_State *L,
-    ngx_log_t *log);
+    ngx_log_t *log, ngx_stream_session_t *s);
 void ngx_stream_lua_balancer_free_peer(ngx_peer_connection_t *pc, void *data,
     ngx_uint_t state);
 
 
 ngx_int_t
-ngx_stream_lua_balancer_handler_file(ngx_log_t *log,
+ngx_stream_lua_balancer_handler_file(ngx_stream_session_t *s, ngx_log_t *log,
     ngx_stream_lua_srv_conf_t *lscf, lua_State *L)
 {
     ngx_int_t           rc;
@@ -66,12 +66,12 @@ ngx_stream_lua_balancer_handler_file(ngx_log_t *log,
     /*  make sure we have a valid code chunk */
     ngx_stream_lua_assert(lua_isfunction(L, -1));
 
-    return ngx_stream_lua_balancer_by_chunk(L, log);
+    return ngx_stream_lua_balancer_by_chunk(L, log, s);
 }
 
 
 ngx_int_t
-ngx_stream_lua_balancer_handler_inline(ngx_log_t *log,
+ngx_stream_lua_balancer_handler_inline(ngx_stream_session_t *s, ngx_log_t *log,
     ngx_stream_lua_srv_conf_t *lscf, lua_State *L)
 {
     ngx_int_t           rc;
@@ -88,7 +88,7 @@ ngx_stream_lua_balancer_handler_inline(ngx_log_t *log,
     /*  make sure we have a valid code chunk */
     ngx_stream_lua_assert(lua_isfunction(L, -1));
 
-    return ngx_stream_lua_balancer_by_chunk(L, log);
+    return ngx_stream_lua_balancer_by_chunk(L, log, s);
 }
 
 
@@ -293,7 +293,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
      */
     lmcf->balancer_peer_data = bp;
 
-    rc = lscf->balancer.handler(pc->log, lscf, L);
+    rc = lscf->balancer.handler(r, pc->log, lscf, L);
 
     if (rc == NGX_ERROR) {
         return NGX_ERROR;
@@ -330,14 +330,14 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
 
 
 static ngx_int_t
-ngx_stream_lua_balancer_by_chunk(lua_State *L, ngx_log_t *log)
+ngx_stream_lua_balancer_by_chunk(lua_State *L, ngx_log_t *log, ngx_stream_session_t *s)
 {
     u_char                  *err_msg;
     size_t                   len;
     ngx_int_t                rc;
 
     /* init nginx context in Lua VM */
-    //ngx_stream_lua_set_req(L, r);
+    ngx_stream_lua_set_session(L, s);
     ngx_stream_lua_create_new_globals_table(L, 0 /* narr */, 1 /* nrec */);
 
     /*  {{{ make new env inheriting main thread's globals table */
