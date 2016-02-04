@@ -162,7 +162,6 @@ ngx_stream_lua_balancer_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         /* inlined Lua code */
-
         lscf->balancer.src = value[1];
 
         p = ngx_palloc(cf->pool, NGX_STREAM_LUA_INLINE_KEY_LEN + 1);
@@ -294,7 +293,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
      */
     lmcf->balancer_peer_data = bp;
 
-    rc = lscf->balancer.handler(r->connection->log, lmcf, L);
+    rc = lscf->balancer.handler(r->connection->log, lscf, L);
 
     if (rc == NGX_ERROR) {
         return NGX_ERROR;

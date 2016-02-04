@@ -107,6 +107,7 @@ typedef struct {
 
 typedef struct ngx_stream_lua_semaphore_mm_s  ngx_stream_lua_semaphore_mm_t;
 typedef struct ngx_stream_lua_main_conf_s  ngx_stream_lua_main_conf_t;
+typedef struct ngx_stream_lua_srv_conf_s  ngx_stream_lua_srv_conf_t;
 
 typedef struct ngx_stream_lua_balancer_peer_data_s
     ngx_stream_lua_balancer_peer_data_t;
@@ -115,7 +116,7 @@ typedef ngx_int_t (*ngx_stream_lua_main_conf_handler_pt)(ngx_log_t *log,
     ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
 	
 typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(ngx_log_t *log,
-    ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
+    ngx_stream_lua_srv_conf_t *lscf, lua_State *L);
 
 
 typedef struct {
@@ -182,7 +183,7 @@ typedef void (*ngx_stream_lua_event_handler_pt)(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t *ctx);
 
 
-typedef struct {
+struct ngx_stream_lua_srv_conf_s {
 
 #if (NGX_STREAM_SSL)
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
@@ -237,7 +238,7 @@ typedef struct {
     } balancer;
 
 
-} ngx_stream_lua_srv_conf_t;
+};
 
 
 enum {
