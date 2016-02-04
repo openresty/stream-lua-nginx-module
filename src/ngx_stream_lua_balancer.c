@@ -45,18 +45,18 @@ static ngx_int_t ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *r,
 static ngx_int_t ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc,
     void *data);
 static ngx_int_t ngx_stream_lua_balancer_by_chunk(lua_State *L,
-    ngx_stream_session_t *r);
+    ngx_log_t *log);
 void ngx_stream_lua_balancer_free_peer(ngx_peer_connection_t *pc, void *data,
     ngx_uint_t state);
 
 
 ngx_int_t
-ngx_stream_lua_balancer_handler_file(ngx_stream_session_t *r,
+ngx_stream_lua_balancer_handler_file(ngx_log_t *log,
     ngx_stream_lua_srv_conf_t *lscf, lua_State *L)
 {
     ngx_int_t           rc;
 
-    rc = ngx_stream_lua_cache_loadfile(r->connection->log, L,
+    rc = ngx_stream_lua_cache_loadfile(log, L,
                                      lscf->balancer.src.data,
                                      lscf->balancer.src_key);
     if (rc != NGX_OK) {
@@ -66,17 +66,17 @@ ngx_stream_lua_balancer_handler_file(ngx_stream_session_t *r,
     /*  make sure we have a valid code chunk */
     ngx_stream_lua_assert(lua_isfunction(L, -1));
 
-    return ngx_stream_lua_balancer_by_chunk(L, r);
+    return ngx_stream_lua_balancer_by_chunk(L, log);
 }
 
 
 ngx_int_t
-ngx_stream_lua_balancer_handler_inline(ngx_stream_session_t *r,
+ngx_stream_lua_balancer_handler_inline(ngx_log_t *log,
     ngx_stream_lua_srv_conf_t *lscf, lua_State *L)
 {
     ngx_int_t           rc;
 
-    rc = ngx_stream_lua_cache_loadbuffer(r->connection->log, L,
+    rc = ngx_stream_lua_cache_loadbuffer(log, L,
                                        lscf->balancer.src.data,
                                        lscf->balancer.src.len,
                                        lscf->balancer.src_key,
@@ -88,7 +88,7 @@ ngx_stream_lua_balancer_handler_inline(ngx_stream_session_t *r,
     /*  make sure we have a valid code chunk */
     ngx_stream_lua_assert(lua_isfunction(L, -1));
 
-    return ngx_stream_lua_balancer_by_chunk(L, r);
+    return ngx_stream_lua_balancer_by_chunk(L, log);
 }
 
 
@@ -293,7 +293,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
      */
     lmcf->balancer_peer_data = bp;
 
-    rc = lscf->balancer.handler(r->connection->log, lscf, L);
+    rc = lscf->balancer.handler(pc->log, lscf, L);
 
     if (rc == NGX_ERROR) {
         return NGX_ERROR;
@@ -330,7 +330,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
 
 
 static ngx_int_t
-ngx_stream_lua_balancer_by_chunk(lua_State *L, ngx_stream_session_t *r)
+ngx_stream_lua_balancer_by_chunk(lua_State *L, ngx_log_t *log)
 {
     u_char                  *err_msg;
     size_t                   len;
@@ -368,7 +368,7 @@ ngx_stream_lua_balancer_by_chunk(lua_State *L, ngx_stream_session_t *r)
             len = sizeof("unknown reason") - 1;
         }
 
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+        ngx_log_error(NGX_LOG_ERR, log, 0,
                       "failed to run balancer_by_lua*: %*s", len, err_msg);
 
         lua_settop(L, 0); /*  clear remaining elems on stack */
