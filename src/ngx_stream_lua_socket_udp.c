@@ -417,7 +417,9 @@ static void
 ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
 {
     ngx_stream_session_t                *s;
+#if (NGX_DEBUG)
     ngx_connection_t                    *c;
+#endif
     ngx_stream_lua_resolved_t           *ur;
     ngx_stream_lua_ctx_t                *lctx;
     lua_State                           *L;
@@ -436,7 +438,9 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
 
     u = ctx->data;
     s = u->session;
+#if (NGX_DEBUG)
     c = s->connection;
+#endif
     ur = u->resolved;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
