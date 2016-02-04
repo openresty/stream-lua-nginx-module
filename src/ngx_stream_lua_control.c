@@ -57,7 +57,8 @@ ngx_stream_lua_ngx_exit(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_TIMER);
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_BALANCER);
 
     rc = (ngx_int_t) luaL_checkinteger(L, 1);
 
@@ -145,7 +146,8 @@ ngx_stream_lua_ffi_exit(ngx_stream_session_t *s, int status, u_char *err,
     }
 
     if (ngx_stream_lua_ffi_check_context(ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                         | NGX_STREAM_LUA_CONTEXT_TIMER,
+                                         | NGX_STREAM_LUA_CONTEXT_TIMER
+                                         | NGX_STREAM_LUA_CONTEXT_BALANCER,
                                          err, errlen)
         != NGX_OK)
     {

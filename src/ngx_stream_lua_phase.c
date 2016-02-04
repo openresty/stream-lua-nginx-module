@@ -57,6 +57,11 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
     case NGX_STREAM_LUA_CONTEXT_TIMER:
         lua_pushliteral(L, "timer");
         break;
+		
+		
+    case NGX_STREAM_LUA_CONTEXT_BALANCER:
+        lua_pushliteral(L, "balancer");
+        break;
 
     default:
         return luaL_error(L, "unknown phase: %d", (int) ctx->context);
