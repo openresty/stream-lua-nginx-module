@@ -541,7 +541,11 @@ int
 ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
     int *status, char **err)
 {
-	/* NOT PORTED: IS IT POSSIBLE? */
+	
+	// This is not yet implemented.
+	// The stream module does not appear to have this available
+	// Or at-least it does not yet
+
     ngx_stream_lua_ctx_t         *ctx;
     ngx_stream_upstream_t        *u;
     //ngx_stream_upstream_state_t  *state;
@@ -587,6 +591,8 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
     } else {
         *status = 0;
     }*/
+	
+	*status = 0
 
     return bp->last_peer_state;
 }
