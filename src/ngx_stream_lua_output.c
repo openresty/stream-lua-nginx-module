@@ -555,9 +555,6 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 static int
 ngx_stream_lua_ngx_eof(lua_State *L)
 {
-#if (NGX_DEBUG)
-    ngx_connection_t          *c;
-#endif
     ngx_stream_session_t      *s;
     ngx_stream_lua_ctx_t      *ctx;
 
@@ -593,12 +590,8 @@ ngx_stream_lua_ngx_eof(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
-#if (NGX_DEBUG)
-    c = s->connection;
-
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua send eof");
-#endif
 
     lua_pushinteger(L, 1);
     return 1;
