@@ -4704,11 +4704,14 @@ ngx_stream_lua_socket_push_input_data(ngx_stream_session_t *s,
     dd("size: %d, nbufs: %d", (int) size, (int) nbufs);
 #endif
 
+#if 0
+    /* TODO */
 #if (NGX_DTRACE)
     ngx_stream_lua_probe_socket_tcp_receive_done(s, u,
                                                  (u_char *)
                                                  lua_tostring(L, -1),
                                                  size);
+#endif
 #endif
 
     if (nbufs > 1 && ll) {
