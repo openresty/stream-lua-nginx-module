@@ -57,8 +57,8 @@ ngx_stream_lua_balancer_handler_file(ngx_stream_session_t *s, ngx_log_t *log,
     ngx_int_t           rc;
 
     rc = ngx_stream_lua_cache_loadfile(log, L,
-                                     lscf->balancer.src.data,
-                                     lscf->balancer.src_key);
+                                       lscf->balancer.src.data,
+                                       lscf->balancer.src_key);
     if (rc != NGX_OK) {
         return rc;
     }
@@ -77,10 +77,10 @@ ngx_stream_lua_balancer_handler_inline(ngx_stream_session_t *s, ngx_log_t *log,
     ngx_int_t           rc;
 
     rc = ngx_stream_lua_cache_loadbuffer(log, L,
-                                       lscf->balancer.src.data,
-                                       lscf->balancer.src.len,
-                                       lscf->balancer.src_key,
-                                       "=balancer_by_lua");
+                                         lscf->balancer.src.data,
+                                         lscf->balancer.src.len,
+                                         lscf->balancer.src_key,
+                                         "=balancer_by_lua");
     if (rc != NGX_OK) {
         return rc;
     }
@@ -118,7 +118,7 @@ ngx_stream_lua_balancer_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
     u_char                      *p;
     u_char                      *name;
     ngx_str_t                   *value;
-    ngx_stream_lua_srv_conf_t     *lscf = conf;
+    ngx_stream_lua_srv_conf_t   *lscf = conf;
 
     ngx_stream_upstream_srv_conf_t      *uscf;
 
@@ -141,7 +141,7 @@ ngx_stream_lua_balancer_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
         /* Lua code in an external file */
 
         name = ngx_stream_lua_rebase_path(cf->pool, value[1].data,
-                                        value[1].len);
+                                          value[1].len);
         if (name == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -244,8 +244,8 @@ ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
 static ngx_int_t
 ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
 {
-    lua_State                          *L;
-    ngx_int_t                           rc;
+    lua_State                            *L;
+    ngx_int_t                             rc;
     ngx_stream_session_t                 *s;
     ngx_stream_lua_ctx_t                 *ctx;
     ngx_stream_lua_srv_conf_t            *lscf;
