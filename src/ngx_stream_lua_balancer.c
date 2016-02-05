@@ -592,7 +592,7 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
         *status = 0;
     }*/
 	
-	*status = 0
+	*status = 0;
 
     return bp->last_peer_state;
 }
