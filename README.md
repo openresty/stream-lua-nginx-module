@@ -269,6 +269,7 @@ TODO
 of `lua_shared_dict`.
 * Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
 * Add `lua_postpone_output` to emulate the [postpone_output](http://nginx.org/r/postpone_output) directive.
+* Add new Lua API `ngx.config.subsystem` to identifiy the NGINX subsystem (`http` or `stream`).
 
 [Back to TOC](#table-of-contents)
 
