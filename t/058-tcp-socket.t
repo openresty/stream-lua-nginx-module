@@ -374,7 +374,7 @@ attempt to send data on a closed socket
         ngx.say("request sent: ", bytes)
     }
 --- stream_response_like
-^failed to connect: blah-blah-not-found\.agentzh\.org could not be resolved(?: \(\d+: Operation timed out\))?
+^failed to connect: blah-blah-not-found\.agentzh\.org could not be resolved(?: \(\d+: (?:Operation timed out|Host not found)\))?
 connected: nil
 failed to send request: closed$
 --- error_log
