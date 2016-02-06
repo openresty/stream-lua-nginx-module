@@ -98,6 +98,7 @@ delete thread 2
 delete thread 1
 
 --- timeout: 0.2
+--- wait: 0.1
 --- abort
 --- stream_response
 receive stream response error: timeout
