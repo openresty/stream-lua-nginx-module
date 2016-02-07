@@ -178,7 +178,6 @@ ngx_stream_lua_variable_binary_remote_addr(lua_State *L,
         return 1;
     }
 
-    return NGX_OK;
 }
 
 
