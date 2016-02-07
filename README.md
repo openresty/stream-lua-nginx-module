@@ -240,6 +240,9 @@ after acquiring the raw request socket via this function.
 * [ngx.timer.running_count](https://github.com/openresty/lua-nginx-module#ngxtimerrunning_count)
 * [ngx.timer.pending_count](https://github.com/openresty/lua-nginx-module#ngxtimerpending_count)
 * [ngx.config.debug](https://github.com/openresty/lua-nginx-module#ngxconfigdebug)
+* [ngx.config.subsystem](https://github.com/openresty/lua-nginx-module#ngxconfigsubsystem)
+
+    Always takes the Lua string value `"stream"` in this module.
 * [ngx.config.prefix](https://github.com/openresty/lua-nginx-module#ngxconfigprefix)
 * [ngx.config.nginx_version](https://github.com/openresty/lua-nginx-module#ngxconfignginx_version)
 * [ngx.config.nginx_configure](https://github.com/openresty/lua-nginx-module#ngxconfignginx_configure)
@@ -269,7 +272,6 @@ TODO
 of `lua_shared_dict`.
 * Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
 * Add `lua_postpone_output` to emulate the [postpone_output](http://nginx.org/r/postpone_output) directive.
-* Add new Lua API `ngx.config.subsystem` to identifiy the NGINX subsystem (`http` or `stream`).
 
 [Back to TOC](#table-of-contents)
 

@@ -21,9 +21,19 @@ __DATA__
         ngx.say("debug: ", ngx.config.debug)
     }
 
---- config
 --- stream_response_like chop
 ^debug: (?:true|false)$
 --- no_error_log
 [error]
 
+
+
+=== TEST 2: ngx.config.subystem
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say("subsystem: ", ngx.config.subsystem)
+    }
+--- stream_response
+subsystem: stream
+--- no_error_log
+[error]

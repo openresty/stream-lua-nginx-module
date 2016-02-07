@@ -44,6 +44,9 @@ ngx_stream_lua_inject_config_api(lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_config_configure);
     lua_setfield(L, -2, "nginx_configure");
 
+    lua_pushliteral(L, "stream");
+    lua_setfield(L, -2, "subsystem");
+
     lua_setfield(L, -2, "config");
 }
 
