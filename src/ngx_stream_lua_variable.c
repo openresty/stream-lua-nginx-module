@@ -177,8 +177,6 @@ ngx_stream_lua_variable_binary_remote_addr(lua_State *L,
         lua_pushlstring(L, (const char *) &sin->sin_addr, sizeof(in_addr_t));
         return 1;
     }
-
-    return NGX_OK;
 }
 
 
