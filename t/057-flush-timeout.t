@@ -215,6 +215,7 @@ free request
 received 41 bytes of response data.
 --- no_error_log
 [error]
+--- timeout: 5
 
 
 
