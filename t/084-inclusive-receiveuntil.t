@@ -448,6 +448,8 @@ close: 1 nil
         end
         ngx.say("request sent: ", bytes)
 
+        ngx.flush(true)
+
         local read_headers = sock:receiveuntil("\r\n\r\n")
         local headers, err, part = read_headers()
         if not headers then
@@ -512,6 +514,8 @@ bad "inclusive" option value type: string
             return
         end
         ngx.say("request sent: ", bytes)
+
+        ngx.flush(true)
 
         local read_headers = sock:receiveuntil("\r\n\r\n")
         local headers, err, part = read_headers()

@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 46;
+plan tests => repeat_each() * 43;
 
 our $HtmlDir = html_dir;
 
@@ -52,31 +52,7 @@ stream lua socket tcp_nodelay
 
 
 
-=== TEST 2: header not sent yet
---- stream_server_config
-    content_by_lua_block {
-        local sock, err = ngx.req.socket(true)
-        if not sock then
-            ngx.log(ngx.ERR, "server: failed to get raw req socket: ", err)
-            return
-        end
-        local ok, err = sock:send("hello")
-        if not ok then
-            ngx.log(ngx.ERR, "failed to send: ", err)
-            return
-        end
-    }
-
---- stream_request chomp
-hello
---- stream_response chop
-hello
---- no_error_log
-[error]
-
-
-
-=== TEST 3: multiple raw req sockets
+=== TEST 2: multiple raw req sockets
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -107,7 +83,7 @@ server: failed to get raw req socket2: duplicate call
 
 
 
-=== TEST 4: ngx.say after ngx.req.socket(true)
+=== TEST 3: ngx.say after ngx.req.socket(true)
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -122,8 +98,6 @@ server: failed to get raw req socket2: duplicate call
         end
     }
 
---- stream_request
-hello
 --- stream_response
 ok
 --- no_error_log
@@ -131,7 +105,7 @@ ok
 
 
 
-=== TEST 5: ngx.print after ngx.req.socket(true)
+=== TEST 4: ngx.print after ngx.req.socket(true)
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -146,8 +120,6 @@ ok
         end
     }
 
---- stream_request chomp
-hello
 --- stream_response chomp
 ok
 --- no_error_log
@@ -155,7 +127,7 @@ ok
 
 
 
-=== TEST 6: ngx.eof after ngx.req.socket(true)
+=== TEST 5: ngx.eof after ngx.req.socket(true)
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -181,7 +153,7 @@ hello
 
 
 
-=== TEST 7: ngx.flush after ngx.req.socket(true)
+=== TEST 6: ngx.flush after ngx.req.socket(true)
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -204,7 +176,7 @@ hello
 
 
 
-=== TEST 8: receive timeout
+=== TEST 7: receive timeout
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -241,7 +213,7 @@ server: 2: failed to receive: timeout, received:  while
 
 
 
-=== TEST 9: on_abort called during ngx.sleep()
+=== TEST 8: on_abort called during ngx.sleep()
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -291,7 +263,7 @@ msg received: hello
 
 
 
-=== TEST 10: on_abort called during sock:receive()
+=== TEST 9: on_abort called during sock:receive()
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -339,7 +311,7 @@ server: failed to receive: client aborted
 
 
 
-=== TEST 11: receiveuntil
+=== TEST 10: receiveuntil
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -371,7 +343,7 @@ hello, world
 
 
 
-=== TEST 12: request body not read yet
+=== TEST 11: request body not read yet
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)
@@ -406,7 +378,7 @@ hello"
 
 
 
-=== TEST 13: read chunked request body with raw req socket
+=== TEST 12: read chunked request body with raw req socket
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket(true)

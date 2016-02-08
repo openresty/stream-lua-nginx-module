@@ -200,6 +200,9 @@ after acquiring the raw request socket via this function.
 * [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
 * [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
 * [ngx.flush](https://github.com/openresty/lua-nginx-module#ngxflush)
+
+    This call currently ignores the `wait` argument and always wait for all the pending
+output to be completely flushed out (to the system socket send buffers).
 * [ngx.exit](https://github.com/openresty/lua-nginx-module#ngxexit)
 * [ngx.eof](https://github.com/openresty/lua-nginx-module#ngxeof)
 * [ngx.sleep](https://github.com/openresty/lua-nginx-module#ngxsleep)

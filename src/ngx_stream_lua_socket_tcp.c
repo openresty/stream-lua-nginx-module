@@ -2689,6 +2689,7 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
                     ngx_del_timer(c->write);
                 }
 
+                dd("chain update chains");
 
 #if defined(nginx_version) && nginx_version >= 1001004
                 ngx_chain_update_chains(s->connection->pool,
@@ -2696,7 +2697,9 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
                 ngx_chain_update_chains(
 #endif
                                         &ctx->free_bufs,
-                                        &ctx->upstream_busy_bufs,
+                                        u->raw_downstream ?
+                                            &ctx->downstream_busy_bufs
+                                            : &ctx->upstream_busy_bufs,
                                         &u->request_bufs,
                                         (ngx_buf_tag_t) &ngx_stream_lua_module);
 

@@ -718,7 +718,7 @@ after)$
 --- stream_server_config
     content_by_lua_block {
         function f()
-            local sock = ngx.req.socket()
+            local sock = assert(ngx.req.socket())
             local body, err = sock:receive(11)
             if not body then
                 ngx.say("failed to read body: ", err)
@@ -729,6 +729,7 @@ after)$
         end
 
         ngx.say("before")
+        ngx.flush(true)
         ngx.thread.spawn(f)
         ngx.say("after")
     }
@@ -747,7 +748,7 @@ delete thread 1
 terminate 2: ok
 delete thread 2)$
 
---- stream_request
+--- stream_request chomp
 hello world
 --- stream_response_like chop
 ^(?:before

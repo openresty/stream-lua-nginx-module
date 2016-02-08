@@ -203,6 +203,8 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
         }
     }
 
+    dd("wev ready=%d, timedout=%d", wev->ready, wev->timedout);
+
     if (!wev->ready && !wev->timedout) {
         goto useless;
     }
@@ -643,7 +645,9 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
             dd("done: ctx->downstream_busy_bufs: %p",
                ctx->downstream_busy_bufs);
 
-            if (ctx->downstream_busy_bufs == NULL) {
+            if (ctx->downstream_busy_bufs == NULL
+                && !ctx->writing_raw_req_socket)
+            {
                 if (ngx_del_event(c->write, NGX_WRITE_EVENT, 0) != NGX_OK) {
                     ngx_stream_lua_free_session(s);
                 }
