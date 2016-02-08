@@ -715,6 +715,10 @@ ngx_stream_lua_send_chain_link(ngx_stream_session_t *s,
 
     rc = ngx_chain_writer(&ctx->out_writer, in);
 
+    if (rc == NGX_ERROR) {
+        s->connection->error = 1;
+    }
+
     ngx_chain_update_chains(s->connection->pool, &ctx->free_bufs,
                             &ctx->downstream_busy_bufs, &in,
                             (ngx_buf_tag_t) &ngx_stream_lua_module);

@@ -196,8 +196,9 @@ ngx_stream_lua_content_handler(ngx_stream_session_t *s)
     ngx_stream_lua_srv_conf_t       *lscf;
     ngx_stream_lua_ctx_t            *ctx;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                   "stream lua content handler");
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                   "stream lua content handler fd:%d",
+                   (int) s->connection->fd);
 
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 

@@ -2724,6 +2724,7 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
     }
 
     if (n == NGX_ERROR) {
+        c->error = 1;
         u->socket_errno = ngx_socket_errno;
         ngx_stream_lua_socket_handle_write_error(s, u,
                                                NGX_STREAM_LUA_SOCKET_FT_ERROR);
@@ -3237,8 +3238,9 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_session_t *s,
 
     c = u->peer.connection;
     if (c) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                       "stream lua close socket connection");
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                       "stream lua close socket connection fd:%d",
+                       (int) c->fd);
 
         ngx_stream_lua_socket_tcp_close_connection(c);
         u->peer.connection = NULL;

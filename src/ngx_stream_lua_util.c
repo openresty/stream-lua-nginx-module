@@ -669,9 +669,9 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
     }
 
     if (ctx->downstream_busy_bufs) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
                        "stream lua having pending data to flush to "
-                       "downstream");
+                       "downstream fd:%d", (int) c->fd);
 
         if (!c->write->ready) {
             ngx_add_timer(c->write, lscf->send_timeout);
@@ -682,6 +682,7 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 
         if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
             ngx_stream_lua_free_session(s);
+            return;
         }
 
         ctx->write_event_handler = ngx_stream_lua_content_wev_handler;
