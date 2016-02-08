@@ -315,8 +315,9 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
 
             if (coctx[i].flushing) {
                 coctx[i].flushing = 0;
-                ctx->cur_co_ctx = &coctx[i];
                 ctx->flushing_coros--;
+                n--;
+                ctx->cur_co_ctx = &coctx[i];
 
                 rc = ngx_stream_lua_flush_resume_helper(s, ctx);
                 if (rc == NGX_ERROR || rc >= NGX_OK) {
@@ -325,7 +326,6 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
 
                 /* rc == NGX_DONE */
 
-                n--;
                 if (n == 0) {
                     return NGX_DONE;
                 }
