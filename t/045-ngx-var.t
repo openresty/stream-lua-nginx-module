@@ -85,7 +85,7 @@ $/
         ngx.say(type(ngx.var.nginx_version))
     }
 --- stream_response_like eval
-qr/^connection: \d
+qr/^connection: \d+
 nginx_version: \d+\.\d+\.\d+.*
 string
 string$/
