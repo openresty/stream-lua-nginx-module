@@ -233,6 +233,7 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 
         if (!ctx->downstream_busy_bufs && ctx->done) {
             ngx_stream_lua_finalize_session(s, NGX_DONE);
+            return NGX_DONE;
         }
     }
 
@@ -315,6 +316,7 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
             if (coctx[i].flushing) {
                 coctx[i].flushing = 0;
                 ctx->cur_co_ctx = &coctx[i];
+                ctx->flushing_coros--;
 
                 rc = ngx_stream_lua_flush_resume_helper(s, ctx);
                 if (rc == NGX_ERROR || rc >= NGX_OK) {
@@ -323,7 +325,6 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
 
                 /* rc == NGX_DONE */
 
-                ctx->flushing_coros--;
                 n--;
                 if (n == 0) {
                     return NGX_DONE;
