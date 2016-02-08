@@ -153,7 +153,7 @@ n = 3
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 5
+n = 6
 --- no_error_log
 [error]
 
