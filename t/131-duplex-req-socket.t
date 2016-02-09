@@ -36,6 +36,7 @@ __DATA__
     lua_socket_read_timeout 1ms;
     lua_socket_send_timeout 1s;
     lua_socket_log_errors off;
+    #lua_lingering_timeout 1ms;
 
     content_by_lua_block {
         local function reader(req_socket)
@@ -75,8 +76,9 @@ __DATA__
 [error]
 --- error_log: The two threads finished
 --- wait: 0.1
---- stream_response chomp
-s
+--- log_stream_response
+--- stream_response_like chomp
+^received \d+ bytes of response data\.$
 --- timeout: 10
 
 
