@@ -1780,6 +1780,8 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
 
+    ctx->lingering_close = 1;
+
     if (u->bufs_in == NULL) {
         u->bufs_in =
             ngx_stream_lua_chain_get_free_buf(s->connection->log,
@@ -3975,7 +3977,6 @@ ngx_stream_lua_req_socket(lua_State *L)
     }
 
     ctx->acquired_raw_req_socket = 1;
-    ctx->lingering_close = 1;
 #endif
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */); /* the object */

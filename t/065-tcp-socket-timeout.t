@@ -728,6 +728,8 @@ lua tcp socket write timed out
 === TEST 20: abort when downstream socket pending on writes
 --- stream_server_config
     lua_resolver $TEST_NGINX_RESOLVER;
+    #lua_lingering_timeout 10ms;
+
     content_by_lua_block {
         ngx.flush(true)
         local sock, err = ngx.req.socket(true)
@@ -764,8 +766,9 @@ probe syscall.send,
         println(probefunc())
     }
 }
---- stream_response chomp
-e
+--- stream_response_like chomp
+^received [1-9]\d* bytes of response data\.$
+--- log_stream_response
 --- error_log
 stream lua tcp socket send timeout: 100
 quitting request now

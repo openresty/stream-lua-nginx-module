@@ -721,6 +721,9 @@ ngx_stream_lua_set_lingering_close(ngx_stream_session_t *s,
 
     c = s->connection;
 
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                   "stream lua set lingering close");
+
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 
     rev = c->read;
