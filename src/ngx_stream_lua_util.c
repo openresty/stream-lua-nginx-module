@@ -691,8 +691,10 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
     }
 
 #if (DDEBUG)
-    dd("c->buffered: %d, busy_bufs: %p, rev ready: %d", (int) c->buffered,
-       ctx->downstream_busy_bufs, c->read->ready);
+    dd("c->buffered: %d, busy_bufs: %p, rev ready: %d, "
+       "ctx->lingering_close: %d", (int) c->buffered,
+       ctx->downstream_busy_bufs, c->read->ready,
+       ctx->lingering_close);
 #endif
 
     if (lscf->lingering_close == NGX_STREAM_LUA_LINGERING_ALWAYS

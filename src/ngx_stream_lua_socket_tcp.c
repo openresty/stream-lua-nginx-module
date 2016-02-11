@@ -1780,8 +1780,6 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
 
-    ctx->lingering_close = 1;
-
     if (u->bufs_in == NULL) {
         u->bufs_in =
             ngx_stream_lua_chain_get_free_buf(s->connection->log,
@@ -1800,6 +1798,7 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
     dd("tcp receive: buf_in: %p, bufs_in: %p", u->buf_in, u->bufs_in);
 
     if (u->raw_downstream) {
+        ctx->lingering_close = 1;
         ctx->read_event_handler = ngx_stream_lua_req_socket_rev_handler;
     }
 
@@ -3555,6 +3554,7 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
     u->rest = u->length;
 
     if (u->raw_downstream) {
+        ctx->lingering_close = 1;
         ctx->read_event_handler = ngx_stream_lua_req_socket_rev_handler;
     }
 
