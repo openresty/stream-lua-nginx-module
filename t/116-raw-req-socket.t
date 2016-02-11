@@ -68,8 +68,6 @@ stream lua socket tcp_nodelay
 
     }
 
---- stream_request
-hello
 --- stap2
 F(ngx_stream_header_filter) {
     println("header filter")
@@ -145,8 +143,6 @@ ok
 --- config
     server_tokens off;
 
---- stream_request chomp
-hello
 --- stream_response
 --- no_error_log
 [error]
@@ -168,8 +164,6 @@ hello
         end
     }
 
---- stream_request chomp
-hello
 --- stream_response
 --- no_error_log
 [error]
