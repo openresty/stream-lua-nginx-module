@@ -125,11 +125,11 @@ received 141 bytes of response data.
 
 === TEST 3: exit in user thread (entry thread is still pending on ngx.flush)
 --- stream_server_config
-    lua_socket_send_timeout 200ms;
+    lua_socket_send_timeout 1s;
     content_by_lua_block {
         function f()
             ngx.say("hello in thread")
-            ngx.sleep(0.1)
+            ngx.sleep(0.2)
             ngx.exit(0)
         end
 
@@ -215,7 +215,7 @@ free request
 received 41 bytes of response data.
 --- no_error_log
 [error]
---- timeout: 5
+--- timeout: 6
 
 
 
