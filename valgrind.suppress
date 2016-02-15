@@ -59,3 +59,11 @@
    fun:ngx_event_process_init
    fun:ngx_worker_process_init
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   epoll_ctl(event)
+   fun:epoll_ctl
+   fun:ngx_epoll_add_event
+   fun:ngx_stream_lua_content_by_chunk
+}
