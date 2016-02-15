@@ -629,7 +629,7 @@ lua tcp socket connect timed out
 
 === TEST 18: re-send on the same object after a send timeout happens
 --- stream_server_config
-    lua_socket_send_timeout 100ms;
+    #lua_socket_send_timeout 100ms;
     lua_resolver $TEST_NGINX_RESOLVER;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -640,6 +640,8 @@ lua tcp socket connect timed out
         end
 
         ngx.say("connected: ", ok)
+
+        sock:settimeout(100)
 
         local bytes
         bytes, err = sock:send("get helloworld!")
