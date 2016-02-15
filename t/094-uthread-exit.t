@@ -920,3 +920,4 @@ hello in thread
 after
 --- no_error_log
 [error]
+--- timeout: 6
