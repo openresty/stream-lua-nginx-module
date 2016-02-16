@@ -29,7 +29,7 @@ Table of Contents
 Status
 ======
 
-Quite usable but still experimental.
+Experimental.
 
 Synopsis
 ========
