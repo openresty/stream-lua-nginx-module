@@ -1798,6 +1798,7 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
     dd("tcp receive: buf_in: %p, bufs_in: %p", u->buf_in, u->bufs_in);
 
     if (u->raw_downstream) {
+        ctx->lingering_close = 1;
         ctx->read_event_handler = ngx_stream_lua_req_socket_rev_handler;
     }
 
@@ -2689,6 +2690,7 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
                     ngx_del_timer(c->write);
                 }
 
+                dd("chain update chains");
 
 #if defined(nginx_version) && nginx_version >= 1001004
                 ngx_chain_update_chains(s->connection->pool,
@@ -2696,7 +2698,9 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
                 ngx_chain_update_chains(
 #endif
                                         &ctx->free_bufs,
-                                        &ctx->upstream_busy_bufs,
+                                        u->raw_downstream ?
+                                            &ctx->downstream_busy_bufs
+                                            : &ctx->upstream_busy_bufs,
                                         &u->request_bufs,
                                         (ngx_buf_tag_t) &ngx_stream_lua_module);
 
@@ -2721,6 +2725,7 @@ ngx_stream_lua_socket_send(ngx_stream_session_t *s,
     }
 
     if (n == NGX_ERROR) {
+        c->error = 1;
         u->socket_errno = ngx_socket_errno;
         ngx_stream_lua_socket_handle_write_error(s, u,
                                                NGX_STREAM_LUA_SOCKET_FT_ERROR);
@@ -3234,8 +3239,9 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_session_t *s,
 
     c = u->peer.connection;
     if (c) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                       "stream lua close socket connection");
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                       "stream lua close socket connection fd:%d",
+                       (int) c->fd);
 
         ngx_stream_lua_socket_tcp_close_connection(c);
         u->peer.connection = NULL;
@@ -3548,6 +3554,7 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
     u->rest = u->length;
 
     if (u->raw_downstream) {
+        ctx->lingering_close = 1;
         ctx->read_event_handler = ngx_stream_lua_req_socket_rev_handler;
     }
 
@@ -3970,7 +3977,6 @@ ngx_stream_lua_req_socket(lua_State *L)
     }
 
     ctx->acquired_raw_req_socket = 1;
-    ctx->lingering_close = 1;
 #endif
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */); /* the object */
@@ -4704,11 +4710,14 @@ ngx_stream_lua_socket_push_input_data(ngx_stream_session_t *s,
     dd("size: %d, nbufs: %d", (int) size, (int) nbufs);
 #endif
 
+#if 0
+    /* TODO */
 #if (NGX_DTRACE)
     ngx_stream_lua_probe_socket_tcp_receive_done(s, u,
                                                  (u_char *)
                                                  lua_tostring(L, -1),
                                                  size);
+#endif
 #endif
 
     if (nbufs > 1 && ll) {

@@ -261,12 +261,15 @@ qr/connect\(\) failed \(\d+: Connection refused\)/
 === TEST 6: connection timeout (tcp)
 --- stream_server_config
     lua_resolver $TEST_NGINX_RESOLVER;
-    lua_socket_connect_timeout 100ms;
-    lua_socket_send_timeout 100ms;
-    lua_socket_read_timeout 100ms;
+    #lua_socket_connect_timeout 100ms;
+    #lua_socket_send_timeout 100ms;
+    #lua_socket_read_timeout 100ms;
     lua_resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
+
+        sock:settimeout(100)  -- ms
+
         local ok, err = sock:connect("agentzh.org", 12345)
         ngx.say("connect: ", ok, " ", err)
 
@@ -374,7 +377,7 @@ attempt to send data on a closed socket
         ngx.say("request sent: ", bytes)
     }
 --- stream_response_like
-^failed to connect: blah-blah-not-found\.agentzh\.org could not be resolved(?: \(\d+: Operation timed out\))?
+^failed to connect: blah-blah-not-found\.agentzh\.org could not be resolved(?: \(\d+: (?:Operation timed out|Host not found)\))?
 connected: nil
 failed to send request: closed$
 --- error_log

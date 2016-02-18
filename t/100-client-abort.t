@@ -182,7 +182,7 @@ delete thread 1
 --- wait: 0.1
 --- timeout: 0.2
 --- abort
---- stream_request
+--- stream_request chomp
 hello
 --- stream_response
 receive stream response error: timeout
@@ -229,7 +229,7 @@ receive stream response error: timeout
         sock:receive(2)
         sock:receive(2)
         sock:receive(1)
-        ngx.sleep(1)
+        ngx.sleep(0.5)
     }
 --- stap2 eval: $::StapScript
 --- stap eval: $::GCScript
@@ -239,10 +239,10 @@ lua check broken conn
 lua req cleanup
 delete thread 1
 
---- wait: 1
+--- wait: 0.6
 --- timeout: 0.2
 --- abort
---- stream_request
+--- stream_request chomp
 hello
 --- stream_response
 receive stream response error: timeout

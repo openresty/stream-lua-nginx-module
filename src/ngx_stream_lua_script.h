@@ -4,8 +4,8 @@
  */
 
 
-#ifndef _NGX_HTTP_LUA_SCRIPT_H_INCLUDED_
-#define _NGX_HTTP_LUA_SCRIPT_H_INCLUDED_
+#ifndef _NGX_STREAM_LUA_SCRIPT_H_INCLUDED_
+#define _NGX_STREAM_LUA_SCRIPT_H_INCLUDED_
 
 
 #include "ngx_stream_lua_common.h"
@@ -83,6 +83,4 @@ ngx_int_t ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
     ngx_stream_lua_complex_value_t *val, luaL_Buffer *luabuf);
 
 
-#endif /* _NGX_HTTP_LUA_SCRIPT_H_INCLUDED_ */
-
-/* vi:set ft=c ts=4 sw=4 et fdm=marker: */
+#endif /* _NGX_STREAM_LUA_SCRIPT_H_INCLUDED_ */

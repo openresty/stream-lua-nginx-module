@@ -203,6 +203,8 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
         }
     }
 
+    dd("wev ready=%d, timedout=%d", wev->ready, wev->timedout);
+
     if (!wev->ready && !wev->timedout) {
         goto useless;
     }
@@ -233,6 +235,7 @@ ngx_stream_lua_wev_handler(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 
         if (!ctx->downstream_busy_bufs && ctx->done) {
             ngx_stream_lua_finalize_session(s, NGX_DONE);
+            return NGX_DONE;
         }
     }
 
@@ -314,6 +317,8 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
 
             if (coctx[i].flushing) {
                 coctx[i].flushing = 0;
+                ctx->flushing_coros--;
+                n--;
                 ctx->cur_co_ctx = &coctx[i];
 
                 rc = ngx_stream_lua_flush_resume_helper(s, ctx);
@@ -323,8 +328,6 @@ ngx_stream_lua_process_flushing_coroutines(ngx_stream_session_t *s,
 
                 /* rc == NGX_DONE */
 
-                ctx->flushing_coros--;
-                n--;
                 if (n == 0) {
                     return NGX_DONE;
                 }
@@ -607,6 +610,7 @@ ngx_stream_lua_finalize_session(ngx_stream_session_t *s, ngx_int_t rc)
 static void
 ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
 {
+    ngx_event_t                 *wev;
     ngx_connection_t            *c;
     ngx_stream_lua_ctx_t        *ctx;
     ngx_stream_lua_srv_conf_t   *lscf;
@@ -642,7 +646,9 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
             dd("done: ctx->downstream_busy_bufs: %p",
                ctx->downstream_busy_bufs);
 
-            if (ctx->downstream_busy_bufs == NULL) {
+            if (ctx->downstream_busy_bufs == NULL
+                && !ctx->writing_raw_req_socket)
+            {
                 if (ngx_del_event(c->write, NGX_WRITE_EVENT, 0) != NGX_OK) {
                     ngx_stream_lua_free_session(s);
                 }
@@ -664,20 +670,23 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
     }
 
     if (ctx->downstream_busy_bufs) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
+        wev = c->write;
+
+        ngx_log_debug3(NGX_LOG_DEBUG_STREAM, c->log, 0,
                        "stream lua having pending data to flush to "
-                       "downstream");
+                       "downstream fd:%d active:%d ready:%d", (int) c->fd,
+                       wev->active, wev->ready);
 
-        if (!c->write->ready) {
-            ngx_add_timer(c->write, lscf->send_timeout);
+        ngx_add_timer(wev, lscf->send_timeout);
 
-        } else if (c->write->timer_set) {
-            ngx_del_timer(c->write);
+#if 1
+        if (!wev->active) {
+            if (ngx_handle_write_event(wev, lscf->send_lowat) != NGX_OK) {
+                ngx_stream_lua_free_session(s);
+                return;
+            }
         }
-
-        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
-            ngx_stream_lua_free_session(s);
-        }
+#endif
 
         ctx->write_event_handler = ngx_stream_lua_content_wev_handler;
         ctx->resume_handler = ngx_stream_lua_wev_handler;
@@ -685,8 +694,10 @@ ngx_stream_lua_finalize_real_session(ngx_stream_session_t *s, ngx_int_t rc)
     }
 
 #if (DDEBUG)
-    dd("c->buffered: %d, busy_bufs: %p, rev ready: %d", (int) c->buffered,
-       ctx->downstream_busy_bufs, c->read->ready);
+    dd("c->buffered: %d, busy_bufs: %p, rev ready: %d, "
+       "ctx->lingering_close: %d", (int) c->buffered,
+       ctx->downstream_busy_bufs, c->read->ready,
+       ctx->lingering_close);
 #endif
 
     if (lscf->lingering_close == NGX_STREAM_LUA_LINGERING_ALWAYS
@@ -714,6 +725,9 @@ ngx_stream_lua_set_lingering_close(ngx_stream_session_t *s,
     ngx_stream_lua_srv_conf_t   *lscf;
 
     c = s->connection;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                   "stream lua set lingering close");
 
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 

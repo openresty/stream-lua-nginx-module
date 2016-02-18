@@ -848,6 +848,7 @@ after
         ngx.say("before")
         ngx.thread.spawn(f)
         ngx.say("after")
+        ngx.flush(true)
         local sock = ngx.req.socket()
 
         sock:settimeout(12000)
@@ -919,3 +920,4 @@ hello in thread
 after
 --- no_error_log
 [error]
+--- timeout: 6

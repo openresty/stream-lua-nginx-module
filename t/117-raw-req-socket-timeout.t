@@ -92,8 +92,9 @@ server: failed to get raw req socket: pending data to write
     server_tokens off;
 
 --- stream_request
---- stream_response chomp
-h
+--- stream_response_like chomp
+^received \d+ bytes of response data\.$
+--- log_stream_response
 --- error_log
 stream lua tcp socket write timed out
 server: failed to send: timeout

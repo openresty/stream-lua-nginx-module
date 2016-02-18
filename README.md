@@ -29,7 +29,7 @@ Table of Contents
 Status
 ======
 
-Quite usable but still experimental.
+Experimental.
 
 Synopsis
 ========
@@ -200,6 +200,9 @@ after acquiring the raw request socket via this function.
 * [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
 * [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
 * [ngx.flush](https://github.com/openresty/lua-nginx-module#ngxflush)
+
+    This call currently ignores the `wait` argument and always wait for all the pending
+output to be completely flushed out (to the system socket send buffers).
 * [ngx.exit](https://github.com/openresty/lua-nginx-module#ngxexit)
 * [ngx.eof](https://github.com/openresty/lua-nginx-module#ngxeof)
 * [ngx.sleep](https://github.com/openresty/lua-nginx-module#ngxsleep)
@@ -240,6 +243,9 @@ after acquiring the raw request socket via this function.
 * [ngx.timer.running_count](https://github.com/openresty/lua-nginx-module#ngxtimerrunning_count)
 * [ngx.timer.pending_count](https://github.com/openresty/lua-nginx-module#ngxtimerpending_count)
 * [ngx.config.debug](https://github.com/openresty/lua-nginx-module#ngxconfigdebug)
+* [ngx.config.subsystem](https://github.com/openresty/lua-nginx-module#ngxconfigsubsystem)
+
+    Always takes the Lua string value `"stream"` in this module.
 * [ngx.config.prefix](https://github.com/openresty/lua-nginx-module#ngxconfigprefix)
 * [ngx.config.nginx_version](https://github.com/openresty/lua-nginx-module#ngxconfignginx_version)
 * [ngx.config.nginx_configure](https://github.com/openresty/lua-nginx-module#ngxconfignginx_configure)

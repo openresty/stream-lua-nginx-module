@@ -38,8 +38,8 @@ __DATA__
             end
         end
     }
---- stream_request
-hello world! my world!
+--- stream_request chomp
+hello world! my
 --- stream_response
 got the request socket
 received: hello
@@ -87,6 +87,7 @@ received: d! my
             m = ngx.re.match(line, "--$", "jo")
             if m then
                 ngx.say("found the end of the stream")
+                sock:receive() -- consume the epiloque.
                 return
             end
 
@@ -207,6 +208,7 @@ found the end of the stream
                 m = ngx.re.match(line, "--$", "jo")
                 if m then
                     ngx.say("found the end of the stream")
+                    sock:receive() -- consume the epiloque.
                     return
                 end
             end
@@ -424,8 +426,8 @@ function go()
        end
    end
 end
---- stream_request
-hello, worldhiya, world
+--- stream_request chomp
+hello, worldhiya, wo
 --- stream_response
 got the request socket
 received: hell
@@ -441,7 +443,7 @@ done
 
 === TEST 7: pipelined requests, big buffer, small steps
 --- stream_server_config
-        lua_socket_buffer_size 5;
+    lua_socket_buffer_size 5;
     content_by_lua_block {
         local sock, err = ngx.req.socket()
         if sock then
@@ -464,7 +466,7 @@ M(http-lua-req-socket-consume-preread) {
     println("preread: ", user_string_n($arg2, $arg3))
 }
 
---- stream_request
+--- stream_request chomp
 hello world
 hiya globe
 --- stream_response

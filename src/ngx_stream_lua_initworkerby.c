@@ -32,6 +32,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     ngx_list_part_t             *part;
     ngx_connection_t            *c = NULL;
     ngx_stream_module_t         *module;
+    ngx_module_t               **modules;
     ngx_stream_session_t        *s = NULL;
     ngx_stream_lua_ctx_t        *ctx;
     ngx_stream_conf_ctx_t       *conf_ctx, stream_ctx;
@@ -156,12 +157,18 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         return NGX_ERROR;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_STREAM_MODULE) {
+#if defined(nginx_version) && nginx_version >= 1009011
+    modules = cycle->modules;
+#else
+    modules = ngx_modules;
+#endif
+
+    for (i = 0; modules[i]; i++) {
+        if (modules[i]->type != NGX_STREAM_MODULE) {
             continue;
         }
 
-        module = ngx_modules[i]->ctx;
+        module = modules[i]->ctx;
 
         if (module->create_srv_conf) {
             cur = module->create_srv_conf(&conf);
@@ -169,9 +176,9 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
                 return NGX_ERROR;
             }
 
-            stream_ctx.srv_conf[ngx_modules[i]->ctx_index] = cur;
+            stream_ctx.srv_conf[modules[i]->ctx_index] = cur;
 
-            if (ngx_modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
+            if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
             {
                 cscf = cur;
                 /* just to silence the error in
