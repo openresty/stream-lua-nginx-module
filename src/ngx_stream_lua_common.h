@@ -44,6 +44,11 @@
 #endif
 
 
+#ifndef NGX_STREAM_LUA_MAX_ARGS
+#define NGX_STREAM_LUA_MAX_ARGS 100
+#endif
+
+
 /* must be within 16 bit */
 #define NGX_STREAM_LUA_CONTEXT_CONTENT        0x001
 #define NGX_STREAM_LUA_CONTEXT_LOG            0x002
