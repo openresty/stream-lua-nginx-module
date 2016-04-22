@@ -96,7 +96,11 @@ typedef struct {
     ngx_uint_t                       no_port; /* unsigned no_port:1 */
 
     ngx_uint_t                       naddrs;
+#if (nginx_version >= 1009013)
+    ngx_resolver_addr_t             *addrs;
+#else
     ngx_addr_t                      *addrs;
+#endif
 
     struct sockaddr                 *sockaddr;
     socklen_t                        socklen;
