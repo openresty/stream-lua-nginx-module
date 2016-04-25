@@ -2457,6 +2457,9 @@ ngx_stream_lua_ffi_max_regex_cache_size(void)
     ngx_stream_lua_main_conf_t    *lmcf;
     lmcf = ngx_stream_cycle_get_module_main_conf(ngx_cycle,
                                                  ngx_stream_lua_module);
+    if (lmcf == NULL) {
+        return 0;
+    }
     return (uint32_t) lmcf->regex_cache_max_entries;
 }
 #endif /* NGX_LUA_NO_FFI_API */
