@@ -561,8 +561,6 @@ ngx_stream_lua_session_cleanup(ngx_stream_lua_ctx_t *ctx, int forcible)
     ngx_stream_session_t            *s;
     ngx_stream_lua_main_conf_t      *lmcf;
 
-    s = ctx->session;
-
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua session cleanup: forcible=%d", forcible);
 
@@ -571,6 +569,8 @@ ngx_stream_lua_session_cleanup(ngx_stream_lua_ctx_t *ctx, int forcible)
         dd("ctx is NULL");
         return;
     }
+
+    s = ctx->session;
 
     lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
 
