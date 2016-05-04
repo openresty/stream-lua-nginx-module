@@ -44,6 +44,7 @@ src/initby.[ch]
 src/shdict.[ch]
 src/initworkerby.[ch]
 src/variable.[ch]
+src/args.[ch]
 echo
 reindex
 go

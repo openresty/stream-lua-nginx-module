@@ -70,6 +70,9 @@ int ngx_stream_lua_do_call(ngx_log_t *log, lua_State *L);
 ngx_int_t ngx_stream_lua_report(ngx_log_t *log, lua_State *L, int status,
     const char *prefix);
 void ngx_stream_lua_free_session(ngx_stream_session_t *s);
+void ngx_stream_lua_process_args_option(ngx_stream_session_t *s, lua_State *L,
+    int table, ngx_str_t *args);
+void ngx_stream_lua_set_multi_value_table(lua_State *L, int index);
 
 
 #ifndef NGX_UNESCAPE_URI_COMPONENT

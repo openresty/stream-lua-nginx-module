@@ -462,9 +462,7 @@ ngx_stream_lua_ngx_re_match_helper(lua_State *L, int wantcaps)
         lua_rawset(L, -3); /* table */
         lua_pop(L, 1);
 
-        if (lmcf) {
-            lmcf->regex_cache_entries++;
-        }
+        lmcf->regex_cache_entries++;
     }
 
 exec:
@@ -921,9 +919,7 @@ ngx_stream_lua_ngx_re_gmatch(lua_State *L)
         lua_rawset(L, -3); /* table */
         lua_pop(L, 1);
 
-        if (lmcf) {
-            lmcf->regex_cache_entries++;
-        }
+        lmcf->regex_cache_entries++;
     }
 
 compiled:
@@ -1662,9 +1658,7 @@ ngx_stream_lua_ngx_re_sub_helper(lua_State *L, unsigned global)
         lua_rawset(L, -3); /* table */
         lua_pop(L, 1);
 
-        if (lmcf) {
-            lmcf->regex_cache_entries++;
-        }
+        lmcf->regex_cache_entries++;
     }
 
 exec:

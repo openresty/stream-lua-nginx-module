@@ -561,16 +561,16 @@ ngx_stream_lua_session_cleanup(ngx_stream_lua_ctx_t *ctx, int forcible)
     ngx_stream_session_t            *s;
     ngx_stream_lua_main_conf_t      *lmcf;
 
-    s = ctx->session;
-
-    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                   "stream lua session cleanup: forcible=%d", forcible);
-
     /*  force coroutine handling the session quit */
     if (ctx == NULL) {
         dd("ctx is NULL");
         return;
     }
+
+    s = ctx->session;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
+                   "stream lua session cleanup: forcible=%d", forcible);
 
     lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
 
@@ -2652,7 +2652,7 @@ static void
 ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
     ngx_log_t *log)
 {
-    lua_createtable(L, 0 /* narr */, 54 /* nrec */);    /* ngx.* */
+    lua_createtable(L, 0 /* narr */, 56 /* nrec */);    /* ngx.* */
 
     lua_pushcfunction(L, ngx_stream_lua_get_raw_phase_context);
     lua_setfield(L, -2, "_phase_ctx");
@@ -3231,4 +3231,314 @@ ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
     ngx_stream_lua_inject_req_socket_api(L);
 
     lua_setfield(L, -2, "req");
+}
+
+
+void
+ngx_stream_lua_process_args_option(ngx_stream_session_t *s, lua_State *L,
+    int table, ngx_str_t *args)
+{
+    u_char              *key;
+    size_t               key_len;
+    u_char              *value;
+    size_t               value_len;
+    size_t               len = 0;
+    size_t               key_escape = 0;
+    uintptr_t            total_escape = 0;
+    int                  n;
+    int                  i;
+    u_char              *p;
+
+    if (table < 0) {
+        table = lua_gettop(L) + table + 1;
+    }
+
+    n = 0;
+    lua_pushnil(L);
+    while (lua_next(L, table) != 0) {
+        if (lua_type(L, -2) != LUA_TSTRING) {
+            luaL_error(L, "attempt to use a non-string key in the "
+                       "\"args\" option table");
+            return;
+        }
+
+        key = (u_char *) lua_tolstring(L, -2, &key_len);
+
+        key_escape = 2 * ngx_stream_lua_escape_uri(NULL, key, key_len,
+                                                   NGX_ESCAPE_URI);
+        total_escape += key_escape;
+
+        switch (lua_type(L, -1)) {
+        case LUA_TNUMBER:
+        case LUA_TSTRING:
+            value = (u_char *) lua_tolstring(L, -1, &value_len);
+
+            total_escape += 2 * ngx_stream_lua_escape_uri(NULL, value,
+                                                          value_len,
+                                                          NGX_ESCAPE_URI);
+
+            len += key_len + value_len + (sizeof("=") - 1);
+            n++;
+
+            break;
+
+        case LUA_TBOOLEAN:
+            if (lua_toboolean(L, -1)) {
+                len += key_len;
+                n++;
+            }
+
+            break;
+
+        case LUA_TTABLE:
+
+            i = 0;
+            lua_pushnil(L);
+            while (lua_next(L, -2) != 0) {
+                if (lua_isboolean(L, -1)) {
+                    if (lua_toboolean(L, -1)) {
+                        len += key_len;
+
+                    } else {
+                        lua_pop(L, 1);
+                        continue;
+                    }
+
+                } else {
+                    value = (u_char *) lua_tolstring(L, -1, &value_len);
+
+                    if (value == NULL) {
+                        luaL_error(L, "attempt to use %s as query arg value",
+                                   luaL_typename(L, -1));
+                        return;
+                    }
+
+                    total_escape +=
+                        2 * ngx_stream_lua_escape_uri(NULL, value,
+                                                      value_len,
+                                                      NGX_ESCAPE_URI);
+
+                    len += key_len + value_len + (sizeof("=") - 1);
+                }
+
+                if (i++ > 0) {
+                    total_escape += key_escape;
+                }
+
+                n++;
+                lua_pop(L, 1);
+            }
+
+            break;
+
+        default:
+            luaL_error(L, "attempt to use %s as query arg value",
+                       luaL_typename(L, -1));
+            return;
+        }
+
+        lua_pop(L, 1);
+    }
+
+    len += (size_t) total_escape;
+
+    if (n > 1) {
+        len += (n - 1) * (sizeof("&") - 1);
+    }
+
+    dd("len 1: %d", (int) len);
+
+    if (s) {
+        p = ngx_palloc(s->connection->pool, len);
+        if (p == NULL) {
+            luaL_error(L, "no memory");
+            return;
+        }
+
+    } else {
+        p = lua_newuserdata(L, len);
+    }
+
+    args->data = p;
+    args->len = len;
+
+    i = 0;
+    lua_pushnil(L);
+    while (lua_next(L, table) != 0) {
+        key = (u_char *) lua_tolstring(L, -2, &key_len);
+
+        switch (lua_type(L, -1)) {
+        case LUA_TNUMBER:
+        case LUA_TSTRING:
+
+            if (total_escape) {
+                p = (u_char *) ngx_stream_lua_escape_uri(p, key, key_len,
+                                                         NGX_ESCAPE_URI);
+
+            } else {
+                dd("shortcut: no escape required");
+
+                p = ngx_copy(p, key, key_len);
+            }
+
+            *p++ = '=';
+
+            value = (u_char *) lua_tolstring(L, -1, &value_len);
+
+            if (total_escape) {
+                p = (u_char *) ngx_stream_lua_escape_uri(p, value, value_len,
+                                                         NGX_ESCAPE_URI);
+
+            } else {
+                p = ngx_copy(p, value, value_len);
+            }
+
+            if (i != n - 1) {
+                /* not the last pair */
+                *p++ = '&';
+            }
+
+            i++;
+
+            break;
+
+        case LUA_TBOOLEAN:
+            if (lua_toboolean(L, -1)) {
+                if (total_escape) {
+                    p = (u_char *) ngx_stream_lua_escape_uri(p, key, key_len,
+                                                             NGX_ESCAPE_URI);
+
+                } else {
+                    dd("shortcut: no escape required");
+
+                    p = ngx_copy(p, key, key_len);
+                }
+
+                if (i != n - 1) {
+                    /* not the last pair */
+                    *p++ = '&';
+                }
+
+                i++;
+            }
+
+            break;
+
+        case LUA_TTABLE:
+
+            lua_pushnil(L);
+            while (lua_next(L, -2) != 0) {
+
+                if (lua_isboolean(L, -1)) {
+                    if (lua_toboolean(L, -1)) {
+                        if (total_escape) {
+                            p = (u_char *) ngx_stream_lua_escape_uri(p, key,
+    key_len,
+    NGX_ESCAPE_URI);
+
+                        } else {
+                            dd("shortcut: no escape required");
+
+                            p = ngx_copy(p, key, key_len);
+                        }
+
+                    } else {
+                        lua_pop(L, 1);
+                        continue;
+                    }
+
+                } else {
+
+                    if (total_escape) {
+                        p = (u_char *)
+                                ngx_stream_lua_escape_uri(p, key,
+                                                          key_len,
+                                                          NGX_ESCAPE_URI);
+
+                    } else {
+                        dd("shortcut: no escape required");
+
+                        p = ngx_copy(p, key, key_len);
+                    }
+
+                    *p++ = '=';
+
+                    value = (u_char *) lua_tolstring(L, -1, &value_len);
+
+                    if (total_escape) {
+                        p = (u_char *)
+                                ngx_stream_lua_escape_uri(p, value,
+                                                          value_len,
+                                                          NGX_ESCAPE_URI);
+
+                    } else {
+                        p = ngx_copy(p, value, value_len);
+                    }
+                }
+
+                if (i != n - 1) {
+                    /* not the last pair */
+                    *p++ = '&';
+                }
+
+                i++;
+                lua_pop(L, 1);
+            }
+
+            break;
+
+        default:
+            luaL_error(L, "should not reach here");
+            return;
+        }
+
+        lua_pop(L, 1);
+    }
+
+    if (p - args->data != (ssize_t) len) {
+        luaL_error(L, "buffer error: %d != %d",
+                   (int) (p - args->data), (int) len);
+        return;
+    }
+}
+
+
+void
+ngx_stream_lua_set_multi_value_table(lua_State *L, int index)
+{
+    if (index < 0) {
+        index = lua_gettop(L) + index + 1;
+    }
+
+    lua_pushvalue(L, -2); /* stack: table key value key */
+    lua_rawget(L, index);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1); /* stack: table key value */
+        lua_rawset(L, index); /* stack: table */
+
+    } else {
+        if (!lua_istable(L, -1)) {
+            /* just inserted one value */
+            lua_createtable(L, 4, 0);
+                /* stack: table key value value table */
+            lua_insert(L, -2);
+                /* stack: table key value table value */
+            lua_rawseti(L, -2, 1);
+                /* stack: table key value table */
+            lua_insert(L, -2);
+                /* stack: table key table value */
+
+            lua_rawseti(L, -2, 2); /* stack: table key table */
+
+            lua_rawset(L, index); /* stack: table */
+
+        } else {
+            /* stack: table key value table */
+            lua_insert(L, -2); /* stack: table key table value */
+
+            lua_rawseti(L, -2, lua_objlen(L, -2) + 1);
+                /* stack: table key table  */
+            lua_pop(L, 2); /* stack: table */
+        }
+    }
 }

@@ -44,6 +44,11 @@
 #endif
 
 
+#ifndef NGX_STREAM_LUA_MAX_ARGS
+#define NGX_STREAM_LUA_MAX_ARGS 100
+#endif
+
+
 /* must be within 16 bit */
 #define NGX_STREAM_LUA_CONTEXT_CONTENT        0x001
 #define NGX_STREAM_LUA_CONTEXT_LOG            0x002
@@ -96,7 +101,11 @@ typedef struct {
     ngx_uint_t                       no_port; /* unsigned no_port:1 */
 
     ngx_uint_t                       naddrs;
+#if (nginx_version >= 1009013)
+    ngx_resolver_addr_t             *addrs;
+#else
     ngx_addr_t                      *addrs;
+#endif
 
     struct sockaddr                 *sockaddr;
     socklen_t                        socklen;
