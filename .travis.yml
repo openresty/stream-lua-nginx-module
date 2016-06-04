@@ -1,0 +1,77 @@
+sudo: required
+dist: trusty
+
+os: linux
+
+language: c
+
+compiler:
+  - gcc
+  - clang
+
+cache:
+  directories:
+  - download-cache
+
+env:
+  global:
+    - LUAJIT_PREFIX=/opt/luajit21
+    - LUAJIT_LIB=$LUAJIT_PREFIX/lib
+    - LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
+    - LUAJIT_INC=$LUAJIT_PREFIX/include/luajit-2.1
+    - LUA_INCLUDE_DIR=$LUAJIT_INC
+    - LUA_CMODULE_DIR=/lib
+    - PCRE_VER=8.33
+    - PCRE_PREFIX=/opt/pcre
+    - PCRE_LIB=$PCRE_PREFIX/lib
+    - PCRE_INC=$PCRE_PREFIX/include
+    - JOBS=3
+    - NGX_BUILD_JOBS=$JOBS
+  matrix:
+    - NGINX_VERSION=1.9.15
+
+services:
+ - memcache
+ - redis-server
+
+before_install:
+  - sudo apt-get install -qq -y axel cpanminus libgd-dev libtest-base-perl libtext-diff-perl liburi-perl libwww-perl libtest-longstring-perl liblist-moreutils-perl > build.log 2>&1 || (cat build.log && exit 1)
+
+install:
+  - if [ ! -d download-cache ]; then mkdir download-cache; fi
+  - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -O download-cache/pcre-$PCRE_VER.tar.gz http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
+  - git clone https://github.com/openresty/nginx-devel-utils.git
+  - git clone https://github.com/openresty/lua-cjson.git
+  - git clone https://github.com/openresty/openresty.git ../openresty
+  - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
+  - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
+  - git clone https://github.com/openresty/mockeagain.git
+  - git clone https://github.com/openresty/test-nginx.git
+  - git clone -b v2.1-agentzh https://github.com/openresty/luajit2.git
+  - git clone https://github.com/openresty/lua-nginx-module.git ../lua-nginx-module
+  - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
+  - git clone https://github.com/openresty/memc-nginx-module.git ../memc-nginx-module
+  - git clone https://github.com/openresty/headers-more-nginx-module.git ../headers-more-nginx-module
+  - git clone https://github.com/openresty/stream-echo-nginx-module.git ../stream-echo-nginx-module
+
+script:
+  - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
+  - cd pcre-$PCRE_VER/
+  - ./configure --prefix=$PCRE_PREFIX --enable-jit --enable-utf --enable-unicode-properties > build.log 2>&1 || (cat build.log && exit 1)
+  - make -j$JOBS > build.log 2>&1 || (cat build.log && exit 1)
+  - sudo PATH=$PATH make install > build.log 2>&1 || (cat build.log && exit 1)
+  - cd ..
+  - cd luajit2
+  - make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' > build.log 2>&1 || (cat build.log && exit 1)
+  - sudo make install PREFIX=$LUAJIT_PREFIX > build.log 2>&1 || (cat build.log && exit 1)
+  - cd ../test-nginx && sudo cpanm . && cd ..
+  - cd lua-cjson/ && make -j$JOBS && sudo make install && cd ..
+  - cd mockeagain/ && make CC=$CC -j$JOBS && cd ..
+  - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
+  - export NGX_BUILD_CC=$CC
+  - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
+  - nginx -V
+  - ldd `which nginx`|grep luajit
+  - export LD_PRELOAD=$PWD/mockeagain/mockeagain.so
+  - prove -r t
+  
