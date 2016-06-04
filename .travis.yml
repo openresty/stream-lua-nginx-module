@@ -27,6 +27,7 @@ env:
     - PCRE_INC=$PCRE_PREFIX/include
     - JOBS=3
     - NGX_BUILD_JOBS=$JOBS
+    - TEST_NGINX_SLEEP=0.006
   matrix:
     - NGINX_VERSION=1.9.15
 
@@ -71,6 +72,10 @@ script:
   - export NGX_BUILD_CC=$CC
   - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
   - nginx -V
-  - ldd `which nginx`|grep luajit
+  - ldd `which nginx`|grep -E 'luajit|ssl|pcre'
   - export LD_PRELOAD=$PWD/mockeagain/mockeagain.so
+  - export LD_LIBRARY_PATH=$PWD/mockeagain:$LD_LIBRARY_PATH
+  - export TEST_NGINX_RESOLVER=8.8.4.4
+  - dig +short @$TEST_NGINX_RESOLVER openresty.org || exit 0
+  - dig +short @$TEST_NGINX_RESOLVER agentzh.org || exit 0
   - prove -r t
