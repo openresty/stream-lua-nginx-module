@@ -639,7 +639,7 @@ ngx_stream_lua_clfactory_loadfile(lua_State *L, const char *filename)
         sharp = 1;
     }
 
-    if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
+    if (c == LUA_SIGNATURE[0]) {  /* binary file? */
         lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
 
         if (lf.f == NULL) {
