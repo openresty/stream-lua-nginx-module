@@ -2652,7 +2652,7 @@ static void
 ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
     ngx_log_t *log)
 {
-    lua_createtable(L, 0 /* narr */, 56 /* nrec */);    /* ngx.* */
+    lua_createtable(L, 0 /* narr */, 55 /* nrec */);    /* ngx.* */
 
     lua_pushcfunction(L, ngx_stream_lua_get_raw_phase_context);
     lua_setfield(L, -2, "_phase_ctx");
