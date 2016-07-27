@@ -147,7 +147,7 @@ typedef struct {
 
 
 void ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L);
-void ngx_stream_lua_inject_req_socket_api(lua_State *L);
+void ngx_stream_lua_inject_tcp_req_socket_api(lua_State *L);
 void ngx_stream_lua_cleanup_conn_pools(lua_State *L);
 
 
