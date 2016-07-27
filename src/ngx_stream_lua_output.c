@@ -60,6 +60,10 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
         return luaL_error(L, "no session object found");
     }
 
+    if (s->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "not supported in udp requests");
+    }
+
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
 
     if (ctx == NULL) {
@@ -476,6 +480,10 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     s = ngx_stream_lua_get_session(L);
 
+    if (s->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "not supported in udp requests");
+    }
+
     wait = 1;  /* always wait */
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
@@ -561,6 +569,10 @@ ngx_stream_lua_ngx_eof(lua_State *L)
     s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
+    }
+
+    if (s->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "not supported in udp requests");
     }
 
     if (lua_gettop(L) != 0) {

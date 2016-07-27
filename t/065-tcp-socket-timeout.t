@@ -138,7 +138,6 @@ lua tcp socket connect timed out
 --- timeout: 10
 
 
-
 === TEST 5: sock:settimeout(-1) does not override lua_socket_connect_timeout
 --- stream_server_config
     lua_socket_connect_timeout 102ms;

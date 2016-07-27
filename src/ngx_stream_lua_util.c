@@ -3227,9 +3227,9 @@ ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
 {
     /* ngx.req table */
 
-    lua_createtable(L, 0 /* narr */, 1 /* nrec */);    /* .req */
-
-    ngx_stream_lua_inject_req_socket_api(L);
+    lua_createtable(L, 0 /* narr */, 2 /* nrec */);    /* .req */
+    ngx_stream_lua_inject_tcp_req_socket_api(L);
+    ngx_stream_lua_inject_udp_req_socket_api(L);
 
     lua_setfield(L, -2, "req");
 }
