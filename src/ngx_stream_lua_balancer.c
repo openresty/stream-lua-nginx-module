@@ -592,6 +592,11 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
         *status = 0;
     }*/
 
+    /*
+     * Given that the stream upstream module is very basic in comparison
+     * with the http upstream module, we do not have any status output
+     * available at this moment.
+     */
     *status = 0;
 
     return bp->last_peer_state;
