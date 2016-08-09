@@ -27,6 +27,7 @@ __DATA__
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -49,6 +50,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log
 [lua] balancer_by_lua:2: hello from balancer by lua! while connecting to upstream,
@@ -71,6 +73,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -95,6 +98,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
 --- stream_server_config
     set $foo 32;
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -117,6 +121,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -138,6 +143,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 ["arg foo: bar",
@@ -158,6 +164,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -177,6 +184,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 [
@@ -198,6 +206,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
@@ -214,6 +223,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- error_log eval
 qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
@@ -230,6 +240,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
     }
 --- stream_server_config
     proxy_pass backend;
+--- config
 --- stream_response
 --- grep_error_log eval: qr/I am in phase \w+/
 --- grep_error_log_out
