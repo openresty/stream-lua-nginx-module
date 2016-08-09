@@ -104,7 +104,7 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       0,
       (void *) ngx_stream_lua_content_handler_file },
-	  
+
     { ngx_string("balancer_by_lua_block"),
       NGX_STREAM_UPS_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
       ngx_stream_lua_balancer_by_lua_block,

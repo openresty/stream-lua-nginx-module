@@ -170,7 +170,7 @@ struct ngx_stream_lua_main_conf_s {
     ngx_uint_t                           shm_zones_inited;
 
     ngx_stream_lua_semaphore_mm_t       *semaphore_mm;
-	
+
     ngx_stream_lua_balancer_peer_data_t      *balancer_peer_data;
                     /* balancer_by_lua does not support yielding and
                      * there cannot be any conflicts among concurrent requests,
@@ -237,8 +237,8 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_uint_t                          lingering_close;
     ngx_msec_t                          lingering_time;
     ngx_msec_t                          lingering_timeout;
-	
-	struct {
+
+    struct {
         ngx_str_t           src;
         u_char             *src_key;
 

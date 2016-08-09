@@ -409,9 +409,9 @@ int
 ngx_stream_lua_ffi_balancer_set_current_peer(ngx_stream_session_t *s,
     const u_char *adds, size_t addr_len, int port, char **err)
 {
-    ngx_url_t              url;
-    ngx_stream_lua_ctx_t    *ctx;
-    ngx_stream_upstream_t   *u;
+    ngx_url_t               url;
+    ngx_stream_lua_ctx_t   *ctx;
+    ngx_stream_upstream_t  *u;
 
     ngx_stream_lua_main_conf_t           *lmcf;
     ngx_stream_lua_balancer_peer_data_t  *bp;
@@ -529,8 +529,7 @@ ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_session_t *s,
         return NGX_ERROR;
     }
 
-    
-	*err = NULL;
+    *err = NULL;
 
     bp->more_tries = count;
     return NGX_OK;
@@ -541,14 +540,15 @@ int
 ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
     int *status, char **err)
 {
-	
-	// This is not yet implemented.
-	// The stream module does not appear to have this available
-	// Or at-least it does not yet
+
+  /* This is not yet implemented.
+   * The stream module does not appear to have this available
+   * Or at-least it does not yet
+   */
 
     ngx_stream_lua_ctx_t         *ctx;
     ngx_stream_upstream_t        *u;
-    //ngx_stream_upstream_state_t  *state;
+    /* ngx_stream_upstream_state_t  *state; */
 
     ngx_stream_lua_balancer_peer_data_t  *bp;
     ngx_stream_lua_main_conf_t           *lmcf;
@@ -591,8 +591,8 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
     } else {
         *status = 0;
     }*/
-	
-	*status = 0;
+
+    *status = 0;
 
     return bp->last_peer_state;
 }
