@@ -28,6 +28,8 @@ __DATA__
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log eval
 [
@@ -39,18 +41,20 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
 
 
 
-=== TEST 2: exit 403
+=== TEST 2: exit DECLINED
 --- stream_config
     upstream backend {
         server 0.0.0.1;
         balancer_by_lua_block {
             print("hello from balancer by lua!")
-            ngx.exit(403)
+            ngx.exit(ngx.DECLINED)
         }
     }
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log
 [lua] balancer_by_lua:2: hello from balancer by lua! while connecting to upstream,
@@ -74,6 +78,8 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log eval
 [
@@ -99,6 +105,8 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
     set $foo 32;
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log eval
 [
@@ -111,72 +119,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
 
 
 
-=== TEST 5: ngx.req.get_headers works
---- stream_config
-    upstream backend {
-        server 0.0.0.1;
-        balancer_by_lua_block {
-            print("header foo: ", ngx.req.get_headers()["foo"])
-        }
-    }
---- stream_server_config
-    proxy_pass backend;
---- config
---- stream_response
---- error_log eval
-[
-"header foo: bar",
-qr/\[crit\] .* connect\(\) .*? failed/,
-]
---- no_error_log
-[warn]
-
-
-
-=== TEST 6: ngx.req.get_uri_args() works
---- stream_config
-    upstream backend {
-        server 0.0.0.1;
-        balancer_by_lua_block {
-            print("arg foo: ", ngx.req.get_uri_args()["foo"])
-        }
-    }
---- stream_server_config
-    proxy_pass backend;
---- config
---- stream_response
---- error_log eval
-["arg foo: bar",
-qr/\[crit\] .* connect\(\) .*? failed/,
-]
---- no_error_log
-[warn]
-
-
-
-=== TEST 7: ngx.req.get_method() works
---- stream_config
-    upstream backend {
-        server 0.0.0.1;
-        balancer_by_lua_block {
-            print("method: ", ngx.req.get_method())
-        }
-    }
---- stream_server_config
-    proxy_pass backend;
---- config
---- stream_response
---- error_log eval
-[
-"method: GET",
-qr/\[crit\] .* connect\(\) .*? failed/,
-]
---- no_error_log
-[warn]
-
-
-
-=== TEST 8: simple logging (by_lua_file)
+=== TEST 5: simple logging (by_lua_file)
 --- stream_config
     upstream backend {
         server 0.0.0.1;
@@ -185,6 +128,11 @@ qr/\[crit\] .* connect\(\) .*? failed/,
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
+--- user_files
+>>> a.lua
+print("hello from balancer by lua!")
 --- stream_response
 --- error_log eval
 [
@@ -196,7 +144,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
 
 
 
-=== TEST 9: cosockets are disabled
+=== TEST 6: cosockets are disabled
 --- stream_config
     upstream backend {
         server 0.0.0.1;
@@ -207,13 +155,15 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "http://0\.0\
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log eval
 qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
 
 
 
-=== TEST 10: ngx.sleep is disabled
+=== TEST 7: ngx.sleep is disabled
 --- stream_config
     upstream backend {
         server 0.0.0.1;
@@ -224,13 +174,15 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- error_log eval
 qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
 
 
 
-=== TEST 11: get_phase
+=== TEST 8: get_phase
 --- stream_config
     upstream backend {
         server 0.0.0.1;
@@ -241,6 +193,8 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 --- stream_server_config
     proxy_pass backend;
 --- config
+--- stream_request chomp
+hello world
 --- stream_response
 --- grep_error_log eval: qr/I am in phase \w+/
 --- grep_error_log_out
