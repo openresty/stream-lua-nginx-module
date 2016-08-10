@@ -241,10 +241,8 @@ struct ngx_stream_lua_srv_conf_s {
     struct {
         ngx_str_t           src;
         u_char             *src_key;
-
         ngx_stream_lua_srv_conf_handler_pt  handler;
     } balancer;
-
 
 };
 
