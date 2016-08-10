@@ -252,8 +252,8 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
     ngx_stream_lua_main_conf_t           *lmcf;
     ngx_stream_lua_balancer_peer_data_t  *bp = data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "lua balancer pees, try: %ui", pc->tries);
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, pc->log, 0,
+                   "lua balancer peer, try: %ui", pc->tries);
 
     lscf = bp->conf;
 

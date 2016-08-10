@@ -65,7 +65,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "0\.0\.0\.1:8
 --- stream_server_config
     proxy_pass backend;
 --- error_log eval
-qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of \(unknown\)/
+qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
 
 
 
@@ -95,7 +95,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: attempt to yield across C-call
 --- stream_server_config
     proxy_pass backend;
 --- error_log eval
-qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of \(unknown\)/
+qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disabled in the context of balancer_by_lua\*/
 
 
 
