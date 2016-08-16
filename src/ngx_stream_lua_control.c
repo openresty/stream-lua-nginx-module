@@ -70,6 +70,11 @@ ngx_stream_lua_ngx_exit(lua_State *L)
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua exit with code %i", ctx->exit_code);
 
+    if (ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER)
+    {
+        return 0;
+    }
+
     dd("calling yield");
     return lua_yield(L, 0);
 }
@@ -159,6 +164,11 @@ ngx_stream_lua_ffi_exit(ngx_stream_session_t *s, int status, u_char *err,
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua exit with code %i", ctx->exit_code);
+
+    if (ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER)
+    {
+        return 0;
+    }
 
     return NGX_OK;
 }

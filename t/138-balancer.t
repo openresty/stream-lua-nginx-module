@@ -69,12 +69,12 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 
 
 
-=== TEST 4: ngx.exit fails
+=== TEST 4: ngx.exit works
 --- stream_config
     upstream backend {
         server 0.0.0.1:80;
         balancer_by_lua_block {
-            ngx.exit(ngx.DECLINED)
+            ngx.exit(ngx.ERROR)
         }
     }
 --- stream_server_config
