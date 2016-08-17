@@ -9,7 +9,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 2 + 3);
+plan tests => repeat_each() * (blocks() * 2 + 4);
 
 #no_diff();
 no_long_string();
@@ -69,22 +69,42 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 
 
 
-=== TEST 4: ngx.exit works
+=== TEST 4: ngx.exit ERROR works
 --- stream_config
     upstream backend {
         server 0.0.0.1:80;
         balancer_by_lua_block {
+            print("hello from balancer by lua!")
             ngx.exit(ngx.ERROR)
         }
     }
 --- stream_server_config
     proxy_pass backend;
+--- error_log
+[lua] balancer_by_lua:2: hello from balancer by lua! while connecting to upstream
+
+
+
+=== TEST 5: ngx.exit OK works
+--- stream_config
+    upstream backend {
+        server 0.0.0.1:80;
+        balancer_by_lua_block {
+            print("hello from balancer by lua!")
+            ngx.exit(ngx.OK)
+        }
+    }
+--- stream_server_config
+    proxy_pass backend;
 --- error_log eval
-qr/\[error\] .*? failed to run balancer_by_lua\*: attempt to yield across C-call boundary/
+[
+'[lua] balancer_by_lua:2: hello from balancer by lua! while connecting to upstream,',
+qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:80 failed .*?, upstream: "0\.0\.0\.1:80"},
+]
 
 
 
-=== TEST 5: ngx.sleep is disabled
+=== TEST 6: ngx.sleep is disabled
 --- stream_config
     upstream backend {
         server 0.0.0.1:80;
@@ -99,7 +119,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 
 
 
-=== TEST 6: get_phase
+=== TEST 7: get_phase
 --- stream_config
     upstream backend {
         server 0.0.0.1:80;
