@@ -53,7 +53,8 @@ struct ngx_stream_lua_socket_udp_upstream_s {
 
     ngx_stream_lua_co_ctx_t           *co_ctx;
     unsigned                           raw_downstream:1;
-    unsigned                           waiting; /* :1 */
+    unsigned                           waiting:1;
+    unsigned                           connected:1;
 };
 
 

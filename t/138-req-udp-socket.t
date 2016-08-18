@@ -20,31 +20,33 @@ run_tests();
 __DATA__
 
 === TEST 1: sanity
+--- ONLY
 --- dgram_server_config
     content_by_lua_block {
         local sock, err = ngx.req.udp_socket()
-        if sock then
-            ngx.say("got the request socket")
-        else
-            ngx.say("failed to get the request socket: ", err)
+        if not sock then
+            ngx.log(ngx.ERR, "failed to get the request socket: ", err)
+            return ngx.exit(ngx.ERROR)
         end
 
-        for i = 1, 3 do
-            local data, err, part = sock:receive(5)
-            if data then
-                ngx.say("received: ", data)
-            else
-                ngx.say("failed to receive: ", err, " [", part, "]")
-            end
+        local data, err = sock:receive()
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        -- print("data: ", data)
+
+        local ok, err = sock:send("received: " .. data)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return ngx.exit(ngx.ERROR)
         end
     }
 --- dgram_request chomp
 hello world! my
---- dgram_response
-got the request socket
-received: hello
-received:  worl
-received: d! my
+--- dgram_response chomp
+received: hello world! my
 --- no_error_log
 [error]
 
