@@ -491,6 +491,7 @@ ngx_stream_lua_new_thread(ngx_stream_session_t *s, lua_State *L, int *ref)
 
     co = lua_newthread(L);
 
+#if 0
     /*  {{{ inherit coroutine's globals to main thread's globals table
      *  for print() function will try to find tostring() in current
      *  globals table.
@@ -505,6 +506,7 @@ ngx_stream_lua_new_thread(ngx_stream_session_t *s, lua_State *L, int *ref)
 
     ngx_stream_lua_set_globals_table(co);
     /*  }}} */
+#endif
 
     *ref = luaL_ref(L, -2);
 

@@ -1058,7 +1058,7 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
 
     dd("sending query %.*s", (int) query.len, query.data);
 
-    n = ngx_send(u->udp_connection.connection, query.data, query.len);
+    n = ngx_udp_send(u->udp_connection.connection, query.data, query.len);
 
     dd("ngx_send returns %d (query len %d)", (int) n, (int) query.len);
 
@@ -1087,6 +1087,7 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
 {
     ngx_stream_session_t                  *s;
     ngx_stream_lua_socket_udp_upstream_t  *u;
+    ngx_connection_t                      *c;
     ngx_int_t                              rc;
     ngx_stream_lua_ctx_t                  *ctx;
     ngx_stream_lua_co_ctx_t               *coctx;
@@ -1156,7 +1157,19 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
                    "stream lua udp socket receive buffer size: %uz",
                    u->recv_buf_size);
 
-    rc = ngx_stream_lua_socket_udp_read(s, u);
+    c = u->udp_connection.connection;
+
+    if (u->raw_downstream && !u->connected) {
+        u->received = c->buffer->last - c->buffer->pos;
+        c->buffer->pos =
+            ngx_copy(ngx_stream_lua_socket_udp_buffer, c->buffer->pos, u->received);
+        ngx_stream_lua_socket_udp_handle_success(s, u);
+        u->connected = 1;
+        rc = NGX_OK;
+
+    } else {
+        rc = ngx_stream_lua_socket_udp_read(s, u);
+    }
 
     if (rc == NGX_ERROR) {
         dd("read failed: %d", (int) u->ft_type);
@@ -1268,7 +1281,7 @@ ngx_stream_lua_socket_udp_finalize(ngx_stream_session_t *s,
         u->resolved->ctx = NULL;
     }
 
-    if (u->udp_connection.connection) {
+    if (u->udp_connection.connection && !u->raw_downstream) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                        "stream lua close socket connection");
 
