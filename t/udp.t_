@@ -27,6 +27,8 @@ __DATA__
     lua_package_path '$TEST_NGINX_PWD/t/lib/?.lua;$prefix/html/?.lua;../lua-resty-core/lib/?.lua;;';
     init_by_lua_block {
         jit.opt.start("minstitch=2")
+
+        require "dns_server"
     }
 
 --- dgram_server_config
@@ -69,7 +71,9 @@ local TYPE_SRV    = 33
 local TYPE_SPF    = 99
 
 local labels = {}
-local resp_tb = {}
+local cname_resp_tb = {}
+local mx_resp_tb = {}
+local txt_resp_tb = {}
 
 local ccbuf = ffi.new("char *[1]")
 local sizep = ffi.new("size_t[1]")
@@ -219,15 +223,18 @@ local regdoms = {
 	['opm.openresty.org'] = openresty_org,
 }
 
+local nxdomain_tb = {}
+
 local function send_nxdomain_ans(id, sock, raw_quest_rr)
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
 
-    local bytes, err = sock:send{
-        ident_hi, ident_lo,
-        "\x84\3\0\1\0\0\0\0\0\0",
-        raw_quest_rr,
-    }
+    nxdomain_tb[1] = ident_hi
+    nxdomain_tb[2] = ident_lo
+    nxdomain_tb[3] = "\x84\3\0\1\0\0\0\0\0\0"
+    nxdomain_tb[4] = raw_quest_rr
+
+    local bytes, err = sock:send(nxdomain_tb)
     if not bytes then
         ngx.log(ngx.ERR, "failed to send NXDOMAIN packet: ", err)
     end
@@ -277,6 +284,59 @@ do
     mx_records = concat(bits)
 end
 
+local txt_records
+do
+    local bits = {}
+    local idx = 0
+
+    idx = idx + 1
+    bits[idx] = openresty_org
+
+    idx = idx + 1
+    bits[idx] = "\0\x10\0\x01\0\0\x0e\x10"
+
+    local data = "v=spf1 a mx ~all"
+    local len = #data + 1
+    local len_hi = char(rshift(len, 8))
+    local len_lo = char(band(len, 0xff))
+
+    idx = idx + 1
+    bits[idx] = len_hi
+
+    idx = idx + 1
+    bits[idx] = len_lo
+
+    idx = idx + 1
+    bits[idx] = char(len - 1)
+
+    idx = idx + 1
+    bits[idx] = data
+
+    txt_records = concat(bits)
+end
+
+local function send_txt_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
+    local ident_hi = char(rshift(id, 8))
+    local ident_lo = char(band(id, 0xff))
+
+    if qname ~= "openresty.org" then
+		return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
+
+    txt_resp_tb[1] = ident_hi
+    txt_resp_tb[2] = ident_lo
+    txt_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
+    txt_resp_tb[4] = raw_quest_rr
+    txt_resp_tb[5] = txt_records
+    txt_resp_tb[6] = ns_records
+
+    local ok, err = sock:send(txt_resp_tb)
+    if not ok then
+        ngx.log(ngx.ERR, "failed to send: ", err)
+        return
+    end
+end
+
 local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, country_code)
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
@@ -292,15 +352,15 @@ local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, countr
 		return send_nxdomain_ans(id, sock, raw_quest_rr)
     end
 
-    resp_tb[1] = ident_hi
-    resp_tb[2] = ident_lo
-    resp_tb[3] = "\x84\0\0\1\0\3\0\2\0\0"
-    resp_tb[4] = raw_quest_rr
-    resp_tb[5] = mx_records
+    mx_resp_tb[1] = ident_hi
+    mx_resp_tb[2] = ident_lo
+    mx_resp_tb[3] = "\x84\0\0\1\0\3\0\2\0\0"
+    mx_resp_tb[4] = raw_quest_rr
+    mx_resp_tb[5] = mx_records
 
-    resp_tb[6] = ns_records
+    mx_resp_tb[6] = ns_records
 
-    local ok, err = sock:send(resp_tb)
+    local ok, err = sock:send(mx_resp_tb)
     if not ok then
         ngx.log(ngx.ERR, "failed to send: ", err)
         return
@@ -333,19 +393,19 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, cou
     local len_hi = char(rshift(len, 8))
     local len_lo = char(band(len, 0xff))
 
-    resp_tb[1] = ident_hi
-    resp_tb[2] = ident_lo
-    resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
-    resp_tb[4] = raw_quest_rr
-    resp_tb[5] = raw_quest_name
-    resp_tb[6] = "\0\x05\0\x01\0\0\x0e\x10"
-    resp_tb[7] = len_hi
-    resp_tb[8] = len_lo
-    resp_tb[9] = cname
+    cname_resp_tb[1] = ident_hi
+    cname_resp_tb[2] = ident_lo
+    cname_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
+    cname_resp_tb[4] = raw_quest_rr
+    cname_resp_tb[5] = raw_quest_name
+    cname_resp_tb[6] = "\0\x05\0\x01\0\0\x0e\x10"
+    cname_resp_tb[7] = len_hi
+    cname_resp_tb[8] = len_lo
+    cname_resp_tb[9] = cname
 
-    resp_tb[10] = ns_records
+    cname_resp_tb[10] = ns_records
 
-    local ok, err = sock:send(resp_tb)
+    local ok, err = sock:send(cname_resp_tb)
     if not ok then
         ngx.log(ngx.ERR, "failed to send: ", err)
         return
@@ -425,18 +485,20 @@ function _M.go()
 
     -- print("type: ", typ)
 
-    if typ == TYPE_A or typ == TYPE_AAAA then
-        local cc = get_country_code()
-
-        -- print("country code: ", cc)
-
-        return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
-    end
-
     if typ == TYPE_MX then
         -- print("found MX query")
-        return send_mx_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
+        return send_mx_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
+
+    if typ == TYPE_TXT then
+        return send_txt_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
+    end
+
+    local cc = get_country_code()
+
+    -- print("country code: ", cc)
+
+    return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
 end
 
 return _M
