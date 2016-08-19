@@ -3571,7 +3571,7 @@ ngx_stream_lua_mmdb_lookup(ngx_stream_session_t *s, const char **country_code,
     }
 
     if (!result.found_entry) {
-        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+        ngx_log_error(NGX_LOG_INFO, c->log, 0,
                       "stream lua mmdb lookup: entry not found");
         return NGX_DECLINED;
     }
@@ -3583,7 +3583,7 @@ ngx_stream_lua_mmdb_lookup(ngx_stream_session_t *s, const char **country_code,
     }
 
     if (!entry_data.has_data) {
-        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+        ngx_log_error(NGX_LOG_INFO, c->log, 0,
                       "stream lua mmdb lookup: entry has no data");
         return NGX_DECLINED;
     }

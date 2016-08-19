@@ -37,6 +37,7 @@ __DATA__
 >>> dns_server.lua
 local bit = require "bit"
 local byte = string.byte
+local char = string.char
 local lshift = bit.lshift
 local rshift = bit.rshift
 local concat = table.concat
@@ -56,6 +57,16 @@ int ngx_stream_lua_mmdb_lookup(void *s, char **country_code,
 ]]
 
 local _M = {}
+
+local TYPE_A      = 1
+local TYPE_NS     = 2
+local TYPE_CNAME  = 5
+local TYPE_PTR    = 12
+local TYPE_MX     = 15
+local TYPE_TXT    = 16
+local TYPE_AAAA   = 28
+local TYPE_SRV    = 33
+local TYPE_SPF    = 99
 
 local labels = {}
 local resp_tb = {}
@@ -168,10 +179,39 @@ local yf_cnames = {
     ['opm.openresty.org'] = _encode_name("fydgdu.openresty.org.yfcdn.net"),
 }
 
-local auth_ns1 = _encode_name("a.restydns.org")
-local auth_ns2 = _encode_name("c.restydns.org")
-
 local openresty_org = _encode_name("openresty.org")
+
+local ns_records
+do
+    local bits = {}
+    local idx = 0
+    local ns_servers = {"a.restydns.org", "c.restydns.org"}
+    for _, srv in ipairs(ns_servers) do
+        local auth_ns = _encode_name(srv)
+
+        len = #auth_ns
+        local len_hi = char(rshift(len, 8))
+        local len_lo = char(band(len, 0xff))
+
+        idx = idx + 1
+        bits[idx] = openresty_org
+
+        idx = idx + 1
+        bits[idx] = "\0\2\0\x01\0\0\2\x58"
+
+        idx = idx + 1
+        bits[idx] = len_hi
+
+        idx = idx + 1
+        bits[idx] = len_lo
+
+        idx = idx + 1
+        bits[idx] = auth_ns
+    end
+
+    ns_records = concat(bits)
+end
+
 local regdoms = {
 	['openresty.org'] = openresty_org,
 	['qa.openresty.org'] = openresty_org,
@@ -190,6 +230,80 @@ local function send_nxdomain_ans(id, sock, raw_quest_rr)
     }
     if not bytes then
         ngx.log(ngx.ERR, "failed to send NXDOMAIN packet: ", err)
+    end
+end
+
+--[[
+openresty.org.         3600       IN         MX         10 alt4.aspmx.l.google.com.
+openresty.org.         3600       IN         MX         5 alt1.aspmx.l.google.com.
+openresty.org.         3600       IN         MX         5 alt2.aspmx.l.google.com.
+]]
+local mx_records
+do
+    local mx_data = {
+        {10, "alt4.aspmx.l.google.com"},
+        {5, "alt1.aspmx.l.google.com"},
+        {5, "alt2.aspmx.l.google.com"},
+    }
+    local bits = {}
+    local idx = 0
+    for _, r in ipairs(mx_data) do
+        local exchange = _encode_name(r[2])
+        local len = #exchange + 2
+        local len_hi = char(rshift(len, 8))
+        local len_lo = char(band(len, 0xff))
+
+        idx = idx + 1
+        bits[idx] = openresty_org
+
+        idx = idx + 1
+        bits[idx] = "\0\x0f\0\x01\0\0\x0e\x10"
+
+        idx = idx + 1
+        bits[idx] = len_hi
+
+        idx = idx + 1
+        bits[idx] = len_lo
+
+        idx = idx + 1
+        bits[idx] = "\0"
+
+        idx = idx + 1
+        bits[idx] = char(r[1])
+
+        idx = idx + 1
+        bits[idx] = exchange
+    end
+    mx_records = concat(bits)
+end
+
+local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, country_code)
+    local ident_hi = char(rshift(id, 8))
+    local ident_lo = char(band(id, 0xff))
+
+    -- country_code = "CN"
+
+	local regdom = regdoms[qname]
+	if not regdom then
+		return send_nxdomain_ans(id, sock, raw_quest_rr)
+	end
+
+    if qname ~= "openresty.org" then
+		return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
+
+    resp_tb[1] = ident_hi
+    resp_tb[2] = ident_lo
+    resp_tb[3] = "\x84\0\0\1\0\3\0\2\0\0"
+    resp_tb[4] = raw_quest_rr
+    resp_tb[5] = mx_records
+
+    resp_tb[6] = ns_records
+
+    local ok, err = sock:send(resp_tb)
+    if not ok then
+        ngx.log(ngx.ERR, "failed to send: ", err)
+        return
     end
 end
 
@@ -224,30 +338,12 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, cou
     resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
     resp_tb[4] = raw_quest_rr
     resp_tb[5] = raw_quest_name
-    resp_tb[6] = "\0\x05\0\x01\0\0\2\x58"
+    resp_tb[6] = "\0\x05\0\x01\0\0\x0e\x10"
     resp_tb[7] = len_hi
     resp_tb[8] = len_lo
     resp_tb[9] = cname
 
-    len = #auth_ns1
-    local len_hi = char(rshift(len, 8))
-    local len_lo = char(band(len, 0xff))
-
-    resp_tb[10] = openresty_org
-    resp_tb[11] = "\0\2\0\x01\0\0\2\x58"
-    resp_tb[12] = len_hi
-    resp_tb[13] = len_lo
-    resp_tb[14] = auth_ns1
-
-    len = #auth_ns2
-    local len_hi = char(rshift(len, 8))
-    local len_lo = char(band(len, 0xff))
-
-    resp_tb[15] = openresty_org
-    resp_tb[16] = "\0\2\0\x01\0\0\2\x58"
-    resp_tb[17] = len_hi
-    resp_tb[18] = len_lo
-    resp_tb[19] = auth_ns2
+    resp_tb[10] = ns_records
 
     local ok, err = sock:send(resp_tb)
     if not ok then
@@ -323,11 +419,24 @@ function _M.go()
 
     -- print("question qname: ", quest_qname)
 
-    local cc = get_country_code()
+    local typ_hi = byte(req, pos)
+    local typ_lo = byte(req, pos + 1)
+    local typ = lshift(typ_hi, 8) + typ_lo
 
-    ngx.log(ngx.ERR, "country code: ", cc)
+    -- print("type: ", typ)
 
-    return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
+    if typ == TYPE_A or typ == TYPE_AAAA then
+        local cc = get_country_code()
+
+        -- print("country code: ", cc)
+
+        return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
+    end
+
+    if typ == TYPE_MX then
+        -- print("found MX query")
+        return send_mx_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
+    end
 end
 
 return _M
