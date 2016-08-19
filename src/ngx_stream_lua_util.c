@@ -491,7 +491,7 @@ ngx_stream_lua_new_thread(ngx_stream_session_t *s, lua_State *L, int *ref)
 
     co = lua_newthread(L);
 
-#if 0
+#if 1
     /*  {{{ inherit coroutine's globals to main thread's globals table
      *  for print() function will try to find tostring() in current
      *  globals table.
@@ -3544,4 +3544,75 @@ ngx_stream_lua_set_multi_value_table(lua_State *L, int index)
             lua_pop(L, 2); /* stack: table */
         }
     }
+}
+
+
+int
+ngx_stream_lua_mmdb_lookup(ngx_stream_session_t *s, const char **country_code,
+    size_t *country_code_size)
+{
+    int                              mmdb_error;
+    const char                      *lookup[] = {"country", "iso_code", NULL};
+    ngx_connection_t                *c = s->connection;
+    MMDB_entry_data_s                entry_data;
+    MMDB_lookup_result_s             result;
+    ngx_stream_lua_main_conf_t      *lmcf;
+
+    lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
+
+    if (lmcf->mmdb == NULL) {
+        return NGX_ERROR;
+    }
+
+    result = MMDB_lookup_sockaddr(lmcf->mmdb, c->sockaddr, &mmdb_error);
+
+    if (mmdb_error != MMDB_SUCCESS) {
+        goto failed;
+    }
+
+    if (!result.found_entry) {
+        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                      "stream lua mmdb lookup: entry not found");
+        return NGX_DECLINED;
+    }
+
+    mmdb_error = MMDB_aget_value(&result.entry, &entry_data, lookup);
+
+    if (mmdb_error != MMDB_SUCCESS) {
+        goto failed;
+    }
+
+    if (!entry_data.has_data) {
+        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                      "stream lua mmdb lookup: entry has no data");
+        return NGX_DECLINED;
+    }
+
+    switch (entry_data.type) {
+
+    case MMDB_DATA_TYPE_UTF8_STRING:
+        *country_code = entry_data.utf8_string;
+        *country_code_size = entry_data.data_size;
+        break;
+
+    case MMDB_DATA_TYPE_BYTES:
+        *country_code = (char *) entry_data.bytes;
+        *country_code_size = entry_data.data_size;
+        break;
+
+    default:
+        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                      "stream lua mmdb lookup: bad entry data type: ",
+                      entry_data.type);
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+
+failed:
+
+    ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                  "stream lua mmdb lookup sockaddr failed: %s",
+                  MMDB_strerror(mmdb_error));
+    return NGX_ERROR;
 }
