@@ -16,6 +16,7 @@
 
 #include <setjmp.h>
 #include <stdint.h>
+#include <maxminddb.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -167,6 +168,8 @@ struct ngx_stream_lua_main_conf_s {
     ngx_uint_t                           shm_zones_inited;
 
     ngx_stream_lua_semaphore_mm_t       *semaphore_mm;
+
+    MMDB_s                              *mmdb;
 
     unsigned                             requires_access:1;
     unsigned                             requires_shm:1;

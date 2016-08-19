@@ -11,8 +11,8 @@ force=$2
 home=~
 
 ngx-build $force $version \
-            --with-ld-opt="-L$PCRE_LIB -Wl,-rpath,$PCRE_LIB:$LIBDRIZZLE_LIB:/usr/local/lib" \
-            --with-cc-opt="-DDEBUG_MALLOC" \
+            --with-ld-opt="-L/opt/mmdb/lib -lmaxminddb -L$PCRE_LIB -Wl,-rpath,/opt/mmdb/lib:$PCRE_LIB:$LIBDRIZZLE_LIB:/usr/local/lib" \
+            --with-cc-opt="-I/opt/mmdb/include -DDEBUG_MALLOC" \
             --with-http_stub_status_module \
             --with-http_image_filter_module \
             --without-mail_pop3_module \

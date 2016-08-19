@@ -32,6 +32,7 @@ static ngx_int_t ngx_stream_lua_init(ngx_conf_t *cf);
 static ngx_int_t ngx_stream_lua_set_ssl(ngx_conf_t *cf,
     ngx_stream_lua_srv_conf_t *lscf);
 #endif
+static void ngx_stream_lua_cleanup_mmdb(void *data);
 
 
 static ngx_conf_post_t  ngx_stream_lua_lowat_post =
@@ -602,8 +603,39 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 #ifndef NGX_LUA_NO_FFI_API
     ngx_pool_cleanup_t         *cln;
 #endif
+    MMDB_s                     *mmdb;
+    const char                 *fname;
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+
+    cln = ngx_pool_cleanup_add(cf->pool, 0);
+    if (cln == NULL) {
+        return NGX_ERROR;
+    }
+
+    cln->data = lmcf;
+    cln->handler = ngx_stream_lua_cleanup_mmdb;
+
+    mmdb = ngx_palloc(cf->pool, sizeof(MMDB_s));
+    if (mmdb == NULL) {
+        return NGX_ERROR;
+    }
+
+    fname = "/home/agentzh/work/GeoLite2-Country.mmdb";
+    rc = MMDB_open(fname, MMDB_MODE_MMAP, mmdb);
+    if (rc != MMDB_SUCCESS) {
+        ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
+                           "cannot open file %s for reading: %s", fname,
+                           MMDB_strerror(rc));
+        if (rc == MMDB_IO_ERROR) {
+            ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
+                               "mmdb file IO error: %s\n", strerror(errno));
+        }
+
+        return NGX_ERROR;
+    }
+
+    lmcf->mmdb = mmdb;
 
 #ifndef NGX_LUA_NO_FFI_API
 
@@ -718,3 +750,15 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
 }
 
 #endif  /* NGX_STREAM_SSL */
+
+
+static void
+ngx_stream_lua_cleanup_mmdb(void *data)
+{
+    ngx_stream_lua_main_conf_t            *lmcf = data;
+
+    if (lmcf->mmdb != NULL) {
+        MMDB_close(lmcf->mmdb);
+        lmcf->mmdb = NULL;
+    }
+}
