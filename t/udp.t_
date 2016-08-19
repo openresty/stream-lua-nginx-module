@@ -24,7 +24,8 @@ __DATA__
 === TEST 1: sanity
 --- ONLY
 --- dgram_config
-    lua_package_path '$TEST_NGINX_PWD/t/lib/?.lua;$prefix/html/?.lua;../lua-resty-core/lib/?.lua;;';
+	lua_shared_dict limit_req_zone 50m;
+    lua_package_path '$TEST_NGINX_PWD/t/lib/?.lua;$prefix/html/?.lua;../lua-resty-limit-traffic/lib/?.lua;;';
     init_by_lua_block {
         jit.opt.start("minstitch=2")
 
@@ -55,7 +56,10 @@ local ffi_str = ffi.string
 
 ffi.cdef[[
 int ngx_stream_lua_mmdb_lookup(void *s, char **country_code,
-    size_t *country_code_size)
+    size_t *country_code_size);
+
+int ngx_stream_lua_get_binary_remote_addr(void *s, char **country_code,
+    size_t *country_code_size);
 ]]
 
 local _M = {}
@@ -77,6 +81,37 @@ local txt_resp_tb = {}
 
 local ccbuf = ffi.new("char *[1]")
 local sizep = ffi.new("size_t[1]")
+
+local limiter
+do
+	local limit_req_module = require "resty.limit.req"
+
+	local rate = 2000000
+	-- local rate = 4
+
+	local burst = 1000
+	-- local burst = 6
+	local err
+	limiter, err = limit_req_module.new("limit_req_zone", rate, burst)
+	if not limiter then
+		return error("failed to instantiate a resty.limit.req object: " .. (err or ""))
+	end
+end
+
+local function get_binary_remote_addr()
+    local s = getfenv(0).__ngx_sess
+    if not s then
+        return error("no session found")
+    end
+
+    local rc = C.ngx_stream_lua_get_binary_remote_addr(s, ccbuf, sizep)
+    if rc ~= 0 then
+        -- ngx.log(ngx.ERR, "error: ", rc)
+        return nil
+    end
+
+    return ffi_str(ccbuf[0], sizep[0])
+end
 
 local function get_country_code()
     local s = getfenv(0).__ngx_sess
@@ -413,6 +448,23 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, cou
 end
 
 function _M.go()
+	local client_addr = get_binary_remote_addr()
+	local delay, err = limiter:incoming(client_addr, true)
+	if not delay then
+		if err == "rejected" then
+			ngx.log(ngx.ERR, "request rejected")
+			return
+		end
+		ngx.log(ngx.ERR, "failed to limit req: ", err)
+		return
+	end
+
+	if delay >= 0.001 then
+		-- local excess = err
+		ngx.log(ngx.ERR, "request delayed by ", delay, " sec")
+		ngx.sleep(delay)
+	end
+
     local sock, err = ngx.req.udp_socket()
     if not sock then
         ngx.log(ngx.ERR, "failed to get the request socket: ", err)

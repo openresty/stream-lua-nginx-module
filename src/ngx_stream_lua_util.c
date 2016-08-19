@@ -3615,3 +3615,36 @@ failed:
                   MMDB_strerror(mmdb_error));
     return NGX_ERROR;
 }
+
+
+int
+ngx_stream_lua_get_binary_remote_addr(ngx_stream_session_t *s, const char **addr, size_t *addr_len)
+{
+    struct sockaddr_in   *sin;
+#if (NGX_HAVE_INET6)
+    struct sockaddr_in6  *sin6;
+#endif
+
+    switch (s->connection->sockaddr->sa_family) {
+
+#if (NGX_HAVE_INET6)
+    case AF_INET6:
+        sin6 = (struct sockaddr_in6 *) s->connection->sockaddr;
+
+        *addr_len = sizeof(struct in6_addr);
+        *addr = (char *) sin6->sin6_addr.s6_addr;
+
+        break;
+#endif
+
+    default: /* AF_INET */
+        sin = (struct sockaddr_in *) s->connection->sockaddr;
+
+        *addr_len = sizeof(in_addr_t);
+        *addr = (char *) &sin->sin_addr;
+
+        break;
+    }
+
+    return NGX_OK;
+}
