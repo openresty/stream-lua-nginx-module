@@ -517,22 +517,22 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, cou
 end
 
 function _M.go()
-	local client_addr = get_binary_remote_addr()
-	local delay, err = limiter:incoming(client_addr, true)
-	if not delay then
-		if err == "rejected" then
-			ngx.log(ngx.ERR, "request rejected")
-			return
-		end
-		ngx.log(ngx.ERR, "failed to limit req: ", err)
-		return
-	end
+    local client_addr = get_binary_remote_addr()
+    local delay, err = limiter:incoming(client_addr, true)
+    if not delay then
+        if err == "rejected" then
+            ngx.log(ngx.ERR, "request rejected")
+            return
+        end
+        ngx.log(ngx.ERR, "failed to limit req: ", err)
+        return
+    end
 
-	if delay >= 0.001 then
-		-- local excess = err
-		ngx.log(ngx.ERR, "request delayed by ", delay, " sec")
-		ngx.sleep(delay)
-	end
+    if delay >= 0.001 then
+        -- local excess = err
+        ngx.log(ngx.WARN, "request delayed by ", delay, " sec")
+        ngx.sleep(delay)
+    end
 
     local sock, err = ngx.req.udp_socket()
     if not sock then
@@ -607,21 +607,23 @@ function _M.go()
     -- print("type: ", typ)
 
     if typ == TYPE_MX then
-        -- print("found MX query")
+        -- print("MX req from ", get_country_code(), ", qname ", quest_qname)
         return send_mx_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     if typ == TYPE_TXT then
+        -- print("TXT req from ", get_country_code(), ", qname ", quest_qname)
         return send_txt_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     if typ == TYPE_SOA then
+        -- print("SOA req from ", get_country_code(), ", qname ", quest_qname)
         return send_soa_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     local cc = get_country_code()
 
-    -- print("country code: ", cc)
+    -- print("type ", typ, " req, country ", cc, ", qname ", quest_qname)
 
     return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
 end
