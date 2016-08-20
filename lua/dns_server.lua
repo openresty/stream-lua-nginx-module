@@ -27,6 +27,7 @@ local _M = {}
 local TYPE_A      = 1
 local TYPE_NS     = 2
 local TYPE_CNAME  = 5
+local TYPE_SOA    = 6
 local TYPE_PTR    = 12
 local TYPE_MX     = 15
 local TYPE_TXT    = 16
@@ -310,20 +311,128 @@ do
     txt_records = concat(bits)
 end
 
+local soa_records = {}
+do
+    for i, mname in ipairs{"a.restydns.com", "c.restydns.com"} do
+        local bits = {}
+        local idx = 0
+
+        mname = _encode_name(mname)
+        local rname = _encode_name("agentzh.gmail.com")
+
+        idx = idx + 1
+        bits[idx] = openresty_org
+
+        idx = idx + 1
+        bits[idx] = "\0\x06\0\x01\0\0\0\x3c"
+
+        local len = #mname + #rname + 5 * 4
+        local len_hi = char(rshift(len, 8))
+        local len_lo = char(band(len, 0xff))
+
+        idx = idx + 1
+        bits[idx] = len_hi
+
+        idx = idx + 1
+        bits[idx] = len_lo
+
+        idx = idx + 1
+        bits[idx] = mname
+
+        idx = idx + 1
+        bits[idx] = rname
+
+        idx = idx + 1
+        bits[idx] = "\x06\x33\xa1\x34"
+
+        idx = idx + 1
+        bits[idx] = "\0\0\x03\x84"
+
+        idx = idx + 1
+        bits[idx] = "\0\0\x03\x84"
+
+        idx = idx + 1
+        bits[idx] = "\0\0\x07\x08"
+
+        idx = idx + 1
+        bits[idx] = "\0\0\0\x3c"
+
+        soa_records[i] = concat(bits)
+    end
+end
+
+local additional_records
+do
+    local bits = {}
+    local idx = 0
+
+    for _, name in ipairs{"a.restydns.com", "c.restydns.com"} do
+        name = _encode_name(name)
+
+        idx = idx + 1
+        bits[idx] = name
+
+        idx = idx + 1
+        bits[idx] = "\0\x01\0\x01\0\0\x0e\x10"
+
+        idx = idx + 1
+        bits[idx] = "\0\x04"
+
+        idx = idx + 1
+        bits[idx] = "\x34\x4c\x31\x65"
+    end
+
+    additional_records = concat(bits)
+end
+
+local soa_resp_tb = {}
+local soa_rr_idx = 1
+
+local function send_soa_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
+    local ident_hi = char(rshift(id, 8))
+    local ident_lo = char(band(id, 0xff))
+
+    local regdom = regdoms[qname]
+    if not regdom then
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
+
+    soa_resp_tb[1] = ident_hi
+    soa_resp_tb[2] = ident_lo
+    soa_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
+    soa_resp_tb[4] = raw_quest_rr
+    soa_resp_tb[5] = soa_records[soa_rr_idx]
+    soa_resp_tb[6] = ns_records
+    soa_resp_tb[7] = additional_records
+
+    if soa_rr_idx == 1 then
+        soa_rr_idx = 2
+    else
+        soa_rr_idx = 1
+    end
+
+    local ok, err = sock:send(soa_resp_tb)
+    if not ok then
+        ngx.log(ngx.ERR, "failed to send: ", err)
+        return
+    end
+end
+
 local function send_txt_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
 
     if qname ~= "openresty.org" then
-		return send_nxdomain_ans(id, sock, raw_quest_rr)
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
     end
 
     txt_resp_tb[1] = ident_hi
     txt_resp_tb[2] = ident_lo
-    txt_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
+    txt_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
     txt_resp_tb[4] = raw_quest_rr
     txt_resp_tb[5] = txt_records
     txt_resp_tb[6] = ns_records
+    txt_resp_tb[7] = additional_records
 
     local ok, err = sock:send(txt_resp_tb)
     if not ok then
@@ -338,22 +447,22 @@ local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, countr
 
     -- country_code = "CN"
 
-	local regdom = regdoms[qname]
-	if not regdom then
-		return send_nxdomain_ans(id, sock, raw_quest_rr)
-	end
+    local regdom = regdoms[qname]
+    if not regdom then
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
 
     if qname ~= "openresty.org" then
-		return send_nxdomain_ans(id, sock, raw_quest_rr)
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
     end
 
     mx_resp_tb[1] = ident_hi
     mx_resp_tb[2] = ident_lo
-    mx_resp_tb[3] = "\x84\0\0\1\0\3\0\2\0\0"
+    mx_resp_tb[3] = "\x84\0\0\1\0\3\0\2\0\2"
     mx_resp_tb[4] = raw_quest_rr
     mx_resp_tb[5] = mx_records
-
     mx_resp_tb[6] = ns_records
+    mx_resp_tb[7] = additional_records
 
     local ok, err = sock:send(mx_resp_tb)
     if not ok then
@@ -390,15 +499,15 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, cou
 
     cname_resp_tb[1] = ident_hi
     cname_resp_tb[2] = ident_lo
-    cname_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\0"
+    cname_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
     cname_resp_tb[4] = raw_quest_rr
     cname_resp_tb[5] = raw_quest_name
     cname_resp_tb[6] = "\0\x05\0\x01\0\0\x0e\x10"
     cname_resp_tb[7] = len_hi
     cname_resp_tb[8] = len_lo
     cname_resp_tb[9] = cname
-
     cname_resp_tb[10] = ns_records
+    cname_resp_tb[11] = additional_records
 
     local ok, err = sock:send(cname_resp_tb)
     if not ok then
@@ -504,6 +613,10 @@ function _M.go()
 
     if typ == TYPE_TXT then
         return send_txt_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
+    end
+
+    if typ == TYPE_SOA then
+        return send_soa_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     local cc = get_country_code()
