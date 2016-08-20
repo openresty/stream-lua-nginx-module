@@ -185,7 +185,7 @@ local ns_records
 do
     local bits = {}
     local idx = 0
-    local ns_servers = {"a.restydns.org", "c.restydns.org"}
+    local ns_servers = {"a.restydns.com", "c.restydns.com"}
     for _, srv in ipairs(ns_servers) do
         local auth_ns = _encode_name(srv)
 
