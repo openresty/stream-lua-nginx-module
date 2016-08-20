@@ -313,10 +313,10 @@ end
 
 local soa_records = {}
 do
-    for i, mname in ipairs{"a.restydns.com", "c.restydns.com"} do
-        local bits = {}
-        local idx = 0
+    local bits = {}
+    local idx = 0
 
+    for i, mname in ipairs{"a.restydns.com", "c.restydns.com"} do
         mname = _encode_name(mname)
         local rname = _encode_name("agentzh.gmail.com")
 
@@ -356,9 +356,9 @@ do
 
         idx = idx + 1
         bits[idx] = "\0\0\0\x3c"
-
-        soa_records[i] = concat(bits)
     end
+
+    soa_records = concat(bits)
 end
 
 local additional_records
@@ -366,8 +366,13 @@ do
     local bits = {}
     local idx = 0
 
-    for _, name in ipairs{"a.restydns.com", "c.restydns.com"} do
-        name = _encode_name(name)
+    local rows = {
+        {"a.restydns.com", "52.76.49.101"},
+        {"c.restydns.com", "52.69.7.138"},
+    }
+
+    for _, row in ipairs(rows) do
+        local name = _encode_name(row[1])
 
         idx = idx + 1
         bits[idx] = name
@@ -378,15 +383,19 @@ do
         idx = idx + 1
         bits[idx] = "\0\x04"
 
-        idx = idx + 1
-        bits[idx] = "\x34\x4c\x31\x65"
+        local addr = row[2]
+
+        for num in string.gmatch(addr, "%d+") do
+            local c = char(tonumber(num))
+            idx = idx + 1
+            bits[idx] = c
+        end
     end
 
     additional_records = concat(bits)
 end
 
 local soa_resp_tb = {}
-local soa_rr_idx = 1
 
 local function send_soa_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
     local ident_hi = char(rshift(id, 8))
@@ -399,17 +408,11 @@ local function send_soa_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
 
     soa_resp_tb[1] = ident_hi
     soa_resp_tb[2] = ident_lo
-    soa_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
+    soa_resp_tb[3] = "\x84\0\0\1\0\2\0\2\0\2"
     soa_resp_tb[4] = raw_quest_rr
-    soa_resp_tb[5] = soa_records[soa_rr_idx]
+    soa_resp_tb[5] = soa_records
     soa_resp_tb[6] = ns_records
     soa_resp_tb[7] = additional_records
-
-    if soa_rr_idx == 1 then
-        soa_rr_idx = 2
-    else
-        soa_rr_idx = 1
-    end
 
     local ok, err = sock:send(soa_resp_tb)
     if not ok then
