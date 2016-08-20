@@ -621,7 +621,7 @@ ngx_stream_lua_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    fname = "/home/agentzh/work/GeoLite2-Country.mmdb";
+    fname = "/opt/mmdb/database/GeoLite2-Country.mmdb";
     rc = MMDB_open(fname, MMDB_MODE_MMAP, mmdb);
     if (rc != MMDB_SUCCESS) {
         ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
