@@ -421,13 +421,6 @@ ngx_stream_lua_ffi_balancer_set_current_peer(ngx_stream_session_t *s,
         return NGX_ERROR;
     }
 
-    u = s->upstream;
-
-    if (u == NULL) {
-        *err = "no upstream found";
-        return NGX_ERROR;
-    }
-
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
         *err = "no ctx found";
@@ -436,6 +429,13 @@ ngx_stream_lua_ffi_balancer_set_current_peer(ngx_stream_session_t *s,
 
     if ((ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER) == 0) {
         *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
+
+    u = s->upstream;
+
+    if (u == NULL) {
+        *err = "no upstream found";
         return NGX_ERROR;
     }
 
@@ -503,13 +503,6 @@ ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_session_t *s,
         return NGX_ERROR;
     }
 
-    u = s->upstream;
-
-    if (u == NULL) {
-        *err = "no upstream found";
-        return NGX_ERROR;
-    }
-
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
         *err = "no ctx found";
@@ -518,6 +511,13 @@ ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_session_t *s,
 
     if ((ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER) == 0) {
         *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
+
+    u = s->upstream;
+
+    if (u == NULL) {
+        *err = "no upstream found";
         return NGX_ERROR;
     }
 
@@ -558,13 +558,6 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
         return NGX_ERROR;
     }
 
-    u = s->upstream;
-
-    if (u == NULL) {
-        *err = "no upstream found";
-        return NGX_ERROR;
-    }
-
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
         *err = "no ctx found";
@@ -573,6 +566,13 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_session_t *s,
 
     if ((ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER) == 0) {
         *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
+
+    u = s->upstream;
+
+    if (u == NULL) {
+        *err = "no upstream found";
         return NGX_ERROR;
     }
 
