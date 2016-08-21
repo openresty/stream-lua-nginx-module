@@ -57,7 +57,8 @@ do
     local err
     limiter, err = limit_req_module.new("limit_req_zone", rate, burst)
     if not limiter then
-        return error("failed to instantiate a resty.limit.req object: " .. (err or ""))
+        return error("failed to instantiate a resty.limit.req object: "
+                     .. (err or ""))
     end
 end
 
@@ -172,7 +173,8 @@ local function _encode_name(name)
     return gsub(name, "([^.]+)%.?", _encode_label) .. '\0'
 end
 
-local aws_cname = _encode_name("openresty-portal-525905983.ap-southeast-1.elb.amazonaws.com")
+local aws_cname =
+    _encode_name("openresty-portal-525905983.ap-southeast-1.elb.amazonaws.com")
 
 local yf_cnames = {
     ['openresty.org'] = _encode_name("km4x14.openresty.org.yfcdn.net"),
@@ -255,11 +257,6 @@ local function send_nxdomain_ans(id, sock, raw_quest_rr)
     end
 end
 
---[[
-openresty.org.         3600       IN         MX         10 alt4.aspmx.l.google.com.
-openresty.org.         3600       IN         MX         5 alt1.aspmx.l.google.com.
-openresty.org.         3600       IN         MX         5 alt2.aspmx.l.google.com.
-]]
 local mx_records
 do
     local mx_data = {
@@ -463,7 +460,9 @@ local function send_txt_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
     end
 end
 
-local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, country_code)
+local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name,
+    country_code)
+
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
 
@@ -493,22 +492,25 @@ local function send_mx_ans(id, sock, qname, raw_quest_rr, raw_quest_name, countr
     end
 end
 
-local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name, country_code)
+local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name,
+    country_code)
+
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
 
     -- country_code = "CN"
 
-	local regdom = regdoms[qname]
-	if not regdom then
-		return send_nxdomain_ans(id, sock, raw_quest_rr)
-	end
+    local regdom = regdoms[qname]
+    if not regdom then
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
 
     local cname
     if country_code == "CN" then
         cname = yf_cnames[qname]
         if not cname then
-			ngx.log(ngx.ERR, "domain name ", qname, " does not have an entry in yf_names")
+            ngx.log(ngx.ERR, "domain name ", qname,
+                    " does not have an entry in yf_names")
             return send_nxdomain_ans(id, sock, raw_quest_rr)
         end
     else
@@ -655,7 +657,8 @@ function _M.go()
 
     -- print("type ", typ, " req, country ", cc, ", qname ", quest_qname)
 
-    return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name, cc)
+    return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name,
+                          cc)
 end
 
 return _M
