@@ -627,6 +627,7 @@ function _M.go()
     end
 
     if not re_find(quest_qname, [[openresty\.org$]], "jo") then
+        ngx.log(ngx.ERR, "out of zone domain in query: ", quest_qname)
         return send_refused_ans(id, sock, raw_quest_rr)
     end
 
