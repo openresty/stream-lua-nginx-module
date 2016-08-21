@@ -13,6 +13,8 @@ local clear_tb = require "table.clear"
 local ffi = require "ffi"
 local C = ffi.C
 local ffi_str = ffi.string
+local re_find = ngx.re.find
+local str_lower = string.lower
 
 ffi.cdef[[
 int ngx_stream_lua_mmdb_lookup(void *s, char **country_code,
@@ -45,18 +47,18 @@ local sizep = ffi.new("size_t[1]")
 
 local limiter
 do
-	local limit_req_module = require "resty.limit.req"
+    local limit_req_module = require "resty.limit.req"
 
-	-- local rate = 2000000
-	local rate = 20
+    -- local rate = 2000000
+    local rate = 20
 
-	-- local burst = 1000
-	local burst = 20
-	local err
-	limiter, err = limit_req_module.new("limit_req_zone", rate, burst)
-	if not limiter then
-		return error("failed to instantiate a resty.limit.req object: " .. (err or ""))
-	end
+    -- local burst = 1000
+    local burst = 20
+    local err
+    limiter, err = limit_req_module.new("limit_req_zone", rate, burst)
+    if not limiter then
+        return error("failed to instantiate a resty.limit.req object: " .. (err or ""))
+    end
 end
 
 local function get_binary_remote_addr()
@@ -145,7 +147,7 @@ local function _decode_name(buf, pos)
     return concat(labels, "."), pos
 end
 
-function send_bad_req(id, sock)
+local function send_bad_req(id, sock)
     if not id then
         return
     end
@@ -189,7 +191,7 @@ do
     for _, srv in ipairs(ns_servers) do
         local auth_ns = _encode_name(srv)
 
-        len = #auth_ns
+        local len = #auth_ns
         local len_hi = char(rshift(len, 8))
         local len_lo = char(band(len, 0xff))
 
@@ -218,6 +220,23 @@ local regdoms = {
 	['www.openresty.org'] = openresty_org,
 	['opm.openresty.org'] = openresty_org,
 }
+
+local refused_tb = {}
+
+local function send_refused_ans(id, sock, raw_quest_rr)
+    local ident_hi = char(rshift(id, 8))
+    local ident_lo = char(band(id, 0xff))
+
+    refused_tb[1] = ident_hi
+    refused_tb[2] = ident_lo
+    refused_tb[3] = "\x84\x05\0\1\0\0\0\0\0\0"
+    refused_tb[4] = raw_quest_rr
+
+    local bytes, err = sock:send(refused_tb)
+    if not bytes then
+        ngx.log(ngx.ERR, "failed to send REFUSED packet: ", err)
+    end
+end
 
 local nxdomain_tb = {}
 
@@ -600,6 +619,14 @@ function _M.go()
 
     local raw_quest_rr = sub(req, 13, pos + 3)
     local raw_quest_name = sub(req, 13, pos - 1)
+
+    if re_find(quest_qname, "[A-Z]", "jo") then
+        quest_qname = str_lower(quest_qname)
+    end
+
+    if not re_find(quest_qname, [[openresty\.org$]], "jo") then
+        return send_refused_ans(id, sock, raw_quest_rr)
+    end
 
     -- print("question qname: ", quest_qname)
 
