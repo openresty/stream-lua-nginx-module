@@ -47,11 +47,11 @@ local limiter
 do
 	local limit_req_module = require "resty.limit.req"
 
-	local rate = 2000000
-	-- local rate = 4
+	-- local rate = 2000000
+	local rate = 4
 
-	local burst = 1000
-	-- local burst = 6
+	-- local burst = 1000
+	local burst = 6
 	local err
 	limiter, err = limit_req_module.new("limit_req_zone", rate, burst)
 	if not limiter then
