@@ -48,7 +48,7 @@ do
 	local limit_req_module = require "resty.limit.req"
 
 	-- local rate = 2000000
-	local rate = 4
+	local rate = 10
 
 	-- local burst = 1000
 	local burst = 6
