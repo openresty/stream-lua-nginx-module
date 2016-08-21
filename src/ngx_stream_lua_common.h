@@ -92,9 +92,6 @@ typedef void (*ngx_stream_lua_cleanup_pt)(void *data);
 typedef struct ngx_stream_lua_cleanup_s  ngx_stream_lua_cleanup_t;
 
 
-typedef struct ngx_http_lua_balancer_peer_data_s
-    ngx_http_lua_balancer_peer_data_t;
-
 struct ngx_stream_lua_cleanup_s {
     ngx_stream_lua_cleanup_pt               handler;
     void                                   *data;
