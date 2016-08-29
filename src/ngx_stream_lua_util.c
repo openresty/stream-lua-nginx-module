@@ -1727,10 +1727,11 @@ ngx_stream_lua_run_posted_threads(ngx_connection_t *c, lua_State *L,
 
         /* rc == NGX_ERROR || rc >= NGX_OK */
 
-#if 0
-        if (ctx->entered_content_phase) {
-            ngx_stream_lua_finalize_session(s, rc);
-        }
+#if 1
+	if (rc == NGX_OK) {
+	    ngx_stream_lua_finalize_session(s, NGX_OK);
+	    return NGX_DONE;
+	}
 #endif
 
         return rc;

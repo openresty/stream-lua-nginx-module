@@ -1231,3 +1231,21 @@ $s;
 [error]
 [alert]
 
+
+
+=== TEST 23: hanging bug
+--- stream_server_config
+    content_by_lua_block {
+        local function foo()
+            ngx.say("ok")
+        end
+
+        ngx.sleep(0.001)
+        local co = ngx.thread.spawn(foo)
+        ngx.thread.wait(co)
+    }
+--- stream_response
+ok
+--- no_error_log
+[error]
+[alert]
