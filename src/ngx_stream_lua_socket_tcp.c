@@ -2001,7 +2001,6 @@ ngx_stream_lua_socket_read_bsd(void *data, ssize_t bytes)
     ngx_stream_lua_socket_tcp_upstream_t      *u = data;
 
     ngx_buf_t                   *b;
-    u_char                       c;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, u->request->connection->log, 0,
                    "stream lua tcp socket read bsd");

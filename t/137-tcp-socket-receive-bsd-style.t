@@ -70,3 +70,7 @@ __DATA__
 GET /t
 --- response_body
 10
+--- no_error_log
+[error]
+--- error_log
+stream lua tcp socket read bsd
