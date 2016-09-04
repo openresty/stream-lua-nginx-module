@@ -1,7 +1,10 @@
+# vim:set ft= ts=4 sw=4 et fdm=marker:
 
 use Test::Nginx::Socket::Lua::Stream 'no_plan';
 
-repeat_each(10);
+repeat_each(2);
+
+log_level 'debug';
 
 run_tests();
 
@@ -14,15 +17,27 @@ __DATA__
             local sock = ngx.socket.tcp()
             sock:settimeout(100)
             assert(sock:connect("127.0.0.1", 5678))
-            sock:send("10")
-            ngx.sleep(0.01)
-            sock:send("2")
-            ngx.sleep(0.01)
-            sock:send("4")
 
-            local pow, _ = sock:receive('*l')
+            sock:send("1")
+            ngx.sleep(0.01)
+
+            sock:send("22")
+            ngx.sleep(0.01)
+
+            local t = {
+                'test',
+                'send',
+                'table',
+            }
+            sock:send(t)
+            ngx.sleep(0.01)
+
+            sock:send("hello world")
+
+            local data, _ = sock:receive('*a')
+            ngx.say(data)
+
             sock:close()
-            ngx.say(pow)
         }
     }
 --- main_config
@@ -30,38 +45,32 @@ __DATA__
         server {
             listen 5678;
             content_by_lua_block {
-                local function is_power_of_two(str)
-                    local num = tonumber(str)
-                    if num <= 0 then
-                        return false, nil 
-                    end 
-                    local power = 0 
-                    while num ~= 1 do
-                        if math.fmod(num, 2) ~= 0 then
-                            return false, nil 
-                        end 
-                        num = num / 2 
-                        power = power + 1 
-                    end 
-                    return true, power
+                local sock = ngx.req.socket(true)
+                local data, _ = sock:receive('*b')
+                if data ~= '1' then
+                    ngx.log(ngx.ERR, "unexcepted result of: ", data)
+                    return
                 end
 
-                local sock = ngx.req.socket(true)
-                local msg = ''
-                local pow
-                while true do
-                    local chunk, err = sock:receive('*b')
-                    if not chunk then
-                        break
-                    end
-                    msg = msg .. chunk
-                    local ok, num = is_power_of_two(msg)
-                    if ok then
-                        pow = num
-                        break
-                    end
+                data, _ = sock:receive('*b')
+                if data ~= '22' then
+                    ngx.log(ngx.ERR, "unexcepted result of: ", data)
+                    return
                 end
-                sock:send(tostring(pow) .. '\n')
+
+                data, _ = sock:receive('*b')
+                if data ~= 'testsendtable' then
+                    ngx.log(ngx.ERR, "unexcepted result of: ", data)
+                    return
+                end
+
+                data, _ = sock:receive('*b')
+                if data ~= 'hello world' then
+                    ngx.log(ngx.ERR, "unexcepted result of: ", data)
+                    return
+                end
+
+                sock:send('ok')
             }
         }
     }
@@ -69,7 +78,7 @@ __DATA__
 --- request
 GET /t
 --- response_body
-10
+ok
 --- no_error_log
 [error]
 --- error_log
