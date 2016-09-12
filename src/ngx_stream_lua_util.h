@@ -27,6 +27,8 @@
 #include "ngx_stream_lua_api.h"
 
 
+
+
 #ifndef NGX_UNESCAPE_URI_COMPONENT
 #define NGX_UNESCAPE_URI_COMPONENT  0
 #endif
@@ -190,6 +192,8 @@ ngx_int_t ngx_stream_lua_open_and_stat_file(u_char *name,
 
 ngx_chain_t *ngx_stream_lua_chain_get_free_buf(ngx_log_t *log, ngx_pool_t *p,
     ngx_chain_t **free, size_t len);
+
+ngx_addr_t *ngx_stream_lua_parse_addr(lua_State *L, u_char *text, size_t len);
 
 
 static ngx_inline void
