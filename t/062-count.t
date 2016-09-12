@@ -251,7 +251,7 @@ worker: 5
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 14
+n = 17
 --- no_error_log
 [error]
 
@@ -268,7 +268,7 @@ n = 14
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 6
+n = 8
 --- no_error_log
 [error]
 
@@ -296,5 +296,22 @@ n = 6
     }
 --- stream_response
 n = 9
+--- no_error_log
+[error]
+
+
+
+=== TEST 16: entries under the metatable of tcp sockets
+--- stream_server_config
+    content_by_lua_block {
+        local n = 0
+        local sock = ngx.socket.tcp()
+        for k, v in pairs(getmetatable(sock)) do
+            n = n + 1
+        end
+        ngx.say("n = ", n)
+    }
+--- stream_response
+n = 17
 --- no_error_log
 [error]
