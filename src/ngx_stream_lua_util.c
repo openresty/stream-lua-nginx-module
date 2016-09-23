@@ -3203,7 +3203,7 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
-        ngx_stream_close_connection(s->connection);
+        ngx_stream_finalize_session(s, NGX_STREAM_OK);
         return;
     }
 
@@ -3218,7 +3218,7 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
         cln = cln->next;
     }
 
-    ngx_stream_close_connection(s->connection);
+    ngx_stream_finalize_session(s, NGX_STREAM_OK);
 }
 
 
