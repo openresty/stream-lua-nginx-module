@@ -1439,6 +1439,8 @@ SSL reused session
 
         do
 
+        local sessions = {}
+
         for i = 1, 3 do
             local ok, err = sock:connect("iscribblet.org", 443)
             if not ok then
@@ -1453,6 +1455,8 @@ SSL reused session
                 ngx.say("failed to do SSL handshake: ", err)
                 return
             end
+
+            sessions[i] = session
 
             ngx.say("ssl handshake: ", type(session))
 

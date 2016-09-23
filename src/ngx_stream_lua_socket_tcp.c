@@ -2561,9 +2561,8 @@ ngx_stream_lua_socket_tcp_handler(ngx_event_t *ev)
     c = ev->data;
     u = c->data;
     s = u->request;
-    c = s->connection;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "stream lua tcp socket handler, wev %d", (int) ev->write);
 
     if (ev->write) {

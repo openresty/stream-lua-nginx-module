@@ -319,6 +319,9 @@ static ngx_command_t  ngx_stream_lua_commands[] = {
 
 
 static ngx_stream_module_t  ngx_stream_lua_module_ctx = {
+#if (nginx_version >= 1011002)
+    NULL,                                  /* preconfiguration */
+#endif
     ngx_stream_lua_init,                   /* postconfiguration */
 
     ngx_stream_lua_create_main_conf,       /* create main configuration */

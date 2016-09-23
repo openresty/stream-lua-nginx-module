@@ -83,3 +83,10 @@
    fun:ngx_epoll_add_event
    fun:ngx_stream_lua_udp_connect
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   epoll_ctl(event)
+   fun:epoll_ctl
+   fun:ngx_epoll_test_rdhup
+}
