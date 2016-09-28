@@ -3203,7 +3203,11 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
+#if defined(nginx_version) && (nginx_version < 1011004)
         ngx_stream_close_connection(s->connection);
+#else
+        ngx_stream_finalize_session(s, NGX_STREAM_INTERNAL_SERVER_ERROR);
+#endif
         return;
     }
 
@@ -3218,7 +3222,11 @@ ngx_stream_lua_free_session(ngx_stream_session_t *s)
         cln = cln->next;
     }
 
+#if defined(nginx_version) && (nginx_version < 1011004)
     ngx_stream_close_connection(s->connection);
+#else
+    ngx_stream_finalize_session(s, NGX_STREAM_OK);
+#endif
 }
 
 
