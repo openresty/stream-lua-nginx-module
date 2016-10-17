@@ -168,7 +168,9 @@ ngx_stream_lua_balancer_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
         lscf->balancer.src_key = p;
 
-        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG, NGX_STREAM_LUA_INLINE_TAG_LEN);
+        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG,
+                     NGX_STREAM_LUA_INLINE_TAG_LEN);
+
         p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
         *p = '\0';
     }
@@ -215,7 +217,9 @@ ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
     ngx_stream_lua_srv_conf_t            *bcf;
     ngx_stream_lua_balancer_peer_data_t  *bp;
 
-    bp = ngx_pcalloc(s->connection->pool, sizeof(ngx_stream_lua_balancer_peer_data_t));
+    bp = ngx_pcalloc(s->connection->pool,
+                     sizeof(ngx_stream_lua_balancer_peer_data_t));
+
     if (bp == NULL) {
         return NGX_ERROR;
     }
@@ -410,7 +414,7 @@ int
 ngx_stream_lua_ffi_balancer_set_current_peer(ngx_stream_session_t *s,
     const u_char *addr, size_t addr_len, int port, char **err)
 {
-    ngx_url_t              url;
+    ngx_url_t                url;
     ngx_stream_lua_ctx_t    *ctx;
     ngx_stream_upstream_t   *u;
 
