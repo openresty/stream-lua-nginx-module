@@ -122,6 +122,8 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
 * [content_by_lua_file](https://github.com/openresty/lua-nginx-module#content_by_lua_file)
+* [balancer_by_lua_block](https://github.com/openresty/lua-nginx-module#balancer_by_lua_block)
+* [balancer_by_lua_file](https://github.com/openresty/lua-nginx-module#balancer_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
@@ -254,6 +256,9 @@ output to be completely flushed out (to the system socket send buffers).
 * [ngx.worker.pid](https://github.com/openresty/lua-nginx-module#ngxworkerpid)
 * [ngx.worker.count](https://github.com/openresty/lua-nginx-module#ngxworkercount)
 * [ngx.worker.id](https://github.com/openresty/lua-nginx-module#ngxworkerid)
+* [ngx.balancer](https://github.com/openresty/lua-nginx-module#ngxbalancer)
+
+    For now, only `set_current_peer` and `set_more_tries`(Not respect `proxy_next_upstream_tries`) provided.
 * [coroutine.create](https://github.com/openresty/lua-nginx-module#coroutinecreate)
 * [coroutine.resume](https://github.com/openresty/lua-nginx-module#coroutineresume)
 * [coroutine.yield](https://github.com/openresty/lua-nginx-module#coroutineyield)
@@ -268,7 +273,7 @@ TODO
 
 * Add new directives `access_by_lua_block` and `access_by_lua_file`.
 * Add new directives `log_by_lua_block` and `log_by_lua_file`.
-* Add new directives `balancer_by_lua_block` and `balancer_by_lua_file`.
+* Add `set_timeouts` in `ngx.balancer` and respect `proxy_next_upstream_tries` for `set_more_tries`.
 * Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
 * Add `ngx.semaphore` API.
 * Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
