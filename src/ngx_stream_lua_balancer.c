@@ -259,7 +259,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
 
     s = bp->session;
 
-    ngx_stream_lua_assert(lscf->balancer.handler && r);
+    ngx_stream_lua_assert(lscf->balancer.handler && s);
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
 
