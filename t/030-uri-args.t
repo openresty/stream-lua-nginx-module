@@ -32,6 +32,7 @@ a=bar&b=foo
 [error]
 
 
+
 === TEST 2: ngx.encode_args (empty table)
 --- stream_server_config
     content_by_lua_block {
