@@ -25,16 +25,16 @@ __DATA__
         local ffi = require "ffi"
 
         ffi.cdef[[
-            void *ngx_http_lua_find_zone(char *data, size_t len);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
         ]]
 
         local buf = ffi.new("char[?]", 4)
         ffi.copy(buf, "foo", 3)
-        local zone = ffi.C.ngx_http_lua_find_zone(buf, 3)
+        local zone = ffi.C.ngx_stream_lua_find_zone(buf, 3)
         ngx.say("foo zone: ", tonumber(ffi.cast("long", zone)) ~= 0 and "defined" or "undef")
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
         ngx.say("dogs zone: ", tonumber(ffi.cast("long", zone)) ~= 0 and "defined" or "undef")
     }
 --- stream_response
@@ -67,10 +67,10 @@ dogs zone: defined
                     ngx_str_t   s; /* string */
                 } value;
 
-            } ngx_http_lua_value_t;
+            } ngx_stream_lua_value_t;
 
-            void *ngx_http_lua_find_zone(char *data, size_t len);
-            intptr_t ngx_http_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_http_lua_value_t *val);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
+            intptr_t ngx_stream_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_stream_lua_value_t *val);
         ]]
 
         local dogs = ngx.shared.dogs
@@ -80,18 +80,18 @@ dogs zone: defined
         local buf = ffi.new("char[?]", 4)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
 
         ffi.copy(buf, "foo", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("foo: rc=", tonumber(rc),
             ", type=", val[0].type,
             ", val=", tonumber(val[0].value.n))
 
         ffi.copy(buf, "bar", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("bar: rc=", tonumber(rc),
             ", type=", val[0].type,
             ", val=", tonumber(val[0].value.n))
@@ -101,10 +101,12 @@ foo: rc=0, type=3, val=1234567
 bar: rc=0, type=3, val=3.14159
 --- no_error_log
 [error]
+--- SKIP
 
 
 
 === TEST 3: boolean typed value
+--- SKIP
 --- stream_config
     lua_shared_dict dogs 1m;
 --- stream_server_config
@@ -126,10 +128,10 @@ bar: rc=0, type=3, val=3.14159
                     ngx_str_t   s; /* string */
                 } value;
 
-            } ngx_http_lua_value_t;
+            } ngx_stream_lua_value_t;
 
-            void *ngx_http_lua_find_zone(char *data, size_t len);
-            intptr_t ngx_http_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_http_lua_value_t *val);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
+            intptr_t ngx_stream_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_stream_lua_value_t *val);
         ]]
 
         local dogs = ngx.shared.dogs
@@ -139,19 +141,19 @@ bar: rc=0, type=3, val=3.14159
         local buf = ffi.new("char[?]", 4)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
 
         ffi.copy(buf, "foo", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("foo: rc=", tonumber(rc),
             ", type=", tonumber(val[0].type),
             ", val=", tonumber(val[0].value.b))
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
         ffi.copy(buf, "bar", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("bar: rc=", tonumber(rc),
             ", type=", tonumber(val[0].type),
             ", val=", tonumber(val[0].value.b))
@@ -186,10 +188,10 @@ bar: rc=0, type=1, val=0
                     ngx_str_t   s; /* string */
                 } value;
 
-            } ngx_http_lua_value_t;
+            } ngx_stream_lua_value_t;
 
-            void *ngx_http_lua_find_zone(char *data, size_t len);
-            intptr_t ngx_http_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_http_lua_value_t *val);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
+            intptr_t ngx_stream_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_stream_lua_value_t *val);
         ]]
 
         local dogs = ngx.shared.dogs
@@ -198,17 +200,17 @@ bar: rc=0, type=1, val=0
         local buf = ffi.new("char[?]", 4)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
 
         ffi.copy(buf, "foo", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("foo: rc=", tonumber(rc))
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
         ffi.copy(buf, "bar", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("bar: rc=", tonumber(rc))
     }
 --- stream_response
@@ -216,6 +218,7 @@ foo: rc=-5
 bar: rc=-5
 --- no_error_log
 [error]
+--- SKIP
 
 
 
@@ -241,10 +244,10 @@ bar: rc=-5
                     ngx_str_t   s; /* string */
                 } value;
 
-            } ngx_http_lua_value_t;
+            } ngx_stream_lua_value_t;
 
-            void *ngx_http_lua_find_zone(char *data, size_t len);
-            intptr_t ngx_http_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_http_lua_value_t *val);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
+            intptr_t ngx_stream_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_stream_lua_value_t *val);
         ]]
 
         local dogs = ngx.shared.dogs
@@ -254,27 +257,27 @@ bar: rc=-5
         local buf = ffi.new("char[?]", 4)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
 
         local s = ffi.new("char[?]", 20)
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
         val[0].value.s.len = 20
         val[0].value.s.data = s
 
         ffi.copy(buf, "foo", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("foo: rc=", tonumber(rc),
             ", type=", tonumber(val[0].type),
             ", val=", ffi.string(val[0].value.s.data, val[0].value.s.len),
             ", len=", tonumber(val[0].value.s.len))
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
         val[0].value.s.len = 20
         val[0].value.s.data = s
 
         ffi.copy(buf, "bar", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("bar: rc=", tonumber(rc),
             ", type=", tonumber(val[0].type),
             ", val=", ffi.string(val[0].value.s.data, val[0].value.s.len),
@@ -285,6 +288,7 @@ foo: rc=0, type=4, val=hello world, len=11
 bar: rc=0, type=4, val=, len=0
 --- no_error_log
 [error]
+--- SKIP
 
 
 
@@ -310,10 +314,10 @@ bar: rc=0, type=4, val=, len=0
                     ngx_str_t   s; /* string */
                 } value;
 
-            } ngx_http_lua_value_t;
+            } ngx_stream_lua_value_t;
 
-            void *ngx_http_lua_find_zone(char *data, size_t len);
-            intptr_t ngx_http_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_http_lua_value_t *val);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
+            intptr_t ngx_stream_lua_shared_dict_get(void *zone, char *kdata, size_t klen, ngx_stream_lua_value_t *val);
         ]]
 
         local dogs = ngx.shared.dogs
@@ -322,18 +326,19 @@ bar: rc=0, type=4, val=, len=0
         local buf = ffi.new("char[?]", 4)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
 
-        local val = ffi.new("ngx_http_lua_value_t[?]", 1)
+        local val = ffi.new("ngx_stream_lua_value_t[?]", 1)
 
         ffi.copy(buf, "foo", 3)
-        local rc = ffi.C.ngx_http_lua_shared_dict_get(zone, buf, 3, val)
+        local rc = ffi.C.ngx_stream_lua_shared_dict_get(zone, buf, 3, val)
         ngx.say("foo: rc=", tonumber(rc))
     }
 --- stream_response
 foo: rc=-5
 --- no_error_log
 [error]
+--- SKIP
 
 
 
@@ -346,16 +351,16 @@ foo: rc=-5
         local ffi = require "ffi"
 
         ffi.cdef[[
-            void *ngx_http_lua_find_zone(char *data, size_t len);
+            void *ngx_stream_lua_find_zone(char *data, size_t len);
         ]]
 
         local buf = ffi.new("char[?]", 4)
         ffi.copy(buf, "cats", 4)
-        local zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        local zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
         local cats = tostring(zone)
 
         ffi.copy(buf, "dogs", 4)
-        zone = ffi.C.ngx_http_lua_find_zone(buf, 4)
+        zone = ffi.C.ngx_stream_lua_find_zone(buf, 4)
         local dogs = tostring(zone)
 
         ngx.say("dogs == cats ? ", dogs == cats)
