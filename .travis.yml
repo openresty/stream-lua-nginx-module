@@ -9,7 +9,12 @@ compiler:
   - gcc
   - clang
 
+addons:
+  apt:
+    packages: [ axel, cpanminus, libgd-dev, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl ]
+
 cache:
+  apt: true
   directories:
   - download-cache
 
@@ -29,17 +34,14 @@ env:
     - TEST_NGINX_SLEEP=0.006
   matrix:
     - NGINX_VERSION=1.9.15
+    - NGINX_VERSION=1.11.2
 
 services:
  - memcache
  - redis-server
 
-before_install:
-  - sudo apt-get install -qq -y axel cpanminus libgd-dev libtest-base-perl libtext-diff-perl liburi-perl libwww-perl libtest-longstring-perl liblist-moreutils-perl > build.log 2>&1 || (cat build.log && exit 1)
-
 install:
-  - if [ ! -d download-cache ]; then mkdir download-cache; fi
-  - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -O download-cache/pcre-$PCRE_VER.tar.gz http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
+  - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
   - git clone https://github.com/openresty/nginx-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
   - git clone https://github.com/openresty/openresty.git ../openresty
