@@ -181,6 +181,7 @@ local yf_cnames = {
     ['qa.openresty.org'] = _encode_name("amtg9l.openresty.org.yfcdn.net"),
     ['www.openresty.org'] = _encode_name("zjrngg.openresty.org.yfcdn.net"),
     ['opm.openresty.org'] = _encode_name("fydgdu.openresty.org.yfcdn.net"),
+    ['con.openresty.org'] = _encode_name("btwyzsojtms.openresty.yfcdn.net"),
 }
 
 local openresty_org = _encode_name("openresty.org")
@@ -221,6 +222,7 @@ local regdoms = {
 	['qa.openresty.org'] = openresty_org,
 	['www.openresty.org'] = openresty_org,
 	['opm.openresty.org'] = openresty_org,
+	['con.openresty.org'] = openresty_org,
 }
 
 local refused_tb = {}
