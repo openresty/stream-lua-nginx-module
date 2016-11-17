@@ -329,6 +329,68 @@ do
     txt_records = concat(bits)
 end
 
+local opm_txt_records
+do
+    local bits = {}
+    local idx = 0
+
+    idx = idx + 1
+    bits[idx] = _encode_name("opm.openresty.org")
+
+    idx = idx + 1
+    bits[idx] = "\0\x10\0\x01\0\0\x0e\x10"
+
+    local data = "v=spf1 include:mailgun.org ~all"
+    local len = #data + 1
+    local len_hi = char(rshift(len, 8))
+    local len_lo = char(band(len, 0xff))
+
+    idx = idx + 1
+    bits[idx] = len_hi
+
+    idx = idx + 1
+    bits[idx] = len_lo
+
+    idx = idx + 1
+    bits[idx] = char(len - 1)
+
+    idx = idx + 1
+    bits[idx] = data
+
+    opm_txt_records = concat(bits)
+end
+
+local opm_txt_records2
+do
+    local bits = {}
+    local idx = 0
+
+    idx = idx + 1
+    bits[idx] = _encode_name("pic._domainkey.opm.openresty.org")
+
+    idx = idx + 1
+    bits[idx] = "\0\x10\0\x01\0\0\x0e\x10"
+
+    local data = "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQe3HDdjNLTyHuQ4WigASF10QjMvEX3/iLz8ogTLRZ9wXlg3gTlUdBeS3bwFxEdOBDhRV1iZVJFXFpGh7F7xceAy8sU/0FJ0jEb9PnkxSPtCiRWIJ+PSBFrzUceYs+1LXhxVVnhxQURc6CMgBFgthFAOwHlK52dAnRPguwYXzuQQIDAQAB"
+    local len = #data + 1
+    local len_hi = char(rshift(len, 8))
+    local len_lo = char(band(len, 0xff))
+
+    idx = idx + 1
+    bits[idx] = len_hi
+
+    idx = idx + 1
+    bits[idx] = len_lo
+
+    idx = idx + 1
+    bits[idx] = char(len - 1)
+
+    idx = idx + 1
+    bits[idx] = data
+
+    opm_txt_records2 = concat(bits)
+end
+
 local soa_records = {}
 do
     local bits = {}
@@ -443,6 +505,44 @@ local function send_txt_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
 
+    if qname == "opm.openresty.org" then
+        local tb = {
+            ident_hi, ident_lo,
+            "\x84\0\0\1\0\1\0\2\0\2",
+            raw_quest_rr,
+            opm_txt_records,
+            ns_records,
+            additional_records,
+        }
+
+        local ok, err = sock:send(tb)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return
+        end
+
+        return
+    end
+
+    if qname == "pic._domainkey.opm.openresty.org" then
+        local tb = {
+            ident_hi, ident_lo,
+            "\x84\0\0\1\0\1\0\2\0\2",
+            raw_quest_rr,
+            opm_txt_records2,
+            ns_records,
+            additional_records,
+        }
+
+        local ok, err = sock:send(tb)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return
+        end
+
+        return
+    end
+
     if qname ~= "openresty.org" then
         return send_nxdomain_ans(id, sock, raw_quest_rr)
     end
@@ -499,6 +599,34 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name,
 
     local ident_hi = char(rshift(id, 8))
     local ident_lo = char(band(id, 0xff))
+
+    if qname == "email.opm.openresty.org" then
+        local cname = _encode_name("mailgun.org")
+        local len = #cname
+
+        local len_hi = char(rshift(len, 8))
+        local len_lo = char(band(len, 0xff))
+
+        cname_resp_tb[1] = ident_hi
+        cname_resp_tb[2] = ident_lo
+        cname_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
+        cname_resp_tb[4] = raw_quest_rr
+        cname_resp_tb[5] = raw_quest_name
+        cname_resp_tb[6] = "\0\x05\0\x01\0\0\x0e\x10"
+        cname_resp_tb[7] = len_hi
+        cname_resp_tb[8] = len_lo
+        cname_resp_tb[9] = cname
+        cname_resp_tb[10] = ns_records
+        cname_resp_tb[11] = additional_records
+
+        local ok, err = sock:send(cname_resp_tb)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return
+        end
+
+        return
+    end
 
     -- country_code = "CN"
 
@@ -642,23 +770,23 @@ function _M.go()
     -- print("type: ", typ)
 
     if typ == TYPE_MX then
-        -- print("MX req from ", get_country_code(), ", qname ", quest_qname)
+        print("MX req from ", get_country_code(), ", qname ", quest_qname)
         return send_mx_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     if typ == TYPE_TXT then
-        -- print("TXT req from ", get_country_code(), ", qname ", quest_qname)
+        print("TXT req from ", get_country_code(), ", qname ", quest_qname)
         return send_txt_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     if typ == TYPE_SOA then
-        -- print("SOA req from ", get_country_code(), ", qname ", quest_qname)
+        print("SOA req from ", get_country_code(), ", qname ", quest_qname)
         return send_soa_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     local cc = get_country_code()
 
-    -- print("type ", typ, " req, country ", cc, ", qname ", quest_qname)
+    print("type ", typ, " req, country ", cc, ", qname ", quest_qname)
 
     return send_cname_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name,
                           cc)
