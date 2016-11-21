@@ -10,7 +10,7 @@
 
 
 #include "ngx_stream_lua_common.h"
-
+#include "api/ngx_stream_lua_api.h"
 
 u_char *ngx_stream_lua_rebase_path(ngx_pool_t *pool, u_char *src, size_t len);
 u_char *ngx_stream_lua_digest_hex(u_char *dest, const u_char *buf, int buf_len);
@@ -128,19 +128,6 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx, unsigned flags,
     return NGX_OK;
 }
 #endif
-
-
-static ngx_inline ngx_stream_session_t *
-ngx_stream_lua_get_session(lua_State *L)
-{
-    ngx_stream_session_t    *s;
-
-    lua_getglobal(L, ngx_stream_lua_session_key);
-    s = lua_touserdata(L, -1);
-    lua_pop(L, 1);
-
-    return s;
-}
 
 
 static ngx_inline void

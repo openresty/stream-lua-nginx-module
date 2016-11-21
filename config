@@ -336,6 +336,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
                 $ngx_addon_dir/src/ngx_stream_lua_initby.c \
                 $ngx_addon_dir/src/ngx_stream_lua_args.c \
                 $ngx_addon_dir/src/ngx_stream_lua_initworkerby.c \
+                $ngx_addon_dir/src/ngx_stream_lua_api.c \
                 "
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
