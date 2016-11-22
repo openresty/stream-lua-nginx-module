@@ -26,6 +26,7 @@ ngx_stream_lua_get_global_state(ngx_conf_t *cf)
     return lmcf->lua;
 }
 
+
 ngx_stream_session_t *
 ngx_stream_lua_get_session(lua_State *L)
 {
@@ -37,6 +38,7 @@ ngx_stream_lua_get_session(lua_State *L)
 
     return s;
 }
+
 
 ngx_int_t
 ngx_stream_lua_add_package_preload(ngx_conf_t *cf, const char *package,
@@ -81,4 +83,3 @@ ngx_stream_lua_add_package_preload(ngx_conf_t *cf, const char *package,
 
     return NGX_OK;
 }
-/* vi:set ft=c ts=4 sw=4 et fdm=marker: */
