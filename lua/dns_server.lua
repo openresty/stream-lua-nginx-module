@@ -174,7 +174,8 @@ local function _encode_name(name)
 end
 
 local aws_cname =
-    _encode_name("openresty-portal-525905983.ap-southeast-1.elb.amazonaws.com")
+    -- _encode_name("openresty-portal-525905983.ap-southeast-1.elb.amazonaws.com")
+    _encode_name("openresty-org-635249771.ap-southeast-1.elb.amazonaws.com")
 
 local yf_cnames = {
     ['openresty.org'] = _encode_name("km4x14.openresty.org.yfcdn.net"),
