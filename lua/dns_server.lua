@@ -448,8 +448,8 @@ do
     local idx = 0
 
     local rows = {
-        {"a.restydns.com", "52.76.49.101"},
-        {"c.restydns.com", "52.69.7.138"},
+        {"a.restydns.com", "46.51.220.188"},
+        {"c.restydns.com", "52.199.132.92"},
     }
 
     for _, row in ipairs(rows) do
