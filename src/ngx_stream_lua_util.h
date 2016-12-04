@@ -10,6 +10,7 @@
 
 
 #include "ngx_stream_lua_common.h"
+#include "api/ngx_stream_lua_api.h"
 
 
 u_char *ngx_stream_lua_rebase_path(ngx_pool_t *pool, u_char *src, size_t len);
