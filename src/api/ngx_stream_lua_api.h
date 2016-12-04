@@ -36,7 +36,7 @@ typedef struct {
 
 lua_State *ngx_stream_lua_get_global_state(ngx_conf_t *cf);
 
-static ngx_stream_session_t *ngx_stream_lua_get_session(lua_State *L);
+/*static ngx_stream_session_t *ngx_stream_lua_get_session(lua_State *L);*/
 
 ngx_int_t ngx_stream_lua_add_package_preload(ngx_conf_t *cf,
     const char *package, lua_CFunction func);
