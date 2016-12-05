@@ -42,7 +42,9 @@ static ngx_command_t ngx_stream_lua_fake_shm_cmds[] = {
 
 
 static ngx_stream_module_t  ngx_stream_lua_fake_shm_module_ctx = {
+#if (nginx_version >= 1011002)
     NULL,                                       /* preconfiguration */
+#endif
     ngx_stream_lua_fake_shm_init,               /* postconfiguration */
 
     ngx_stream_lua_fake_shm_create_main_conf,   /* create main configuration */
