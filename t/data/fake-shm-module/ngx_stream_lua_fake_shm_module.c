@@ -49,7 +49,7 @@ static ngx_stream_module_t  ngx_stream_lua_fake_shm_module_ctx = {
     NULL,                                       /* init main configuration */
 
     NULL,                                       /* create server configuration */
-    NULL,                                       /* merge server configuration */
+    NULL                                        /* merge server configuration */
 };
 
 
