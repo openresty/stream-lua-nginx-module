@@ -19,6 +19,7 @@
 #include "ngx_stream_lua_initby.h"
 #include "ngx_stream_lua_shdict.h"
 #include "ngx_stream_lua_initworkerby.h"
+#include "api/ngx_stream_lua_api.h"
 
 
 static u_char *ngx_stream_lua_gen_chunk_name(ngx_conf_t *cf, const char *tag,
