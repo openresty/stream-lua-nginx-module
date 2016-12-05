@@ -3,7 +3,7 @@
 use Test::Nginx::Socket::Lua::Stream;
 repeat_each(1);
 
-plan tests => blocks() * (repeat_each() * 3 - 1);
+plan tests => blocks() * (repeat_each() * 3) - 1;
 
 run_tests();
 
