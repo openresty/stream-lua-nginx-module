@@ -10,8 +10,8 @@
 #include "ddebug.h"
 
 
-#include "ngx_stream_lua_common.h"
 #include "api/ngx_stream_lua_api.h"
+#include "ngx_stream_lua_common.h"
 #include "ngx_stream_lua_shdict.h"
 #include "ngx_stream_lua_util.h"
 

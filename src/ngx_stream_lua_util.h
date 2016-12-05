@@ -130,19 +130,6 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx, unsigned flags,
 #endif
 
 
-static ngx_inline ngx_stream_session_t *
-ngx_stream_lua_get_session(lua_State *L)
-{
-    ngx_stream_session_t    *s;
-
-    lua_getglobal(L, ngx_stream_lua_session_key);
-    s = lua_touserdata(L, -1);
-    lua_pop(L, 1);
-
-    return s;
-}
-
-
 static ngx_inline void
 ngx_stream_lua_init_ctx(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 {
