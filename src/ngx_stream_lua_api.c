@@ -16,6 +16,25 @@
 #include "ngx_stream_lua_util.h"
 
 
+lua_State *
+ngx_stream_lua_get_global_state(ngx_conf_t *cf)
+{
+    ngx_stream_lua_main_conf_t *lmcf;
+
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+
+    return lmcf->lua;
+}
+
+
+ngx_stream_session_t *
+ngx_stream_lua_get_sess(lua_State *L)
+{
+    return ngx_stream_lua_get_session(L);
+}
+
+
+
 static ngx_int_t ngx_stream_lua_shared_memory_init(ngx_shm_zone_t *shm_zone,
     void *data);
 

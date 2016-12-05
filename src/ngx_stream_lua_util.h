@@ -130,6 +130,19 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx, unsigned flags,
 #endif
 
 
+static ngx_inline ngx_stream_session_t *
+ngx_stream_lua_get_session(lua_State *L)
+{
+    ngx_stream_session_t    *s;
+
+    lua_getglobal(L, ngx_stream_lua_session_key);
+    s = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    return s;
+}
+
+
 static ngx_inline void
 ngx_stream_lua_init_ctx(ngx_stream_session_t *s, ngx_stream_lua_ctx_t *ctx)
 {
@@ -169,6 +182,8 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *s)
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
     if (!lscf->enable_code_cache && s->connection->fd != (ngx_socket_t) -1) {
         lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
+
+        dd("lmcf: %p", lmcf);
 
         L = ngx_stream_lua_init_vm(lmcf->lua, lmcf->cycle,
                                    s->connection->pool, lmcf,
