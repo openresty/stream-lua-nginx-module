@@ -383,7 +383,7 @@ ngx_stream_lua_socket_tcp(lua_State *L)
                           lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -437,7 +437,7 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
                           "arguments (including the object), but seen %d", n);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -1175,7 +1175,7 @@ ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L)
                           "arguments (including the object), but seen %d", n);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -1669,7 +1669,7 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
                           "(including the object), but got %d", n);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -2181,7 +2181,7 @@ ngx_stream_lua_socket_tcp_send(lua_State *L)
                           "but got %d", lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -2461,7 +2461,7 @@ ngx_stream_lua_socket_tcp_close(lua_State *L)
                           "(including the object) but seen %d", lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -3406,7 +3406,7 @@ ngx_stream_lua_socket_tcp_receiveuntil(lua_State *L)
         lua_pop(L, 2);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -3491,7 +3491,7 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
         return 2;
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }
@@ -3945,7 +3945,7 @@ ngx_stream_lua_req_socket(lua_State *L)
                           lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -4160,7 +4160,7 @@ ngx_stream_lua_socket_tcp_setkeepalive(lua_State *L)
         return 2;
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no request found");
     }

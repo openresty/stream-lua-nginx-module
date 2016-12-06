@@ -24,7 +24,7 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
     ngx_stream_session_t          *r;
     ngx_stream_lua_ctx_t          *ctx;
 
-    r = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_sess(L);
 
     /* If we have no sessiong object, assume we are called from the "init"
      * phase. */

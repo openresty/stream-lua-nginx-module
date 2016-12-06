@@ -446,7 +446,7 @@ ngx_stream_lua_semaphore_handler(ngx_event_t *ev)
             ngx_del_timer(&wait_co_ctx->sleep);
         }
 
-        s = ngx_stream_lua_get_session(wait_co_ctx->co);
+        s = ngx_stream_lua_get_sess(wait_co_ctx->co);
 
         ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
         ngx_stream_lua_assert(ctx != NULL);
@@ -481,7 +481,7 @@ ngx_stream_lua_semaphore_timeout_handler(ngx_event_t *ev)
     ngx_queue_remove(&wait_co_ctx->sem_wait_queue);
     sem->wait_count--;
 
-    s = ngx_stream_lua_get_session(wait_co_ctx->co);
+    s = ngx_stream_lua_get_sess(wait_co_ctx->co);
 
     ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
     ngx_stream_lua_assert(ctx != NULL);

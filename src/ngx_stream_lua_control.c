@@ -46,7 +46,7 @@ ngx_stream_lua_ngx_exit(lua_State *L)
         return luaL_error(L, "expecting one argument");
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }
@@ -82,7 +82,7 @@ ngx_stream_lua_on_abort(lua_State *L)
     ngx_stream_lua_co_ctx_t        *coctx = NULL;
     ngx_stream_lua_srv_conf_t      *lscf;
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

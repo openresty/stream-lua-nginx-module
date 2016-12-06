@@ -55,7 +55,7 @@ ngx_stream_lua_uthread_spawn(lua_State *L)
 
     n = lua_gettop(L);
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -115,7 +115,7 @@ ngx_stream_lua_uthread_wait(lua_State *L)
     ngx_stream_lua_ctx_t        *ctx;
     ngx_stream_lua_co_ctx_t     *coctx, *sub_coctx;
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -213,7 +213,7 @@ ngx_stream_lua_uthread_kill(lua_State *L)
     ngx_stream_lua_ctx_t          *ctx;
     ngx_stream_lua_co_ctx_t       *coctx, *sub_coctx;
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

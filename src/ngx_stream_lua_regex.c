@@ -172,7 +172,7 @@ ngx_stream_lua_ngx_re_match_helper(lua_State *L, int wantcaps)
                           "but got %d", nargs);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }
@@ -684,7 +684,7 @@ ngx_stream_lua_ngx_re_gmatch(lua_State *L)
                           nargs);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }
@@ -1016,7 +1016,7 @@ ngx_stream_lua_ngx_re_gmatch_iterator(lua_State *L)
 
     dd("offset %d, s %p, subj %s", (int) offset, ctx->session, subj.data);
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }
@@ -1327,7 +1327,7 @@ ngx_stream_lua_ngx_re_sub_helper(lua_State *L, unsigned global)
                           nargs);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }

@@ -37,7 +37,7 @@ ngx_stream_lua_ngx_sleep(lua_State *L)
         return luaL_error(L, "attempt to pass %d arguments, but accepted 1", n);
     }
 
-    s = ngx_stream_lua_get_session(L);
+    s = ngx_stream_lua_get_sess(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
