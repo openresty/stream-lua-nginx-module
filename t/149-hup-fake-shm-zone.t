@@ -12,12 +12,15 @@ BEGIN {
     }
 }
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua::Stream $SkipReason ? (skip_all => $SkipReason) : ();
 
 repeat_each(2);
 
-plan tests => blocks() * (repeat_each() * 3);
+plan tests => repeat_each() * (blocks() * 3);
+
+no_long_string();
+
+no_shuffle();
 
 run_tests();
 
