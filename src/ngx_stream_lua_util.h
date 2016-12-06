@@ -183,6 +183,8 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *s)
     if (!lscf->enable_code_cache && s->connection->fd != (ngx_socket_t) -1) {
         lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
 
+        dd("lmcf: %p", lmcf);
+
         L = ngx_stream_lua_init_vm(lmcf->lua, lmcf->cycle,
                                    s->connection->pool, lmcf,
                                    s->connection->log, &cln);

@@ -155,8 +155,6 @@ struct ngx_stream_lua_main_conf_s {
 
     ngx_array_t                         *shm_zones;  /* of ngx_shm_zone_t* */
 
-    ngx_array_t                         *shdict_zones; /* shm zones of "shdict" */
-
     ngx_array_t                         *preload_hooks;
                                         /* of ngx_stream_lua_preload_hook_t */
 

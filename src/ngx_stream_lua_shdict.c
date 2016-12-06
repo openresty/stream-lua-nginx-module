@@ -55,7 +55,10 @@ ngx_stream_lua_shdict_init_zone(ngx_shm_zone_t *shm_zone, void *data)
     ngx_stream_lua_shdict_ctx_t  *octx = data;
 
     size_t                           len;
+    ngx_int_t                        rc;
+    volatile ngx_cycle_t            *saved_cycle;
     ngx_stream_lua_shdict_ctx_t     *ctx;
+    ngx_stream_lua_main_conf_t      *lmcf;
 
     dd("init zone");
 
@@ -65,7 +68,7 @@ ngx_stream_lua_shdict_init_zone(ngx_shm_zone_t *shm_zone, void *data)
         ctx->sh = octx->sh;
         ctx->shpool = octx->shpool;
 
-        return NGX_OK;
+        goto done;
     }
 
     ctx->shpool = (ngx_slab_pool_t *) shm_zone->shm.addr;
@@ -73,7 +76,7 @@ ngx_stream_lua_shdict_init_zone(ngx_shm_zone_t *shm_zone, void *data)
     if (shm_zone->shm.exists) {
         ctx->sh = ctx->shpool->data;
 
-        return NGX_OK;
+        goto done;
     }
 
     ctx->sh = ngx_slab_alloc(ctx->shpool,
@@ -102,6 +105,32 @@ ngx_stream_lua_shdict_init_zone(ngx_shm_zone_t *shm_zone, void *data)
 #if defined(nginx_version) && nginx_version >= 1005013
     ctx->shpool->log_nomem = 0;
 #endif
+
+done:
+
+    dd("get lmcf");
+
+    lmcf = ctx->main_conf;
+
+    dd("lmcf->lua: %p", lmcf->lua);
+
+    lmcf->shm_zones_inited++;
+
+    if (lmcf->shm_zones_inited == lmcf->shm_zones->nelts
+        && lmcf->init_handler)
+    {
+        saved_cycle = ngx_cycle;
+        ngx_cycle = ctx->cycle;
+
+        rc = lmcf->init_handler(ctx->log, lmcf, lmcf->lua);
+
+        ngx_cycle = saved_cycle;
+
+        if (rc != NGX_OK) {
+            /* an error happened */
+            return NGX_ERROR;
+        }
+    }
 
     return NGX_OK;
 }
@@ -283,8 +312,8 @@ ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
     ngx_uint_t                    i;
     ngx_shm_zone_t              **zone;
 
-    if (lmcf->shdict_zones != NULL) {
-        lua_createtable(L, 0, lmcf->shdict_zones->nelts /* nrec */);
+    if (lmcf->shm_zones != NULL) {
+        lua_createtable(L, 0, lmcf->shm_zones->nelts /* nrec */);
                 /* ngx.shared */
 
         lua_createtable(L, 0 /* narr */, 13 /* nrec */); /* shared mt */
@@ -328,9 +357,9 @@ ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
         lua_pushvalue(L, -1); /* shared mt mt */
         lua_setfield(L, -2, "__index"); /* shared mt */
 
-        zone = lmcf->shdict_zones->elts;
+        zone = lmcf->shm_zones->elts;
 
-        for (i = 0; i < lmcf->shdict_zones->nelts; i++) {
+        for (i = 0; i < lmcf->shm_zones->nelts; i++) {
             ctx = zone[i]->data;
 
             lua_pushlstring(L, (char *) ctx->name.data, ctx->name.len);
@@ -1253,7 +1282,6 @@ ngx_stream_lua_find_zone(u_char *name_data, size_t name_len)
     ngx_str_t                       *name;
     ngx_uint_t                       i;
     ngx_shm_zone_t                  *zone;
-    ngx_stream_lua_shm_zone_ctx_t   *ctx;
     volatile ngx_list_part_t        *part;
 
     part = &ngx_cycle->shared_memory.part;
@@ -1279,8 +1307,7 @@ ngx_stream_lua_find_zone(u_char *name_data, size_t name_len)
         if (name->len == name_len
             && ngx_strncmp(name->data, name_data, name_len) == 0)
         {
-            ctx = (ngx_stream_lua_shm_zone_ctx_t *) zone[i].data;
-            return &ctx->zone;
+            return &zone[i];
         }
     }
 

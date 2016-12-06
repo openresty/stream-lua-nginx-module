@@ -32,7 +32,6 @@ ngx-build $force $version \
             --add-module=$root/../memc-nginx-module \
             --add-module=$root/../headers-more-nginx-module \
             --add-module=$root/../stream-echo-nginx-module \
-            --add-module=$root/t/data/fake-shm-module \
             --add-module=$root $opts \
             --with-poll_module \
             --without-http_ssi_module \
