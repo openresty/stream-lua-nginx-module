@@ -28,9 +28,9 @@ ngx_stream_lua_get_global_state(ngx_conf_t *cf)
 
 
 ngx_stream_session_t *
-ngx_stream_lua_get_session(lua_State *L)
+ngx_stream_lua_get_sess(lua_State *L)
 {
-    return ngx_stream_lua_get_sess(L);
+    return ngx_stream_lua_get_session(L);
 }
 
 

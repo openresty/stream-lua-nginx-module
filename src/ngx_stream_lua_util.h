@@ -131,7 +131,7 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx, unsigned flags,
 
 
 static ngx_inline ngx_stream_session_t *
-ngx_stream_lua_get_sess(lua_State *L)
+ngx_stream_lua_get_session(lua_State *L)
 {
     ngx_stream_session_t    *s;
 

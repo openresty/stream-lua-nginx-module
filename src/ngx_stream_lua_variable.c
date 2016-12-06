@@ -62,7 +62,7 @@ ngx_stream_lua_var_get(lua_State *L)
     u_char                      *p;
     size_t                       len;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

@@ -41,7 +41,7 @@ ngx_stream_lua_ngx_get(lua_State *L)
     size_t                       len;
     ngx_stream_lua_ctx_t        *ctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         lua_pushnil(L);
         return 1;
@@ -83,7 +83,7 @@ ngx_stream_lua_ngx_set(lua_State *L)
     if (len == sizeof("ctx") - 1
         && ngx_strncmp(p, "ctx", sizeof("ctx") - 1) == 0)
     {
-        s = ngx_stream_lua_get_sess(L);
+        s = ngx_stream_lua_get_session(L);
         if (s == NULL) {
             return luaL_error(L, "no session object found");
         }

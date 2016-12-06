@@ -31,7 +31,7 @@ ngx_stream_lua_ngx_get_ctx(lua_State *L)
     ngx_stream_session_t          *s;
     ngx_stream_lua_ctx_t          *ctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -77,7 +77,7 @@ ngx_stream_lua_ngx_set_ctx(lua_State *L)
     ngx_stream_session_t          *s;
     ngx_stream_lua_ctx_t          *ctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

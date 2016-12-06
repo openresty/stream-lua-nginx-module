@@ -55,7 +55,7 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
     const char                  *msg;
     u_char                       errbuf[NGX_STREAM_LUA_MAX_ERROR_STR];
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }
@@ -474,7 +474,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
                           "or 1", n);
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
 
     wait = 1;  /* always wait */
 
@@ -558,7 +558,7 @@ ngx_stream_lua_ngx_eof(lua_State *L)
     ngx_stream_session_t      *s;
     ngx_stream_lua_ctx_t      *ctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session object found");
     }

@@ -47,7 +47,7 @@ ngx_stream_lua_coroutine_create(lua_State *L)
     ngx_stream_session_t          *s;
     ngx_stream_lua_ctx_t          *ctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -138,7 +138,7 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
 
     luaL_argcheck(L, co, 1, "coroutine expected");
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -198,7 +198,7 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
     ngx_stream_lua_ctx_t          *ctx;
     ngx_stream_lua_co_ctx_t       *coctx;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -353,7 +353,7 @@ ngx_stream_lua_coroutine_status(lua_State *L)
 
     luaL_argcheck(L, co, 1, "coroutine expected");
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

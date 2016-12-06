@@ -129,7 +129,7 @@ ngx_stream_lua_socket_udp(lua_State *L)
                           lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -186,7 +186,7 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
                           "arguments (including the object), but seen %d", n);
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -777,7 +777,7 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
                           "but got %d", lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "session object not found");
     }
@@ -905,7 +905,7 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
                           "(including the object), but got %d", nargs);
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }
@@ -1444,7 +1444,7 @@ ngx_stream_lua_socket_udp_close(lua_State *L)
                           "(including the object) but seen %d", lua_gettop(L));
     }
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
     if (s == NULL) {
         return luaL_error(L, "no session found");
     }

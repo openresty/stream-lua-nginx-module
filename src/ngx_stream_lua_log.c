@@ -37,7 +37,7 @@ ngx_stream_lua_ngx_log(lua_State *L)
     const char                  *msg;
     int                          level;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
 
     if (s && s->connection && s->connection->log) {
         log = s->connection->log;
@@ -72,7 +72,7 @@ ngx_stream_lua_print(lua_State *L)
     ngx_log_t                   *log;
     ngx_stream_session_t        *s;
 
-    s = ngx_stream_lua_get_sess(L);
+    s = ngx_stream_lua_get_session(L);
 
     if (s && s->connection && s->connection->log) {
         log = s->connection->log;
