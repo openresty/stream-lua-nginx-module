@@ -4,7 +4,6 @@
 #include "ddebug.h"
 
 
-#include "api/ngx_stream_lua_api.h"
 #include "ngx_stream_lua_output.h"
 #include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_contentby.h"

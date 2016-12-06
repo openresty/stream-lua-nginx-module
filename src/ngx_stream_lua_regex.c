@@ -12,7 +12,6 @@
 
 #if (NGX_PCRE)
 
-#include "api/ngx_stream_lua_api.h"
 #include "ngx_stream_lua_regex.h"
 #include "ngx_stream_lua_pcrefix.h"
 #include "ngx_stream_lua_script.h"
