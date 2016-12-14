@@ -25,7 +25,8 @@ __DATA__
 --- ONLY
 --- dgram_config
 	lua_shared_dict limit_req_zone 50m;
-    lua_package_path '$TEST_NGINX_PWD/t/lib/?.lua;$TEST_NGINX_PWD/lua/?.lua;../lua-resty-limit-traffic/lib/?.lua;;';
+    lua_package_path '$TEST_NGINX_PWD/t/lib/?.lua;$TEST_NGINX_PWD/lua/?.lua;../lua-resty-limit-traffic/lib/?.lua;/usr/local/openresty/lualib/?.lua;;';
+    lua_package_cpath '/usr/local/openresty/lualib/?.so;;';
     init_by_lua_block {
         jit.opt.start("minstitch=2")
 

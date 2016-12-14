@@ -39,6 +39,7 @@ local TYPE_SPF    = 99
 
 local labels = {}
 local cname_resp_tb = {}
+local a_resp_tb = {}
 local mx_resp_tb = {}
 local txt_resp_tb = {}
 
@@ -219,11 +220,20 @@ do
 end
 
 local regdoms = {
-	['openresty.org'] = openresty_org,
-	['qa.openresty.org'] = openresty_org,
-	['www.openresty.org'] = openresty_org,
-	['opm.openresty.org'] = openresty_org,
-	['con.openresty.org'] = openresty_org,
+	['openresty.org'] = "openresty.org",
+	['qa.openresty.org'] = "openresty.org",
+	['www.openresty.org'] = "openresty.org",
+	['opm.openresty.org'] = "openresty.org",
+	['con.openresty.org'] = "openresty.org",
+	['agentzh.org'] = "agentzh.org",
+	['www.agentzh.org'] = "agentzh.org",
+	['blog.agentzh.org'] = "agentzh.org",
+	['iscribblet.org'] = "iscribblet.org",
+	['www.iscribblet.org'] = "iscribblet.org",
+	['api.iscribblet.org'] = "iscribblet.org",
+	['sregex.org'] = "sregex.org",
+	['www.sregex.org'] = "sregex.org",
+	['g.sregex.org'] = "sregex.org",
 }
 
 local refused_tb = {}
@@ -629,8 +639,6 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name,
         return
     end
 
-    -- country_code = "CN"
-
     local regdom = regdoms[qname]
     if not regdom then
         return send_nxdomain_ans(id, sock, raw_quest_rr)
@@ -665,6 +673,65 @@ local function send_cname_ans(id, sock, qname, raw_quest_rr, raw_quest_name,
     cname_resp_tb[11] = additional_records
 
     local ok, err = sock:send(cname_resp_tb)
+    if not ok then
+        ngx.log(ngx.ERR, "failed to send: ", err)
+        return
+    end
+end
+
+
+local a_records = {}
+do
+    local linode_ip = "106.184.1.99"
+    local rows = {
+        {"agentzh.org", linode_ip},
+        {"iscribblet.org", linode_ip},
+        {"sregex.org", linode_ip},
+    }
+
+    for _, row in pairs(rows) do
+        local bits = {}
+        local idx = 0
+
+        for num in string.gmatch(row[2], "%d+") do
+            local c = char(tonumber(num))
+            idx = idx + 1
+            bits[idx] = c
+        end
+
+        a_records[row[1]] = concat(bits)
+        -- ngx.logrequire "cjson".encode(concat(bits))
+    end
+end
+
+
+local function send_a_ans(id, sock, qname, raw_quest_rr, raw_quest_name)
+    local regdom = regdoms[qname]
+    if not regdom then
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
+
+    local a_rec = a_records[regdom]
+    if not a_rec then
+        return send_nxdomain_ans(id, sock, raw_quest_rr)
+    end
+
+    local ident_hi = char(rshift(id, 8))
+    local ident_lo = char(band(id, 0xff))
+
+    a_resp_tb[1] = ident_hi
+    a_resp_tb[2] = ident_lo
+    a_resp_tb[3] = "\x84\0\0\1\0\1\0\2\0\2"
+    a_resp_tb[4] = raw_quest_rr
+    a_resp_tb[5] = raw_quest_name
+    a_resp_tb[6] = "\0\x01\0\x01\0\0\x0e\x10"
+    a_resp_tb[7] = "\0\x04"
+    a_resp_tb[8] = a_rec
+
+    a_resp_tb[9] = ns_records
+    a_resp_tb[10] = additional_records
+
+    local ok, err = sock:send(a_resp_tb)
     if not ok then
         ngx.log(ngx.ERR, "failed to send: ", err)
         return
@@ -755,6 +822,12 @@ function _M.go()
 
     if re_find(quest_qname, "[A-Z]", "jo") then
         quest_qname = str_lower(quest_qname)
+    end
+
+    -- print("quest_name: ", quest_qname)
+
+    if re_find(quest_qname, [[(?:agentzh|iscribblet|sregex)\.org$]], "jo") then
+        return send_a_ans(id, sock, quest_qname, raw_quest_rr, raw_quest_name)
     end
 
     if not re_find(quest_qname, [[openresty\.org$]], "jo") then
