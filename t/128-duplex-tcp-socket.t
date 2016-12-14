@@ -339,7 +339,7 @@ F(ngx_http_lua_socket_tcp_finalize_write_part) {
 === TEST 5: concurrent socket operations while connecting
 --- stream_server_config
     lua_socket_log_errors off;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
 

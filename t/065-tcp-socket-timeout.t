@@ -45,7 +45,7 @@ __DATA__
 === TEST 1: lua_socket_connect_timeout only
 --- stream_server_config
     lua_socket_connect_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -69,7 +69,7 @@ lua tcp socket connect timed out
 === TEST 2: sock:settimeout() overrides lua_socket_connect_timeout
 --- stream_server_config
     lua_socket_connect_timeout 60s;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -94,7 +94,7 @@ lua tcp socket connect timed out
 === TEST 3: sock:settimeout(nil) does not override lua_socket_connect_timeout
 --- stream_server_config
     lua_socket_connect_timeout 102ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(nil)
@@ -117,7 +117,7 @@ lua tcp socket connect timed out
 === TEST 4: sock:settimeout(0) does not override lua_socket_connect_timeout
 --- stream_server_config
     lua_socket_connect_timeout 102ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -142,7 +142,7 @@ lua tcp socket connect timed out
 === TEST 5: sock:settimeout(-1) does not override lua_socket_connect_timeout
 --- stream_server_config
     lua_socket_connect_timeout 102ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(-1)
@@ -165,7 +165,7 @@ lua tcp socket connect timed out
 === TEST 6: lua_socket_read_timeout only
 --- stream_server_config
     lua_socket_read_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
@@ -597,7 +597,7 @@ after
 === TEST 17: re-connect after timed out
 --- stream_server_config
     lua_socket_connect_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -630,7 +630,7 @@ lua tcp socket connect timed out
 === TEST 18: re-send on the same object after a send timeout happens
 --- stream_server_config
     #lua_socket_send_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
@@ -729,7 +729,7 @@ lua tcp socket write timed out
 
 === TEST 20: abort when downstream socket pending on writes
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     #lua_lingering_timeout 10ms;
 
     content_by_lua_block {
@@ -783,7 +783,7 @@ lua tcp socket write timed out
 === TEST 21: read timeout on receive(N)
 --- stream_server_config
     lua_socket_read_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)

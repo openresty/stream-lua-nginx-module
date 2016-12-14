@@ -1,6 +1,7 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
 use Test::Nginx::Socket::Lua::Stream;
+
 repeat_each(2);
 
 plan tests => repeat_each() * (blocks() * 7);
@@ -119,7 +120,7 @@ SSL reused session
 
 === TEST 2: no SNI, no verify
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -192,7 +193,7 @@ SSL reused session
 
 === TEST 3: SNI, no verify
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -266,7 +267,7 @@ SSL reused session
 
 === TEST 4: ssl session reuse
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -353,7 +354,7 @@ lua ssl free session
 === TEST 5: certificate does not match host name (verify)
 The certificate for "blah.agentzh.org" does not contain the name "blah.agentzh.org".
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 5;
 
@@ -428,7 +429,7 @@ SSL reused session
 === TEST 6: certificate does not match host name (verify, no log socket errors)
 The certificate for "blah.agentzh.org" does not contain the name "blah.agentzh.org".
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_socket_log_errors off;
     lua_ssl_verify_depth 2;
@@ -503,7 +504,7 @@ SSL reused session
 
 === TEST 7: certificate does not match host name (no verify)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -578,7 +579,7 @@ SSL reused session
 
 === TEST 8: iscribblet.org: passing SSL verify
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 2;
 
@@ -659,7 +660,7 @@ SSL reused session
 
 === TEST 9: ssl verify depth not enough (with automatic error logging)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 1;
 
@@ -733,7 +734,7 @@ SSL reused session
 
 === TEST 10: ssl verify depth not enough (without automatic error logging)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 1;
     lua_socket_log_errors off;
@@ -980,7 +981,7 @@ SSL reused session
 
 === TEST 13: iscribblet.org: passing SSL verify with multiple certificates
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 2;
 
@@ -1062,7 +1063,7 @@ SSL reused session
 
 === TEST 14: default cipher
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -1134,7 +1135,7 @@ SSL reused session
 
 === TEST 15: explicit cipher configuration
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_ciphers RC4-SHA;
 
     content_by_lua_block {
@@ -1207,7 +1208,7 @@ SSL reused session
 
 === TEST 16: explicit ssl protocol configuration
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_protocols TLSv1;
 
     content_by_lua_block {
@@ -1283,7 +1284,7 @@ SSL reused session
 
 === TEST 17: unsupported ssl protocol
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_protocols SSLv2;
     lua_socket_log_errors off;
 
@@ -1356,7 +1357,7 @@ SSL reused session
 
 === TEST 18: iscribblet.org: passing SSL verify: keepalive (reuse the ssl session)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 2;
 
@@ -1429,7 +1430,7 @@ SSL reused session
 
 === TEST 19: iscribblet.org: passing SSL verify: keepalive (no reusing the ssl session)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 2;
 
@@ -1507,7 +1508,7 @@ SSL reused session
 
 === TEST 20: downstream cosockets do not support ssl handshake
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/trusted.crt;
     lua_ssl_verify_depth 2;
 
@@ -1556,7 +1557,7 @@ attempt to call method 'sslhandshake' (a nil value)
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         do
@@ -1650,7 +1651,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/test.crt;
 
 
@@ -1745,7 +1746,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         do
@@ -1832,7 +1833,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_crl ../html/test.crl;
     lua_ssl_trusted_certificate ../html/test.crt;
     lua_socket_log_errors off;
@@ -1910,7 +1911,7 @@ SSL reused session
 
 === TEST 25: multiple handshake calls
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -1990,7 +1991,7 @@ SSL reused session
 
 === TEST 26: handshake timed out
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -2057,7 +2058,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         do
@@ -2127,7 +2128,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         do
@@ -2196,7 +2197,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -2272,7 +2273,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_ssl_trusted_certificate ../html/test.crt;
 
 
@@ -2367,7 +2368,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     #lua_ssl_trusted_certificate ../html/test.crt;
 
 
