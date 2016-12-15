@@ -177,7 +177,7 @@ resolve name done: -2
 
 === TEST 4: kill pending connect
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER;
+    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local ready = false
         function f()
