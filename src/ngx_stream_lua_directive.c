@@ -874,7 +874,7 @@ ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ctx->log = &cf->cycle->new_log;
 
     zone = ngx_stream_lua_shared_memory_add(cf, &name, (size_t) size,
-                                 &ngx_stream_lua_module);
+                                            &ngx_stream_lua_module);
     if (zone == NULL) {
         return NGX_CONF_ERROR;
     }
