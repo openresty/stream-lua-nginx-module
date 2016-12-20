@@ -357,6 +357,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
      *      lmcf->init_handler = NULL;
      *      lmcf->init_src = { 0, NULL };
      *      lmcf->shm_zones_inited = 0;
+     *      lmcf->shdict_zones = NULL;
      *      lmcf->preload_hooks = NULL;
      *      lmcf->requires_rewrite = 0;
      *      lmcf->requires_access = 0;

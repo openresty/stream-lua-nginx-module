@@ -19,6 +19,7 @@
 #include "ngx_stream_lua_initby.h"
 #include "ngx_stream_lua_shdict.h"
 #include "ngx_stream_lua_initworkerby.h"
+#include "api/ngx_stream_lua_api.h"
 
 
 static u_char *ngx_stream_lua_gen_chunk_name(ngx_conf_t *cf, const char *tag,
@@ -827,13 +828,13 @@ ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_stream_lua_shdict_ctx_t  *ctx;
     ssize_t                       size;
 
-    if (lmcf->shm_zones == NULL) {
-        lmcf->shm_zones = ngx_palloc(cf->pool, sizeof(ngx_array_t));
-        if (lmcf->shm_zones == NULL) {
+    if (lmcf->shdict_zones == NULL) {
+        lmcf->shdict_zones = ngx_palloc(cf->pool, sizeof(ngx_array_t));
+        if (lmcf->shdict_zones == NULL) {
             return NGX_CONF_ERROR;
         }
 
-        if (ngx_array_init(lmcf->shm_zones, cf->pool, 2,
+        if (ngx_array_init(lmcf->shdict_zones, cf->pool, 2,
                            sizeof(ngx_shm_zone_t *))
             != NGX_OK)
         {
@@ -871,9 +872,8 @@ ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ctx->name = name;
     ctx->main_conf = lmcf;
     ctx->log = &cf->cycle->new_log;
-    ctx->cycle = cf->cycle;
 
-    zone = ngx_shared_memory_add(cf, &name, (size_t) size,
+    zone = ngx_stream_lua_shared_memory_add(cf, &name, (size_t) size,
                                  &ngx_stream_lua_module);
     if (zone == NULL) {
         return NGX_CONF_ERROR;
@@ -891,7 +891,7 @@ ngx_stream_lua_shared_dict(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     zone->init = ngx_stream_lua_shdict_init_zone;
     zone->data = ctx;
 
-    zp = ngx_array_push(lmcf->shm_zones);
+    zp = ngx_array_push(lmcf->shdict_zones);
     if (zp == NULL) {
         return NGX_CONF_ERROR;
     }
