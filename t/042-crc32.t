@@ -42,4 +42,3 @@ __DATA__
     }
 --- stream_response
 0
-

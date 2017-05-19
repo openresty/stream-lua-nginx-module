@@ -1025,4 +1025,3 @@ registered timer
 lua ngx.timer expired
 stream lua close fake stream connection
 trace: [m][f][g]
-

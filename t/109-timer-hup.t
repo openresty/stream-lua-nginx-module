@@ -475,4 +475,3 @@ ok
 --- grep_error_log_out
 stream lua found 8191 pending timers
 --- timeout: 20
-

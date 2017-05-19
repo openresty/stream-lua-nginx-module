@@ -61,4 +61,3 @@ env LUA_CPATH;
 [error]
 --- error_log eval
 qr/\[alert\] .*? lua_code_cache is off/
-
