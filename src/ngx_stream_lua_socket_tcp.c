@@ -95,7 +95,7 @@ static int ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L);
 static ngx_int_t ngx_stream_lua_socket_compile_pattern(u_char *data, size_t len,
     ngx_stream_lua_socket_compiled_pattern_t *cp, ngx_log_t *log);
 static int ngx_stream_lua_socket_cleanup_compiled_pattern(lua_State *L);
-static int ngx_stream_lua_req_socket(lua_State *L);
+static int ngx_stream_lua_tcp_req_socket(lua_State *L);
 static void ngx_stream_lua_req_socket_rev_handler(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t *ctx);
 static int ngx_stream_lua_socket_tcp_getreusedtimes(lua_State *L);
@@ -193,7 +193,7 @@ enum {
 static char ngx_stream_lua_req_socket_metatable_key;
 #endif
 static char ngx_stream_lua_raw_req_socket_metatable_key;
-static char ngx_stream_lua_tcp_socket_metatable_key;
+static char ngx_stream_lua_socket_tcp_metatable_key;
 static char ngx_stream_lua_upstream_udata_metatable_key;
 static char ngx_stream_lua_downstream_udata_metatable_key;
 static char ngx_stream_lua_pool_udata_metatable_key;
@@ -276,7 +276,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     /* }}} */
 
     /* {{{tcp object metatable */
-    lua_pushlightuserdata(L, &ngx_stream_lua_tcp_socket_metatable_key);
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_tcp_metatable_key);
     lua_createtable(L, 0 /* narr */, 11 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_connect);
@@ -364,14 +364,6 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 }
 
 
-void
-ngx_stream_lua_inject_req_socket_api(lua_State *L)
-{
-    lua_pushcfunction(L, ngx_stream_lua_req_socket);
-    lua_setfield(L, -2, "socket");
-}
-
-
 static int
 ngx_stream_lua_socket_tcp(lua_State *L)
 {
@@ -397,7 +389,7 @@ ngx_stream_lua_socket_tcp(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */);
-    lua_pushlightuserdata(L, &ngx_stream_lua_tcp_socket_metatable_key);
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_tcp_metatable_key);
     lua_rawget(L, LUA_REGISTRYINDEX);
     lua_setmetatable(L, -2);
 
@@ -3918,14 +3910,22 @@ ngx_stream_lua_socket_cleanup_compiled_pattern(lua_State *L)
 }
 
 
+void
+ngx_stream_lua_inject_tcp_req_socket_api(lua_State *L)
+{
+    lua_pushcfunction(L, ngx_stream_lua_tcp_req_socket);
+    lua_setfield(L, -2, "socket");
+}
+
+
 static int
-ngx_stream_lua_req_socket(lua_State *L)
+ngx_stream_lua_tcp_req_socket(lua_State *L)
 {
     int                              n, raw;
+    ngx_stream_session_t            *s;
     ngx_peer_connection_t           *pc;
     ngx_stream_lua_srv_conf_t       *lscf;
     ngx_connection_t                *c;
-    ngx_stream_session_t            *s;
     ngx_stream_lua_ctx_t            *ctx;
     ngx_stream_lua_co_ctx_t         *coctx;
     ngx_stream_lua_cleanup_t        *cln;
@@ -3955,6 +3955,11 @@ ngx_stream_lua_req_socket(lua_State *L)
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
 
     c = s->connection;
+
+    if (c->type != SOCK_STREAM) {
+        return luaL_error(L, "socket api does not match connection transport",
+                          lua_gettop(L));
+    }
 
 #if !defined(nginx_version) || nginx_version < 1003013
     lua_pushnil(L);
