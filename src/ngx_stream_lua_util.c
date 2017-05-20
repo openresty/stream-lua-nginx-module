@@ -2674,7 +2674,7 @@ ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
 
     ngx_stream_lua_inject_req_api(log, L);
     ngx_stream_lua_inject_variable_api(L);
-    ngx_stream_lua_inject_shdict_api(lmcf, L);
+    ngx_stream_lua_inject_shdict_api(log, lmcf, L);
     ngx_stream_lua_inject_socket_tcp_api(log, L);
     ngx_stream_lua_inject_socket_udp_api(log, L);
     ngx_stream_lua_inject_uthread_api(log, L);

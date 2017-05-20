@@ -306,14 +306,79 @@ ngx_stream_lua_shdict_expire(ngx_stream_lua_shdict_ctx_t *ctx, ngx_uint_t n)
 
 
 void
-ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
+ngx_stream_lua_inject_shdict_api(ngx_log_t *log,
+    ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
 {
-    ngx_stream_lua_shdict_ctx_t  *ctx;
-    ngx_uint_t                    i;
-    ngx_shm_zone_t              **zone;
+    ngx_uint_t                       i;
+    ngx_array_t                      all_zones;
+    ngx_module_t                    *http_module = NULL;
+    ngx_stream_lua_shdict_ctx_t     *ctx;
+    ngx_shm_zone_t                 **zone, *shm_zone;
+    ngx_pool_t                      *temp_pool;
+    ngx_list_part_t                 *part;
+    ngx_module_t                   **modules;
 
-    if (lmcf->shm_zones != NULL) {
-        lua_createtable(L, 0, lmcf->shm_zones->nelts /* nrec */);
+    /* Find ngx_http_lua_module */
+    modules = lmcf->cycle->modules;
+
+    for (i = 0; modules[i]; i++) {
+
+        if (ngx_strcmp(modules[i]->name, "ngx_http_lua_module") == 0) {
+            http_module = modules[i];
+            break;
+        }
+    }
+
+    /* place http and stream zones in a single array */
+    temp_pool = ngx_create_pool(NGX_DEFAULT_POOL_SIZE, log);
+
+    if (temp_pool == NULL) {
+        ngx_log_error(NGX_LOG_ERR, log, 1,
+                      "error: pool for zone array not allocated");
+        return;
+    }
+
+    if (ngx_array_init(&all_zones, temp_pool, 2,
+                       sizeof(ngx_shm_zone_t *)) != NGX_OK)
+    {
+        ngx_destroy_pool(temp_pool);
+        ngx_log_error(NGX_LOG_ERR, log, 1,
+                      "error: zone array not allocated");
+        return;
+    }
+
+    part = &lmcf->cycle->shared_memory.part;
+    shm_zone = part->elts;
+
+    for (i = 0; /* void */ ; i++) {
+
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
+                break;
+            }
+            part = part->next;
+            shm_zone = part->elts;
+            i = 0;
+        }
+
+        if ((shm_zone->tag == http_module && shm_zone->tag != NULL)
+            || shm_zone->tag == &ngx_stream_lua_module)
+        {
+            zone = ngx_array_push(&all_zones);
+
+            if (zone == NULL) {
+                ngx_destroy_pool(temp_pool);
+                ngx_log_error(NGX_LOG_ERR, log, 1,
+                              "error: zone pointer not allocated");
+                return;
+            }
+
+            *zone = shm_zone;
+        }
+    }
+
+    if (all_zones.nelts > 0) {
+        lua_createtable(L, 0, all_zones.nelts /* nrec */);
                 /* ngx.shared */
 
         lua_createtable(L, 0 /* narr */, 13 /* nrec */); /* shared mt */
@@ -357,10 +422,13 @@ ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
         lua_pushvalue(L, -1); /* shared mt mt */
         lua_setfield(L, -2, "__index"); /* shared mt */
 
-        zone = lmcf->shm_zones->elts;
+        zone = all_zones.elts;
 
-        for (i = 0; i < lmcf->shm_zones->nelts; i++) {
+        for (i = 0; i < all_zones.nelts; i++) {
             ctx = zone[i]->data;
+
+            dd("injecting shared dict %.*s",
+               (int) ctx->name.len, ctx->name.data);
 
             lua_pushlstring(L, (char *) ctx->name.data, ctx->name.len);
                 /* shared mt key */
@@ -381,6 +449,7 @@ ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
     }
 
     lua_setfield(L, -2, "shared");
+    ngx_destroy_pool(temp_pool);
 }
 
 

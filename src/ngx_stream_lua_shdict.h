@@ -44,8 +44,8 @@ typedef struct {
 ngx_int_t ngx_stream_lua_shdict_init_zone(ngx_shm_zone_t *shm_zone, void *data);
 void ngx_stream_lua_shdict_rbtree_insert_value(ngx_rbtree_node_t *temp,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
-void ngx_stream_lua_inject_shdict_api(ngx_stream_lua_main_conf_t *lmcf,
-    lua_State *L);
+void ngx_stream_lua_inject_shdict_api(ngx_log_t *log,
+    ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_SHDICT_H_INCLUDED_ */
