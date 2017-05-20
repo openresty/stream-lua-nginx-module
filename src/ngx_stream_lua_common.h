@@ -61,6 +61,7 @@
 #define NGX_STREAM_LUA_CONTEXT_LOG            0x002
 #define NGX_STREAM_LUA_CONTEXT_TIMER          0x004
 #define NGX_STREAM_LUA_CONTEXT_INIT_WORKER    0x008
+#define NGX_STREAM_LUA_CONTEXT_BALANCER       0x010
 
 
 /* Nginx Stream Lua Inline tag prefix */
@@ -118,10 +119,17 @@ typedef struct {
 
 typedef struct ngx_stream_lua_semaphore_mm_s  ngx_stream_lua_semaphore_mm_t;
 typedef struct ngx_stream_lua_main_conf_s  ngx_stream_lua_main_conf_t;
+typedef struct ngx_stream_lua_srv_conf_s  ngx_stream_lua_srv_conf_t;
+
+
+typedef struct ngx_stream_lua_balancer_peer_data_s
+    ngx_stream_lua_balancer_peer_data_t;
 
 
 typedef ngx_int_t (*ngx_stream_lua_main_conf_handler_pt)(ngx_log_t *log,
     ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
+typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(ngx_stream_session_t *s,
+    ngx_stream_lua_srv_conf_t *lscf, lua_State *L);
 
 
 typedef struct {
@@ -164,6 +172,12 @@ struct ngx_stream_lua_main_conf_s {
     ngx_stream_lua_main_conf_handler_pt  init_worker_handler;
     ngx_str_t                            init_worker_src;
 
+    ngx_stream_lua_balancer_peer_data_t     *balancer_peer_data;
+                    /* balancer_by_lua does not support yielding and
+                     * there cannot be any conflicts among concurrent requests,
+                     * thus it is safe to store the peer data in the main conf.
+                     */
+
     ngx_uint_t                           shm_zones_inited;
 
     ngx_stream_lua_semaphore_mm_t       *semaphore_mm;
@@ -182,7 +196,7 @@ typedef void (*ngx_stream_lua_event_handler_pt)(ngx_stream_session_t *s,
     ngx_stream_lua_ctx_t *ctx);
 
 
-typedef struct {
+struct ngx_stream_lua_srv_conf_s {
 
 #if (NGX_STREAM_SSL)
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
@@ -229,7 +243,13 @@ typedef struct {
     ngx_msec_t                          lingering_time;
     ngx_msec_t                          lingering_timeout;
 
-} ngx_stream_lua_srv_conf_t;
+    struct {
+        ngx_str_t    src;
+        u_char      *src_key;
+
+        ngx_stream_lua_srv_conf_handler_pt  handler;
+    } balancer;
+};
 
 
 enum {

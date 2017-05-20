@@ -88,6 +88,7 @@ void ngx_stream_lua_set_multi_value_table(lua_State *L, int index);
      : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                     \
      : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                     \
      : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"           \
      : "(unknown)")
 
 
