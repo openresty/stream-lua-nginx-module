@@ -325,6 +325,17 @@ export LUAJIT_INC=/path/to/luajit/include/luajit-2.1
         --add-module=/path/to/stream-lua-nginx-module
 ```
 
+Starting from NGINX 1.9.11, you can also compile this module as a dynamic module, by using the `--add-dynamic-module=PATH` option instead of `--add-module=PATH` on the
+`./configure` command line above. And then you can explicitly load the module in your `nginx.conf` via the [load_module](http://nginx.org/en/docs/ngx_core_module.html#load_module)
+directive, for example,
+
+```nginx
+load_module /path/to/modules/ngx_stream_lua_module.so;
+```
+
+Also, please notr, that if you have `stream` module itself also muilt as dynamic module, you MUST load it **before** `stream_lua` module.
+
+
 [Back to TOC](#table-of-contents)
 
 Community
