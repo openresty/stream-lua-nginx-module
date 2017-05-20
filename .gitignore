@@ -41,7 +41,6 @@ src/config.[ch]
 src/worker.[ch]
 src/misc.[ch]
 src/initby.[ch]
-src/shdict.[ch]
 src/initworkerby.[ch]
 src/variable.[ch]
 src/args.[ch]
@@ -56,3 +55,4 @@ html_out/
 ebooks.sh
 *.pdf
 *.patch
+*.project

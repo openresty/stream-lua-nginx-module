@@ -287,7 +287,6 @@ qr/content_by_lua_block\(nginx\.conf:\d+\):7: bad session/
 
 === TEST 6: connect again immediately
 --- stream_server_config
-
     content_by_lua_block {
         local sock = ngx.socket.udp()
         local port = $TEST_NGINX_MEMCACHED_PORT
@@ -301,7 +300,7 @@ qr/content_by_lua_block\(nginx\.conf:\d+\):7: bad session/
         ngx.say("connected: ", ok)
 
         ok, err = sock:setpeername("127.0.0.1", port)
-        if not ok then
+          if not ok then
             ngx.say("failed to connect: ", err)
             return
         end
@@ -520,6 +519,8 @@ lua udp socket receive buffer size: 8192
 === TEST 11: access the google DNS server (using domain names)
 --- stream_server_config
     lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    #lua_resolver agentzh.org ipv6=off;
+    #lua_resolver 8.8.8.8 ipv6=off;
     content_by_lua_block {
         -- avoid flushing google in "check leak" testing mode:
         local counter = package.loaded.counter
@@ -540,6 +541,7 @@ lua udp socket receive buffer size: 8192
         udp:settimeout(2000) -- 2 sec
 
         local ok, err = udp:setpeername("google-public-dns-a.google.com", 53)
+        --local ok, err = udp:setpeername("127.0.1.1", 53)
         if not ok then
             ngx.say("failed to connect: ", err)
             return

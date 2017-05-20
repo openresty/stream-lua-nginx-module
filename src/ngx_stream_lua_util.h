@@ -73,6 +73,7 @@ void ngx_stream_lua_free_session(ngx_stream_session_t *s);
 void ngx_stream_lua_process_args_option(ngx_stream_session_t *s, lua_State *L,
     int table, ngx_str_t *args);
 void ngx_stream_lua_set_multi_value_table(lua_State *L, int index);
+ngx_addr_t *ngx_stream_lua_parse_addr(lua_State *L, u_char *text, size_t len);
 
 
 #ifndef NGX_UNESCAPE_URI_COMPONENT
