@@ -15,6 +15,8 @@
 #include "ngx_stream_lua_util.h"
 
 
+
+
 static int ngx_stream_lua_print(lua_State *L);
 static int ngx_stream_lua_ngx_log(lua_State *L);
 static int log_wrapper(ngx_log_t *log, const char *ident,
@@ -33,14 +35,14 @@ int
 ngx_stream_lua_ngx_log(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_session_t        *s;
+    ngx_stream_lua_request_t          *r;
     const char                  *msg;
     int                          level;
 
-    s = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_req(L);
 
-    if (s && s->connection && s->connection->log) {
-        log = s->connection->log;
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
 
     } else {
         log = ngx_cycle->log;
@@ -55,7 +57,7 @@ ngx_stream_lua_ngx_log(lua_State *L)
     /* remove log-level param from stack */
     lua_remove(L, 1);
 
-    return log_wrapper(log, "stream [lua] ", (ngx_uint_t) level, L);
+    return log_wrapper(log, "[lua] ", (ngx_uint_t) level, L);
 }
 
 
@@ -70,18 +72,18 @@ int
 ngx_stream_lua_print(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_session_t        *s;
+    ngx_stream_lua_request_t          *r;
 
-    s = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_req(L);
 
-    if (s && s->connection && s->connection->log) {
-        log = s->connection->log;
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
 
     } else {
         log = ngx_cycle->log;
     }
 
-    return log_wrapper(log, "stream [lua] ", NGX_LOG_NOTICE, L);
+    return log_wrapper(log, "[lua] ", NGX_LOG_NOTICE, L);
 }
 
 
@@ -160,6 +162,16 @@ log_wrapper(ngx_log_t *log, const char *ident, ngx_uint_t level,
 
                 break;
 
+            case LUA_TTABLE:
+                if (!luaL_callmeta(L, i, "__tostring")) {
+                    return luaL_argerror(L, i, "expected table to have "
+                                         "__tostring metamethod");
+                }
+
+                lua_tolstring(L, -1, &len);
+                size += len;
+                break;
+
             case LUA_TLIGHTUSERDATA:
                 if (lua_touserdata(L, i) == NULL) {
                     size += sizeof("null") - 1;
@@ -225,6 +237,12 @@ log_wrapper(ngx_log_t *log, const char *ident, ngx_uint_t level,
                     *p++ = 'e';
                 }
 
+                break;
+
+            case LUA_TTABLE:
+                luaL_callmeta(L, i, "__tostring");
+                q = (u_char *) lua_tolstring(L, -1, &len);
+                p = ngx_copy(p, q, len);
                 break;
 
             case LUA_TLIGHTUSERDATA:
@@ -296,5 +314,8 @@ ngx_stream_lua_inject_log_consts(lua_State *L)
     lua_setfield(L, -2, "DEBUG");
     /* }}} */
 }
+
+
+
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

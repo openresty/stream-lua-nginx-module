@@ -20,7 +20,11 @@ static int ngx_stream_lua_ngx_time(lua_State *L);
 static int ngx_stream_lua_ngx_now(lua_State *L);
 static int ngx_stream_lua_ngx_localtime(lua_State *L);
 static int ngx_stream_lua_ngx_utctime(lua_State *L);
+static int ngx_stream_lua_ngx_cookie_time(lua_State *L);
+static int ngx_stream_lua_ngx_http_time(lua_State *L);
+static int ngx_stream_lua_ngx_parse_http_time(lua_State *L);
 static int ngx_stream_lua_ngx_update_time(lua_State *L);
+static int ngx_stream_lua_ngx_req_start_time(lua_State *L);
 
 
 static int
@@ -109,6 +113,95 @@ ngx_stream_lua_ngx_utctime(lua_State *L)
 }
 
 
+static int
+ngx_stream_lua_ngx_cookie_time(lua_State *L)
+{
+    time_t                               t;
+    u_char                              *p;
+
+    u_char   buf[sizeof("Mon, 28 Sep 1970 06:00:00 GMT") - 1];
+
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "expecting one argument");
+    }
+
+    t = (time_t) luaL_checknumber(L, 1);
+
+    p = buf;
+    p = ngx_http_cookie_time(p, t);
+
+    lua_pushlstring(L, (char *) buf, p - buf);
+
+    return 1;
+}
+
+
+static int
+ngx_stream_lua_ngx_http_time(lua_State *L)
+{
+    time_t                               t;
+    u_char                              *p;
+
+    u_char   buf[sizeof("Mon, 28 Sep 1970 06:00:00 GMT") - 1];
+
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "expecting one argument");
+    }
+
+    t = (time_t) luaL_checknumber(L, 1);
+
+    p = buf;
+    p = ngx_http_time(p, t);
+
+    lua_pushlstring(L, (char *) buf, p - buf);
+
+    return 1;
+}
+
+
+static int
+ngx_stream_lua_ngx_parse_http_time(lua_State *L)
+{
+    u_char                              *p;
+    size_t                               len;
+    time_t                               time;
+
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "expecting one argument");
+    }
+
+    p = (u_char *) luaL_checklstring(L, 1, &len);
+
+    time = ngx_http_parse_time(p, len);
+    if (time == NGX_ERROR) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_pushnumber(L, (lua_Number) time);
+
+    return 1;
+}
+
+
+static int
+ngx_stream_lua_ngx_req_start_time(lua_State *L)
+{
+    ngx_stream_lua_request_t  *r;
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
+    }
+
+
+    lua_pushnumber(L, (lua_Number) (r->session->start_sec + r->session->start_msec / 1000.0L));
+
+
+    return 1;
+}
+
+
 void
 ngx_stream_lua_inject_time_api(lua_State *L)
 {
@@ -138,6 +231,23 @@ ngx_stream_lua_inject_time_api(lua_State *L)
 
     lua_pushcfunction(L, ngx_stream_lua_ngx_today);
     lua_setfield(L, -2, "today");
+
+    lua_pushcfunction(L, ngx_stream_lua_ngx_cookie_time);
+    lua_setfield(L, -2, "cookie_time");
+
+    lua_pushcfunction(L, ngx_stream_lua_ngx_http_time);
+    lua_setfield(L, -2, "http_time");
+
+    lua_pushcfunction(L, ngx_stream_lua_ngx_parse_http_time);
+    lua_setfield(L, -2, "parse_http_time");
+}
+
+
+void
+ngx_stream_lua_inject_req_time_api(lua_State *L)
+{
+    lua_pushcfunction(L, ngx_stream_lua_ngx_req_start_time);
+    lua_setfield(L, -2, "start_time");
 }
 
 
@@ -153,9 +263,21 @@ ngx_stream_lua_ffi_now(void)
 }
 
 
+double
+ngx_stream_lua_ffi_req_start_time(ngx_stream_lua_request_t *r)
+{
+
+    return r->session->start_sec + r->session->start_msec / 1000.0;
+
+}
+
+
 long
 ngx_stream_lua_ffi_time(void)
 {
     return (long) ngx_time();
 }
 #endif /* NGX_LUA_NO_FFI_API */
+
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

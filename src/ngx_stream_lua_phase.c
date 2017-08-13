@@ -21,12 +21,12 @@ static int ngx_stream_lua_ngx_get_phase(lua_State *L);
 static int
 ngx_stream_lua_ngx_get_phase(lua_State *L)
 {
-    ngx_stream_session_t          *r;
+    ngx_stream_lua_request_t          *r;
     ngx_stream_lua_ctx_t          *ctx;
 
-    r = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_req(L);
 
-    /* If we have no sessiong object, assume we are called from the "init"
+    /* If we have no request object, assume we are called from the "init"
      * phase. */
 
     if (r == NULL) {
@@ -34,32 +34,32 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         return 1;
     }
 
-    ctx = ngx_stream_get_module_ctx(r, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no sessiong ctx found");
+        return luaL_error(L, "no request ctx found");
     }
-
-    dd("context: %d", (int) ctx->context);
 
     switch (ctx->context) {
     case NGX_STREAM_LUA_CONTEXT_INIT_WORKER:
         lua_pushliteral(L, "init_worker");
         break;
 
+
+
     case NGX_STREAM_LUA_CONTEXT_CONTENT:
         lua_pushliteral(L, "content");
         break;
 
-    case NGX_STREAM_LUA_CONTEXT_LOG:
-        lua_pushliteral(L, "log");
-        break;
+
 
     case NGX_STREAM_LUA_CONTEXT_TIMER:
         lua_pushliteral(L, "timer");
         break;
 
+
+
     default:
-        return luaL_error(L, "unknown phase: %d", (int) ctx->context);
+        return luaL_error(L, "unknown phase: %#x", (int) ctx->context);
     }
 
     return 1;

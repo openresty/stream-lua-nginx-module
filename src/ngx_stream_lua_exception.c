@@ -24,7 +24,7 @@ jmp_buf ngx_stream_lua_exception;
  *
  * @param L Lua state pointer
  * @retval Long jump to the nearest jmp-mark, never returns.
- * @note nginx session pointer should be stored in Lua thread's globals table
+ * @note nginx request pointer should be stored in Lua thread's globals table
  * in order to make logging working.
  * */
 int
@@ -45,8 +45,7 @@ ngx_stream_lua_atpanic(lua_State *L)
         len = sizeof("unknown reason") - 1;
     }
 
-    ngx_log_stderr(0, "stream lua atpanic: Lua VM crashed, reason: %*s",
-                   len, s);
+    ngx_log_stderr(0, "lua atpanic: Lua VM crashed, reason: %*s", len, s);
     ngx_quit = 1;
 
     /*  restore nginx execution */
@@ -55,3 +54,5 @@ ngx_stream_lua_atpanic(lua_State *L)
     /* impossible to reach here */
 #endif
 }
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

@@ -19,3 +19,5 @@ ngx_int_t ngx_stream_lua_init_by_file(ngx_log_t *log,
 
 
 #endif /* _NGX_STREAM_LUA_INITBY_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

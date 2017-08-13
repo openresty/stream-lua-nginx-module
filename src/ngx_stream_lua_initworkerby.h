@@ -4,8 +4,8 @@
  */
 
 
-#ifndef _NGX_STREAME_LUA_INITWORKERBY_H_INCLUDED_
-#define _NGX_STREAME_LUA_INITWORKERBY_H_INCLUDED_
+#ifndef _NGX_STREAM_LUA_INITWORKERBY_H_INCLUDED_
+#define _NGX_STREAM_LUA_INITWORKERBY_H_INCLUDED_
 
 
 #include "ngx_stream_lua_common.h"
@@ -20,4 +20,6 @@ ngx_int_t ngx_stream_lua_init_worker_by_file(ngx_log_t *log,
 ngx_int_t ngx_stream_lua_init_worker(ngx_cycle_t *cycle);
 
 
-#endif /* _NGX_STREAME_LUA_INITWORKERBY_H_INCLUDED_ */
+#endif /* _NGX_STREAM_LUA_INITWORKERBY_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

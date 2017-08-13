@@ -19,3 +19,5 @@ void ngx_stream_lua_pcre_malloc_done(ngx_pool_t *old_pool);
 
 
 #endif /* _NGX_STREAM_LUA_PCREFIX_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

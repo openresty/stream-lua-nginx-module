@@ -11,9 +11,12 @@
 #include "ddebug.h"
 
 
+#include <nginx.h>
+#include <ngx_md5.h>
+#include "ngx_stream_lua_common.h"
 #include "ngx_stream_lua_cache.h"
-#include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_clfactory.h"
+#include "ngx_stream_lua_util.h"
 
 
 /**
@@ -66,7 +69,7 @@ ngx_stream_lua_cache_load_code(ngx_log_t *log, lua_State *L,
         }
 
         ngx_log_error(NGX_LOG_ERR, log, 0,
-                      "stream lua: failed to run factory at key \"%s\": %s",
+                      "lua: failed to run factory at key \"%s\": %s",
                       key, err);
         lua_pop(L, 2);
         return NGX_ERROR;
@@ -163,7 +166,7 @@ ngx_stream_lua_cache_loadbuffer(ngx_log_t *log, lua_State *L,
     rc = ngx_stream_lua_clfactory_loadbuffer(L, (char *) src, src_len, name);
 
     if (rc != 0) {
-        /*  Oops! error occured when loading Lua script */
+        /*  Oops! error occurred when loading Lua script */
         if (rc == LUA_ERRMEM) {
             err = "memory allocation error";
 
@@ -249,14 +252,16 @@ ngx_stream_lua_cache_loadfile(ngx_log_t *log, lua_State *L,
     dd("loadfile returns %d (%d)", (int) rc, LUA_ERRFILE);
 
     if (rc != 0) {
-        /*  Oops! error occured when loading Lua script */
+        /*  Oops! error occurred when loading Lua script */
         switch (rc) {
         case LUA_ERRMEM:
             err = "memory allocation error";
             break;
 
         case LUA_ERRFILE:
-            errcode = NGX_ERROR;
+
+            errcode = NGX_STREAM_INTERNAL_SERVER_ERROR;
+
             /* fall through */
 
         default:
@@ -289,3 +294,5 @@ error:
     lua_settop(L, n);
     return errcode;
 }
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

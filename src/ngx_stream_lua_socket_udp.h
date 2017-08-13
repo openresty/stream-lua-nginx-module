@@ -16,12 +16,12 @@ typedef struct ngx_stream_lua_socket_udp_upstream_s
 
 
 typedef
-    int (*ngx_stream_lua_socket_udp_retval_handler)(ngx_stream_session_t *s,
+    int (*ngx_stream_lua_socket_udp_retval_handler)(ngx_stream_lua_request_t *r,
         ngx_stream_lua_socket_udp_upstream_t *u, lua_State *L);
 
 
 typedef void (*ngx_stream_lua_socket_udp_upstream_handler_pt)
-    (ngx_stream_session_t *s, ngx_stream_lua_socket_udp_upstream_t *u);
+    (ngx_stream_lua_request_t *r, ngx_stream_lua_socket_udp_upstream_t *u);
 
 
 typedef struct {
@@ -37,14 +37,14 @@ struct ngx_stream_lua_socket_udp_upstream_s {
     ngx_stream_lua_socket_udp_retval_handler          prepare_retvals;
     ngx_stream_lua_socket_udp_upstream_handler_pt     read_event_handler;
 
-    ngx_stream_lua_srv_conf_t         *conf;
-    ngx_pool_cleanup_pt               *cleanup;
-    ngx_stream_session_t              *session;
+    ngx_stream_lua_loc_conf_t         *conf;
+    ngx_stream_lua_cleanup_pt             *cleanup;
+    ngx_stream_lua_request_t              *request;
     ngx_stream_lua_udp_connection_t    udp_connection;
 
-    ngx_msec_t                         read_timeout;
+    ngx_msec_t                       read_timeout;
 
-    ngx_stream_lua_resolved_t         *resolved;
+    ngx_stream_upstream_resolved_t    *resolved;
 
     ngx_uint_t                       ft_type;
     ngx_err_t                        socket_errno;
@@ -61,3 +61,5 @@ void ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_SOCKET_UDP_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

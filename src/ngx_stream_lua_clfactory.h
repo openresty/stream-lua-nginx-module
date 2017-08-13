@@ -18,3 +18,5 @@ ngx_int_t ngx_stream_lua_clfactory_loadbuffer(lua_State *L, const char *buff,
 
 
 #endif /* _NGX_STREAM_LUA_CLFACTORY_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

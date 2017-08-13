@@ -37,3 +37,8 @@ ngx_stream_lua_inject_core_consts(lua_State *L)
     lua_setfield(L, -2, "null");
     /* }}} */
 }
+
+
+
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

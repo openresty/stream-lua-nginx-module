@@ -11,6 +11,7 @@
 #include "ddebug.h"
 
 
+#include <nginx.h>
 #include "ngx_stream_lua_clfactory.h"
 
 
@@ -92,14 +93,14 @@
  * | Char              | Number of upvalues referenced by this function
  * | [nups]            |
  * ---------------------
- * | Char              | Number of paramters of this function
+ * | Char              | Number of parameters of this function
  * | [numparams]       |
  * ---------------------
  * | Char              | Does this function has variable number of arguments?
  * | [is_var_arg]      | main function always set to VARARG_ISVARARG (2)
  * ---------------------
  * | Char              | Maximum stack size this function used
- * | [maxstacksize]    | Intially set to 2
+ * | [maxstacksize]    | Initially set to 2
  * ---------------------
  * | Vector(instr)     | Code instructions of this function
  * | [code]            |
@@ -176,7 +177,7 @@
  * | Char              | F(ffi) | V(vararg)| C(has internal funcs)
  * | [func flag]       |
  * ---------------------
- * | Char              | Number of paramters of this function
+ * | Char              | Number of parameters of this function
  * | [numparams]       |
  * ---------------------
  * | Char              |
@@ -497,7 +498,7 @@ ngx_stream_lua_clfactory_bytecode_prepare(lua_State *L,
                     sizeof(size_t) + sizeof(int) * 2);
         /* number of upvalues */
         *(lf->begin_code.str + POS_NUM_OF_UPVS) = 0;
-        /* number of paramters */
+        /* number of parameters */
         *(lf->begin_code.str + POS_NUM_OF_PARA) = 0;
         /* is var-argument function? */
         *(lf->begin_code.str + POS_IS_VAR_ARG) = 2;
@@ -639,7 +640,7 @@ ngx_stream_lua_clfactory_loadfile(lua_State *L, const char *filename)
         sharp = 1;
     }
 
-    if (c == LUA_SIGNATURE[0]) {  /* binary file? */
+    if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
         lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
 
         if (lf.f == NULL) {
@@ -806,8 +807,7 @@ ngx_stream_lua_clfactory_getF(lua_State *L, void *ud, size_t *size)
 
 
 static int
-ngx_stream_lua_clfactory_errfile(lua_State *L, const char *what,
-    int fname_index)
+ngx_stream_lua_clfactory_errfile(lua_State *L, const char *what, int fname_index)
 {
     const char      *serr;
     const char      *filename;
@@ -882,3 +882,6 @@ ngx_stream_lua_clfactory_file_size(FILE *f)
 
     return len;
 }
+
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

@@ -23,16 +23,16 @@
 
 
 typedef struct ngx_stream_lua_socket_tcp_upstream_s
-    ngx_stream_lua_socket_tcp_upstream_t;
+        ngx_stream_lua_socket_tcp_upstream_t;
 
 
 typedef
-    int (*ngx_stream_lua_socket_tcp_retval_handler)(ngx_stream_session_t *r,
+    int (*ngx_stream_lua_socket_tcp_retval_handler)(ngx_stream_lua_request_t *r,
         ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L);
 
 
 typedef void (*ngx_stream_lua_socket_tcp_upstream_handler_pt)
-    (ngx_stream_session_t *r, ngx_stream_lua_socket_tcp_upstream_t *u);
+    (ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u);
 
 
 typedef struct {
@@ -59,16 +59,16 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
 
     ngx_stream_lua_socket_pool_t      *socket_pool;
 
-    ngx_stream_lua_srv_conf_t         *conf;
-    ngx_pool_cleanup_pt               *cleanup;
-    ngx_stream_session_t              *request;
-    ngx_peer_connection_t              peer;
+    ngx_stream_lua_loc_conf_t         *conf;
+    ngx_stream_lua_cleanup_pt             *cleanup;
+    ngx_stream_lua_request_t              *request;
+    ngx_peer_connection_t            peer;
 
     ngx_msec_t                       read_timeout;
     ngx_msec_t                       send_timeout;
     ngx_msec_t                       connect_timeout;
 
-    ngx_stream_lua_resolved_t       *resolved;
+    ngx_stream_upstream_resolved_t    *resolved;
 
     ngx_chain_t                     *bufs_in; /* input data buffers */
     ngx_chain_t                     *buf_in; /* last input data buffer */
@@ -85,12 +85,12 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     size_t                           request_len;
     ngx_chain_t                     *request_bufs;
 
-    ngx_stream_lua_co_ctx_t         *read_co_ctx;
-    ngx_stream_lua_co_ctx_t         *write_co_ctx;
+    ngx_stream_lua_co_ctx_t           *read_co_ctx;
+    ngx_stream_lua_co_ctx_t           *write_co_ctx;
 
     ngx_uint_t                       reused;
 
-#if (NGX_STREAM_SSL)
+#if (NGX_HTTP_SSL)
     ngx_str_t                        ssl_name;
 #endif
 
@@ -104,7 +104,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     unsigned                         raw_downstream:1;
     unsigned                         read_closed:1;
     unsigned                         write_closed:1;
-#if (NGX_STREAM_SSL)
+#if (NGX_HTTP_SSL)
     unsigned                         ssl_verify:1;
     unsigned                         ssl_session_reuse:1;
 #endif
@@ -115,25 +115,25 @@ typedef struct ngx_stream_lua_dfa_edge_s  ngx_stream_lua_dfa_edge_t;
 
 
 struct ngx_stream_lua_dfa_edge_s {
-    u_char                               chr;
-    int                                  new_state;
-    ngx_stream_lua_dfa_edge_t           *next;
+    u_char                           chr;
+    int                              new_state;
+    ngx_stream_lua_dfa_edge_t         *next;
 };
 
 
 typedef struct {
-    ngx_stream_lua_socket_tcp_upstream_t    *upstream;
+    ngx_stream_lua_socket_tcp_upstream_t  *upstream;
 
-    ngx_str_t                                pattern;
-    int                                      state;
-    ngx_stream_lua_dfa_edge_t              **recovering;
+    ngx_str_t                            pattern;
+    int                                  state;
+    ngx_stream_lua_dfa_edge_t            **recovering;
 
-    unsigned                                 inclusive:1;
+    unsigned                             inclusive:1;
 } ngx_stream_lua_socket_compiled_pattern_t;
 
 
 typedef struct {
-    ngx_stream_lua_socket_pool_t    *socket_pool;
+    ngx_stream_lua_socket_pool_t      *socket_pool;
 
     ngx_queue_t                      queue;
     ngx_connection_t                *connection;
@@ -152,3 +152,5 @@ void ngx_stream_lua_cleanup_conn_pools(lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_SOCKET_TCP_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

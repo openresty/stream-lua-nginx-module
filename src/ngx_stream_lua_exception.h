@@ -29,3 +29,5 @@ int ngx_stream_lua_atpanic(lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_EXCEPTION_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

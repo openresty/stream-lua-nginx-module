@@ -12,7 +12,6 @@
 
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_util.h"
-#include "ngx_stream_lua_contentby.h"
 
 
 static u_char *ngx_stream_lua_log_init_worker_error(ngx_log_t *log,
@@ -27,18 +26,26 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     ngx_uint_t                   i;
     ngx_conf_t                   conf;
     ngx_cycle_t                 *fake_cycle;
-    ngx_conf_file_t              conf_file;
+    ngx_module_t               **modules;
     ngx_open_file_t             *file, *ofile;
     ngx_list_part_t             *part;
     ngx_connection_t            *c = NULL;
-    ngx_stream_module_t         *module;
-    ngx_module_t               **modules;
-    ngx_stream_session_t        *s = NULL;
-    ngx_stream_lua_ctx_t        *ctx;
-    ngx_stream_conf_ctx_t       *conf_ctx, stream_ctx;
-    ngx_stream_lua_srv_conf_t   *lscf, *top_lscf;
-    ngx_stream_lua_main_conf_t  *lmcf;
-    ngx_stream_core_srv_conf_t  *cscf;
+    ngx_stream_module_t           *module;
+    ngx_stream_lua_request_t          *r = NULL;
+    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_conf_ctx_t         *conf_ctx, stream_ctx;
+
+
+
+    ngx_stream_lua_main_conf_t    *lmcf;
+
+
+    ngx_stream_session_t    *s;
+
+
+
+    ngx_stream_core_srv_conf_t    *clcf;
+
 
     lmcf = ngx_stream_cycle_get_module_main_conf(cycle, ngx_stream_lua_module);
 
@@ -50,10 +57,10 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     }
 
     conf_ctx = (ngx_stream_conf_ctx_t *)
-                                     cycle->conf_ctx[ngx_stream_module.index];
+               cycle->conf_ctx[ngx_stream_module.index];
     stream_ctx.main_conf = conf_ctx->main_conf;
 
-    top_lscf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
+
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
 
@@ -145,14 +152,10 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     conf.pool = fake_cycle->pool;
     conf.log = cycle->log;
 
-    conf_file.file.fd = NGX_INVALID_FILE;
-    conf_file.file.name = cycle->conf_file;
-    conf_file.line = 0;
 
-    conf.conf_file = &conf_file;
 
     stream_ctx.srv_conf = ngx_pcalloc(conf.pool,
-                                      sizeof(void *) * ngx_stream_max_module);
+                                    sizeof(void *) * ngx_stream_max_module);
     if (stream_ctx.srv_conf == NULL) {
         return NGX_ERROR;
     }
@@ -178,14 +181,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
             stream_ctx.srv_conf[modules[i]->ctx_index] = cur;
 
-            if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
-            {
-                cscf = cur;
-                /* just to silence the error in
-                 * ngx_stream_core_merge_srv_conf */
-                cscf->handler = ngx_stream_lua_content_handler;
-            }
-
             if (module->merge_srv_conf) {
                 prev = module->create_srv_conf(&conf);
                 if (prev == NULL) {
@@ -198,6 +193,8 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
                 }
             }
         }
+
+
     }
 
     ngx_destroy_pool(conf.temp_pool);
@@ -210,6 +207,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     c->log->handler = ngx_stream_lua_log_init_worker_error;
 
+
     s = ngx_stream_lua_create_fake_session(c);
     if (s == NULL) {
         goto failed;
@@ -218,30 +216,47 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     s->main_conf = stream_ctx.main_conf;
     s->srv_conf = stream_ctx.srv_conf;
 
-    lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
+    clcf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
-    if (top_lscf->resolver) {
-        lscf->resolver = top_lscf->resolver;
+
+#if defined(nginx_version) && nginx_version >= 1003014
+
+#   if nginx_version >= 1009000
+
+    ngx_set_connection_log(r->connection, clcf->error_log);
+
+#   else
+
+    ngx_http_set_connection_log(r->connection, clcf->error_log);
+
+#   endif
+
+#else
+
+    c->log->file = clcf->error_log->file;
+
+    if (!(c->log->log_level & NGX_LOG_DEBUG_CONNECTION)) {
+        c->log->log_level = clcf->error_log->log_level;
     }
 
-    if (top_lscf->log_socket_errors != NGX_CONF_UNSET) {
-        lscf->log_socket_errors = top_lscf->log_socket_errors;
-    }
+#endif
 
-    cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
-
-    ngx_set_connection_log(s->connection, cscf->error_log);
 
     ctx = ngx_stream_lua_create_ctx(s);
+
     if (ctx == NULL) {
         goto failed;
     }
 
+
+    r = ctx->request;
+
+
     ctx->context = NGX_STREAM_LUA_CONTEXT_INIT_WORKER;
     ctx->cur_co_ctx = NULL;
-    ctx->read_event_handler = ngx_stream_lua_block_reading;
+    r->read_event_handler = ngx_stream_lua_block_reading;
 
-    ngx_stream_lua_set_session(lmcf->lua, s);
+    ngx_stream_lua_set_req(lmcf->lua, r);
 
     (void) lmcf->init_worker_handler(cycle->log, lmcf, lmcf->lua);
 
@@ -277,8 +292,8 @@ ngx_stream_lua_init_worker_by_inline(ngx_log_t *log,
 
 
 ngx_int_t
-ngx_stream_lua_init_worker_by_file(ngx_log_t *log,
-    ngx_stream_lua_main_conf_t *lmcf, lua_State *L)
+ngx_stream_lua_init_worker_by_file(ngx_log_t *log, ngx_stream_lua_main_conf_t *lmcf,
+    lua_State *L)
 {
     int         status;
 

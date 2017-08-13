@@ -57,9 +57,7 @@ typedef struct {
 } ngx_stream_lua_script_engine_t;
 
 
-typedef void (*ngx_stream_lua_script_code_pt)
-    (ngx_stream_lua_script_engine_t *e);
-
+typedef void (*ngx_stream_lua_script_code_pt) (ngx_stream_lua_script_engine_t *e);
 typedef size_t (*ngx_stream_lua_script_len_code_pt)
     (ngx_stream_lua_script_engine_t *e);
 
@@ -78,9 +76,11 @@ typedef struct {
 
 ngx_int_t ngx_stream_lua_compile_complex_value(
     ngx_stream_lua_compile_complex_value_t *ccv);
-ngx_int_t ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
+ngx_int_t ngx_stream_lua_complex_value(ngx_stream_lua_request_t *r, ngx_str_t *subj,
     size_t offset, ngx_int_t count, int *cap,
     ngx_stream_lua_complex_value_t *val, luaL_Buffer *luabuf);
 
 
 #endif /* _NGX_STREAM_LUA_SCRIPT_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

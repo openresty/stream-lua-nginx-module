@@ -15,7 +15,7 @@
 #include "ngx_stream_lua_args.h"
 #include "ngx_crc32.h"
 
-#if NGX_HAVE_SHA1
+#if (NGX_HAVE_SHA1)
 #include "ngx_sha1.h"
 #endif
 
@@ -48,8 +48,9 @@ static int ngx_stream_lua_ngx_decode_base64(lua_State *L);
 static int ngx_stream_lua_ngx_encode_base64(lua_State *L);
 static int ngx_stream_lua_ngx_crc32_short(lua_State *L);
 static int ngx_stream_lua_ngx_crc32_long(lua_State *L);
-static int ngx_stream_lua_ngx_encode_args(lua_State *L);
-static int ngx_stream_lua_ngx_decode_args(lua_State *L);
+
+
+
 #if (NGX_OPENSSL)
 static int ngx_stream_lua_ngx_hmac_sha1(lua_State *L);
 #endif
@@ -64,11 +65,7 @@ ngx_stream_lua_inject_string_api(lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_ngx_unescape_uri);
     lua_setfield(L, -2, "unescape_uri");
 
-    lua_pushcfunction(L, ngx_stream_lua_ngx_encode_args);
-    lua_setfield(L, -2, "encode_args");
 
-    lua_pushcfunction(L, ngx_stream_lua_ngx_decode_args);
-    lua_setfield(L, -2, "decode_args");
 
     lua_pushcfunction(L, ngx_stream_lua_ngx_quote_sql_str);
     lua_setfield(L, -2, "quote_sql_str");
@@ -125,12 +122,13 @@ ngx_stream_lua_ngx_escape_uri(lua_State *L)
         return 1;
     }
 
-    escape = 2 * ngx_stream_lua_escape_uri(NULL, src, len, NGX_ESCAPE_URI);
+    escape = 2 * ngx_stream_lua_escape_uri(NULL, src, len,
+                                         NGX_ESCAPE_URI_COMPONENT);
 
     if (escape) {
         dlen = escape + len;
         dst = lua_newuserdata(L, dlen);
-        ngx_stream_lua_escape_uri(dst, src, len, NGX_ESCAPE_URI);
+        ngx_stream_lua_escape_uri(dst, src, len, NGX_ESCAPE_URI_COMPONENT);
         lua_pushlstring(L, (char *) dst, dlen);
     }
 
@@ -576,55 +574,7 @@ ngx_stream_lua_ngx_crc32_long(lua_State *L)
 }
 
 
-static int
-ngx_stream_lua_ngx_encode_args(lua_State *L)
-{
-    ngx_str_t                    args;
 
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "expecting 1 argument but seen %d",
-                          lua_gettop(L));
-    }
-
-    luaL_checktype(L, 1, LUA_TTABLE);
-    ngx_stream_lua_process_args_option(NULL, L, 1, &args);
-    lua_pushlstring(L, (char *) args.data, args.len);
-    return 1;
-}
-
-
-static int
-ngx_stream_lua_ngx_decode_args(lua_State *L)
-{
-    u_char                      *buf;
-    u_char                      *tmp;
-    size_t                       len = 0;
-    int                          n;
-    int                          max;
-
-    n = lua_gettop(L);
-
-    if (n != 1 && n != 2) {
-        return luaL_error(L, "expecting 1 or 2 arguments but seen %d", n);
-    }
-
-    buf = (u_char *) luaL_checklstring(L, 1, &len);
-
-    if (n == 2) {
-        max = luaL_checkint(L, 2);
-        lua_pop(L, 1);
-
-    } else {
-        max = NGX_STREAM_LUA_MAX_ARGS;
-    }
-
-    tmp = lua_newuserdata(L, len);
-    ngx_memcpy(tmp, buf, len);
-
-    lua_createtable(L, 0, 4);
-
-    return ngx_stream_lua_parse_args(L, tmp, tmp + len, max);
-}
 
 
 #if (NGX_OPENSSL)
@@ -685,7 +635,7 @@ ngx_stream_lua_ffi_md5(const u_char *src, size_t len, u_char *dst)
 int
 ngx_stream_lua_ffi_sha1_bin(const u_char *src, size_t len, u_char *dst)
 {
-#if NGX_HAVE_SHA1
+#if (NGX_HAVE_SHA1)
     ngx_sha1_t               sha;
 
     ngx_sha1_init(&sha);
@@ -742,7 +692,7 @@ ngx_stream_lua_ffi_unescape_uri(const u_char *src, size_t len, u_char *dst)
     u_char      *p = dst;
 
     ngx_stream_lua_unescape_uri(&p, (u_char **) &src, len,
-                                NGX_UNESCAPE_URI_COMPONENT);
+                              NGX_UNESCAPE_URI_COMPONENT);
     return p - dst;
 }
 
@@ -751,14 +701,16 @@ size_t
 ngx_stream_lua_ffi_uri_escaped_length(const u_char *src, size_t len)
 {
     return len + 2 * ngx_stream_lua_escape_uri(NULL, (u_char *) src, len,
-                                               NGX_ESCAPE_URI);
+                                             NGX_ESCAPE_URI_COMPONENT);
 }
 
 
 void
 ngx_stream_lua_ffi_escape_uri(const u_char *src, size_t len, u_char *dst)
 {
-    ngx_stream_lua_escape_uri(dst, (u_char *) src, len, NGX_ESCAPE_URI);
+    ngx_stream_lua_escape_uri(dst, (u_char *) src, len, NGX_ESCAPE_URI_COMPONENT);
 }
 
 #endif
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

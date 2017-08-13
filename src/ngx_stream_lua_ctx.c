@@ -20,7 +20,7 @@ typedef struct {
 } ngx_stream_lua_ngx_ctx_cleanup_data_t;
 
 
-static ngx_int_t ngx_stream_lua_ngx_ctx_add_cleanup(ngx_stream_session_t *s,
+static ngx_int_t ngx_stream_lua_ngx_ctx_add_cleanup(ngx_stream_lua_request_t *r,
     int ref);
 static void ngx_stream_lua_ngx_ctx_cleanup(void *data);
 
@@ -28,23 +28,22 @@ static void ngx_stream_lua_ngx_ctx_cleanup(void *data);
 int
 ngx_stream_lua_ngx_get_ctx(lua_State *L)
 {
-    ngx_stream_session_t          *s;
+    ngx_stream_lua_request_t          *r;
     ngx_stream_lua_ctx_t          *ctx;
 
-    s = ngx_stream_lua_get_session(L);
-    if (s == NULL) {
-        return luaL_error(L, "no session found");
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
     }
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no session ctx found");
+        return luaL_error(L, "no request ctx found");
     }
 
     if (ctx->ctx_ref == LUA_NOREF) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                       "stream lua create ngx.ctx table for the current "
-                       "session");
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua create ngx.ctx table for the current request");
 
         lua_pushliteral(L, ngx_stream_lua_ctx_tables_key);
         lua_rawget(L, LUA_REGISTRYINDEX);
@@ -52,16 +51,16 @@ ngx_stream_lua_ngx_get_ctx(lua_State *L)
         lua_pushvalue(L, -1);
         ctx->ctx_ref = luaL_ref(L, -3);
 
-        if (ngx_stream_lua_ngx_ctx_add_cleanup(s, ctx->ctx_ref) != NGX_OK) {
+        if (ngx_stream_lua_ngx_ctx_add_cleanup(r, ctx->ctx_ref) != NGX_OK) {
             return luaL_error(L, "no memory");
         }
 
         return 1;
     }
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                   "stream lua fetching existing ngx.ctx table for the current "
-                   "session");
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "lua fetching existing ngx.ctx table for the current "
+                   "request");
 
     lua_pushliteral(L, ngx_stream_lua_ctx_tables_key);
     lua_rawget(L, LUA_REGISTRYINDEX);
@@ -74,25 +73,25 @@ ngx_stream_lua_ngx_get_ctx(lua_State *L)
 int
 ngx_stream_lua_ngx_set_ctx(lua_State *L)
 {
-    ngx_stream_session_t          *s;
+    ngx_stream_lua_request_t          *r;
     ngx_stream_lua_ctx_t          *ctx;
 
-    s = ngx_stream_lua_get_session(L);
-    if (s == NULL) {
-        return luaL_error(L, "no session found");
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
     }
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no session ctx found");
+        return luaL_error(L, "no request ctx found");
     }
 
-    return ngx_stream_lua_ngx_set_ctx_helper(L, s, ctx, 3);
+    return ngx_stream_lua_ngx_set_ctx_helper(L, r, ctx, 3);
 }
 
 
 int
-ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_session_t *s,
+ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_lua_request_t *r,
     ngx_stream_lua_ctx_t *ctx, int index)
 {
     if (index < 0) {
@@ -100,9 +99,8 @@ ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_session_t *s,
     }
 
     if (ctx->ctx_ref == LUA_NOREF) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                       "stream lua create ngx.ctx table for the current "
-                       "session");
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua create ngx.ctx table for the current request");
 
         lua_pushliteral(L, ngx_stream_lua_ctx_tables_key);
         lua_rawget(L, LUA_REGISTRYINDEX);
@@ -110,16 +108,16 @@ ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_session_t *s,
         ctx->ctx_ref = luaL_ref(L, -2);
         lua_pop(L, 1);
 
-        if (ngx_stream_lua_ngx_ctx_add_cleanup(s, ctx->ctx_ref) != NGX_OK) {
+        if (ngx_stream_lua_ngx_ctx_add_cleanup(r, ctx->ctx_ref) != NGX_OK) {
             return luaL_error(L, "no memory");
         }
 
         return 0;
     }
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
-                   "stream lua fetching existing ngx.ctx table for the current "
-                   "session");
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "lua fetching existing ngx.ctx table for the current "
+                   "request");
 
     lua_pushliteral(L, ngx_stream_lua_ctx_tables_key);
     lua_rawget(L, LUA_REGISTRYINDEX);
@@ -134,11 +132,11 @@ ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_session_t *s,
 
 #ifndef NGX_LUA_NO_FFI_API
 int
-ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_session_t *s)
+ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_lua_request_t *r)
 {
     ngx_stream_lua_ctx_t  *ctx;
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
         return NGX_STREAM_LUA_FFI_NO_REQ_CTX;
     }
@@ -148,18 +146,18 @@ ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_session_t *s)
 
 
 int
-ngx_stream_lua_ffi_set_ctx_ref(ngx_stream_session_t *s, int ref)
+ngx_stream_lua_ffi_set_ctx_ref(ngx_stream_lua_request_t *r, int ref)
 {
     ngx_stream_lua_ctx_t  *ctx;
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
         return NGX_STREAM_LUA_FFI_NO_REQ_CTX;
     }
 
     ctx->ctx_ref = ref;
 
-    if (ngx_stream_lua_ngx_ctx_add_cleanup(s, ref) != NGX_OK) {
+    if (ngx_stream_lua_ngx_ctx_add_cleanup(r, ref) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -169,18 +167,18 @@ ngx_stream_lua_ffi_set_ctx_ref(ngx_stream_session_t *s, int ref)
 
 
 static ngx_int_t
-ngx_stream_lua_ngx_ctx_add_cleanup(ngx_stream_session_t *s, int ref)
+ngx_stream_lua_ngx_ctx_add_cleanup(ngx_stream_lua_request_t *r, int ref)
 {
     lua_State                   *L;
     ngx_pool_cleanup_t          *cln;
-    ngx_stream_lua_ctx_t        *ctx;
+    ngx_stream_lua_ctx_t          *ctx;
 
     ngx_stream_lua_ngx_ctx_cleanup_data_t    *data;
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
-    L = ngx_stream_lua_get_lua_vm(s, ctx);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    L = ngx_stream_lua_get_lua_vm(r, ctx);
 
-    cln = ngx_pool_cleanup_add(s->connection->pool,
+    cln = ngx_pool_cleanup_add(r->pool,
                                sizeof(ngx_stream_lua_ngx_ctx_cleanup_data_t));
     if (cln == NULL) {
         return NGX_ERROR;
@@ -204,7 +202,7 @@ ngx_stream_lua_ngx_ctx_cleanup(void *data)
     ngx_stream_lua_ngx_ctx_cleanup_data_t    *clndata = data;
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                   "stream lua release ngx.ctx at ref %d", clndata->ref);
+                   "lua release ngx.ctx at ref %d", clndata->ref);
 
     L = clndata->vm;
 
@@ -213,3 +211,6 @@ ngx_stream_lua_ngx_ctx_cleanup(void *data)
     luaL_unref(L, -1, clndata->ref);
     lua_pop(L, 1);
 }
+
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */
