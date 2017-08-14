@@ -90,7 +90,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
 
     ngx_uint_t                       reused;
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
     ngx_str_t                        ssl_name;
 #endif
 
@@ -104,7 +104,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     unsigned                         raw_downstream:1;
     unsigned                         read_closed:1;
     unsigned                         write_closed:1;
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
     unsigned                         ssl_verify:1;
     unsigned                         ssl_session_reuse:1;
 #endif

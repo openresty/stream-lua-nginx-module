@@ -34,7 +34,7 @@ static char *ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent,
 
 static ngx_int_t ngx_stream_lua_init(ngx_conf_t *cf);
 static char *ngx_stream_lua_lowat_check(ngx_conf_t *cf, void *post, void *data);
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 static ngx_int_t ngx_stream_lua_set_ssl(ngx_conf_t *cf,
     ngx_stream_lua_loc_conf_t *llcf);
 #endif
@@ -49,7 +49,7 @@ static ngx_conf_post_t  ngx_stream_lua_lowat_post =
 
 
 
-#if (NGX_HTTP_SSL) && defined(nginx_version) && nginx_version >= 1001013
+#if (NGX_STREAM_SSL) && defined(nginx_version) && nginx_version >= 1001013
 
 static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
     { ngx_string("SSLv2"), NGX_SSL_SSLv2 },
@@ -285,7 +285,7 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
     
 
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
 #   if defined(nginx_version) && nginx_version >= 1001013
 
@@ -328,7 +328,7 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       offsetof(ngx_stream_lua_srv_conf_t, ssl_crl),
       NULL },
 
-#endif  /* NGX_HTTP_SSL */
+#endif  /* NGX_STREAM_SSL */
 
      { ngx_string("lua_malloc_trim"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,

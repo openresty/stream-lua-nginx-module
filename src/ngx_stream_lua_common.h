@@ -207,7 +207,7 @@ struct ngx_stream_lua_main_conf_s {
 
 
 typedef struct {
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
     ngx_uint_t              ssl_protocols;
     ngx_str_t               ssl_ciphers;

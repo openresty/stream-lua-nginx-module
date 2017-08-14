@@ -178,7 +178,7 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
                         | NGX_STREAM_LUA_CONTEXT_SSL_SESS_FETCH))
     {
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
         ctx->exit_code = status;
         ctx->exited = 1;

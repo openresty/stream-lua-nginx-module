@@ -90,8 +90,10 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
 
     llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
 
+
     r->connection->read->handler = ngx_stream_lua_request_handler;
     r->connection->write->handler = ngx_stream_lua_request_handler;
+
 
     if (llcf->check_client_abort) {
         r->read_event_handler = ngx_stream_lua_rd_check_broken_connection;

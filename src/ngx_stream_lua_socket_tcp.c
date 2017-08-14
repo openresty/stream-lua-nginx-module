@@ -20,7 +20,7 @@
 
 static int ngx_stream_lua_socket_tcp(lua_State *L);
 static int ngx_stream_lua_socket_tcp_connect(lua_State *L);
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 static int ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L);
 #endif
 static int ngx_stream_lua_socket_tcp_receive(lua_State *L);
@@ -125,7 +125,7 @@ static void
     ngx_stream_lua_socket_empty_resolve_handler(ngx_resolver_ctx_t *ctx);
 static int ngx_stream_lua_socket_prepare_error_retvals(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L, ngx_uint_t ft_type);
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 static int ngx_stream_lua_ssl_handshake_retval_handler(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L);
 static void ngx_stream_lua_ssl_handshake_handler(ngx_connection_t *c);
@@ -189,7 +189,7 @@ static char ngx_stream_lua_upstream_udata_metatable_key;
 static char ngx_stream_lua_downstream_udata_metatable_key;
 static char ngx_stream_lua_pool_udata_metatable_key;
 static char ngx_stream_lua_pattern_udata_metatable_key;
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 static char ngx_stream_lua_ssl_session_metatable_key;
 #endif
 
@@ -259,7 +259,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_connect);
     lua_setfield(L, -2, "connect");
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_sslhandshake);
     lua_setfield(L, -2, "sslhandshake");
@@ -330,7 +330,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
     /* {{{ssl session userdata metatable */
     lua_pushlightuserdata(L, &ngx_stream_lua_ssl_session_metatable_key);
@@ -1169,7 +1169,7 @@ ngx_stream_lua_socket_conn_error_retval_handler(ngx_stream_lua_request_t *r,
 }
 
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
 static int
 ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L)
@@ -1566,7 +1566,7 @@ ngx_stream_lua_ssl_handshake_retval_handler(ngx_stream_lua_request_t *r,
     return 1;
 }
 
-#endif  /* NGX_HTTP_SSL */
+#endif  /* NGX_STREAM_SSL */
 
 
 static int
@@ -3433,7 +3433,7 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
         u->peer.free(&u->peer, u->peer.data, 0);
     }
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
     if (u->ssl_name.data) {
         ngx_free(u->ssl_name.data);
         u->ssl_name.data = NULL;
@@ -3470,7 +3470,7 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
 static void
 ngx_stream_lua_socket_tcp_close_connection(ngx_connection_t *c)
 {
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
     if (c->ssl) {
         c->ssl->no_wait_shutdown = 1;
@@ -5258,7 +5258,7 @@ ngx_stream_lua_coctx_cleanup(void *data)
 }
 
 
-#if (NGX_HTTP_SSL)
+#if (NGX_STREAM_SSL)
 
 static int
 ngx_stream_lua_ssl_free_session(lua_State *L)
@@ -5277,7 +5277,7 @@ ngx_stream_lua_ssl_free_session(lua_State *L)
     return 0;
 }
 
-#endif  /* NGX_HTTP_SSL */
+#endif  /* NGX_STREAM_SSL */
 
 
 void
