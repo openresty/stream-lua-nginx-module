@@ -2789,7 +2789,9 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
                       "kevent() reported that client prematurely closed "
                       "connection");
 
-        return NGX_HTTP_CLIENT_CLOSED_REQUEST;
+
+        return NGX_ERROR;
+
     }
 
 #endif
@@ -2812,7 +2814,9 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
 
 #if 1
         if (ngx_del_event(ev, event, 0) != NGX_OK) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+
+            return NGX_ERROR;
+
         }
 #endif
     }
@@ -2840,7 +2844,9 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
     ngx_log_error(NGX_LOG_INFO, ev->log, err,
                   "client prematurely closed connection");
 
-    return NGX_HTTP_CLIENT_CLOSED_REQUEST;
+
+    return NGX_ERROR;
+
 }
 
 
@@ -2882,8 +2888,11 @@ ngx_stream_lua_rd_check_broken_connection(ngx_stream_lua_request_t *r)
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && rev->active) {
             if (ngx_del_event(rev, NGX_READ_EVENT, 0) != NGX_OK) {
                 ngx_stream_lua_request_cleanup(ctx, 0);
+
+
                 ngx_stream_lua_finalize_request(r,
-                                              NGX_HTTP_INTERNAL_SERVER_ERROR);
+                                              NGX_STREAM_INTERNAL_SERVER_ERROR);
+
                 return;
             }
         }
