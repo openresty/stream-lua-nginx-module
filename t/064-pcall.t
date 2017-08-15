@@ -43,7 +43,7 @@ __DATA__
     }
 --- stream_response eval
 qr/^res len: 2
-res: falsecontent_by_lua_block\(nginx\.conf:\d+\):4: zero error
+res: falsecontent_by_lua\(nginx\.conf:\d+\):4: zero error
 res len: 4
 res: true23hellotrue
 $/s
@@ -87,7 +87,7 @@ $/s
         ngx.say("res: ", unpack(res))
     }
 --- stream_response eval
-qr/^error handler called: content_by_lua_block\(nginx\.conf:\d+\):4: zero error
+qr/^error handler called: content_by_lua\(nginx\.conf:\d+\):4: zero error
 res len: 2
 res: falsethis is the new err
 res len: 4

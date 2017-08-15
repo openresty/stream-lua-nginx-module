@@ -21,7 +21,7 @@ __DATA__
         return a}
 --- stream_response
 --- error_log eval
-qr/failed to load inlined Lua code: content_by_lua_block\(nginx\.conf:\d+\):2: unexpected symbol near ';'/
+qr/failed to load inlined Lua code: content_by_lua\(nginx\.conf:\d+\):2: unexpected symbol near ';'/
 
 
 

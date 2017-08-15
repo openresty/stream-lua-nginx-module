@@ -161,7 +161,9 @@ ngx_stream_lua_code_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (!*fp) {
         ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
-                           "lua_code_cache is off; this will hurt "
+
+                           "stream lua_code_cache is off; this will hurt "
+
                            "performance");
     }
 

@@ -137,11 +137,11 @@ ngx_stream_lua_socket_udp(lua_State *L)
         return luaL_error(L, "no ctx found");
     }
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_REWRITE
-                               | NGX_STREAM_LUA_CONTEXT_ACCESS
-                               | NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_SSL_CERT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+
+
+
+                               | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */);
     lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_metatable_key);
@@ -162,7 +162,11 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
     ngx_str_t                    host;
     int                          port;
     ngx_resolver_ctx_t          *rctx, temp;
-    ngx_http_core_loc_conf_t    *clcf;
+
+
+    ngx_stream_core_srv_conf_t  *clcf;
+
+
     int                          saved_top;
     int                          n;
     u_char                      *p;
@@ -198,11 +202,11 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         return luaL_error(L, "no ctx found");
     }
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_REWRITE
-                               | NGX_STREAM_LUA_CONTEXT_ACCESS
-                               | NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_SSL_CERT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+
+
+
+                               | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     luaL_checktype(L, 1, LUA_TTABLE);
 
@@ -316,7 +320,7 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         return 2;
     }
 
-    u->resolved = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_resolved_t));
+    u->resolved = ngx_pcalloc(r->pool, sizeof(ngx_stream_upstream_resolved_t));
     if (u->resolved == NULL) {
         return luaL_error(L, "no memory");
     }
@@ -344,7 +348,7 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         return rc;
     }
 
-    clcf = ngx_stream_lua_get_module_loc_conf(r, ngx_http_core_module);
+    clcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_core_module);
 
     temp.name = host;
     rctx = ngx_resolve_start(clcf->resolver, &temp);
@@ -411,12 +415,9 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
 
     coctx->data = u;
 
-    if (ctx->entered_content_phase) {
-        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    } else {
-        r->write_event_handler = ngx_http_core_run_phases;
-    }
+    r->write_event_handler = ngx_stream_lua_content_wev_handler;
+
 
     return lua_yield(L, 0);
 }
@@ -427,7 +428,7 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
 {
     ngx_stream_lua_request_t                  *r;
     ngx_connection_t                    *c;
-    ngx_http_upstream_resolved_t        *ur;
+    ngx_stream_upstream_resolved_t        *ur;
     ngx_stream_lua_ctx_t                  *lctx;
     lua_State                           *L;
     ngx_stream_lua_socket_udp_upstream_t  *u;
@@ -486,9 +487,7 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
         ngx_stream_lua_socket_udp_handle_error(r, u,
                                              NGX_STREAM_LUA_SOCKET_FT_RESOLVER);
 
-        if (waiting) {
-            ngx_http_run_posted_requests(c);
-        }
+
 
         return;
     }
@@ -607,7 +606,8 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
     if (waiting) {
         lctx->resume_handler = ngx_stream_lua_socket_udp_resume;
         r->write_event_handler(r);
-        ngx_http_run_posted_requests(c);
+
+
 
     } else {
         (void) ngx_stream_lua_socket_resolve_retval_handler(r, u, L);
@@ -627,7 +627,7 @@ nomem:
                                          NGX_STREAM_LUA_SOCKET_FT_NOMEM);
 
     if (waiting) {
-        ngx_http_run_posted_requests(c);
+
 
     } else {
         lua_pushnil(L);
@@ -643,8 +643,8 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_lua_request_t *r,
     ngx_stream_lua_ctx_t              *ctx;
     ngx_stream_lua_co_ctx_t           *coctx;
     ngx_connection_t                *c;
-    ngx_http_cleanup_t              *cln;
-    ngx_http_upstream_resolved_t    *ur;
+    ngx_stream_lua_cleanup_t              *cln;
+    ngx_stream_upstream_resolved_t    *ur;
     ngx_int_t                        rc;
     ngx_stream_lua_udp_connection_t   *uc;
 
@@ -677,7 +677,7 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_lua_request_t *r,
     }
 
     if (u->cleanup == NULL) {
-        cln = ngx_stream_cleanup_add(r, 0);
+        cln = ngx_stream_lua_cleanup_add(r, 0);
         if (cln == NULL) {
             u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_ERROR;
             lua_pushnil(L);
@@ -1010,12 +1010,9 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
     coctx->cleanup = ngx_stream_lua_udp_socket_cleanup;
     coctx->data = u;
 
-    if (ctx->entered_content_phase) {
-        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    } else {
-        r->write_event_handler = ngx_http_core_run_phases;
-    }
+    r->write_event_handler = ngx_stream_lua_content_wev_handler;
+
 
     u->co_ctx = coctx;
     u->waiting = 1;
@@ -1280,8 +1277,10 @@ ngx_stream_lua_socket_udp_cleanup(void *data)
 
     r = u->request;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                   "cleanup lua udp socket upstream request: \"%V\"", &r->uri);
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "cleanup lua udp socket upstream request");
+
 
     ngx_stream_lua_socket_udp_finalize(r, u);
 }
@@ -1292,7 +1291,8 @@ ngx_stream_lua_socket_udp_handler(ngx_event_t *ev)
 {
     ngx_connection_t                *c;
     ngx_stream_lua_request_t              *r;
-    ngx_http_log_ctx_t              *ctx;
+
+
 
     ngx_stream_lua_socket_udp_upstream_t  *u;
 
@@ -1301,18 +1301,11 @@ ngx_stream_lua_socket_udp_handler(ngx_event_t *ev)
     r = u->request;
     c = r->connection;
 
-    if (c->fd != (ngx_socket_t) -1) {  /* not a fake connection */
-        ctx = c->log->data;
-        ctx->current_request = r;
-    }
 
-    ngx_log_debug3(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                   "lua udp socket handler for \"%V?%V\", wev %d", &r->uri,
-                   &r->args, (int) ev->write);
 
     u->read_event_handler(r, u);
 
-    ngx_http_run_posted_requests(c);
+
 }
 
 

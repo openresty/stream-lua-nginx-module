@@ -199,33 +199,7 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
 #endif
     }
 
-    if (ctx->no_abort
-        && status != NGX_ERROR
-        && status != NGX_HTTP_CLOSE
-        && status != NGX_HTTP_REQUEST_TIME_OUT
-        && status != NGX_HTTP_CLIENT_CLOSED_REQUEST)
-    {
-        *errlen = ngx_snprintf(err, *errlen,
-                               "attempt to abort with pending subrequests")
-                  - err;
-        return NGX_ERROR;
-    }
 
-    if ((r->header_sent || ctx->header_sent)
-        && status >= NGX_HTTP_SPECIAL_RESPONSE
-        && status != NGX_HTTP_REQUEST_TIME_OUT
-        && status != NGX_HTTP_CLIENT_CLOSED_REQUEST
-        && status != NGX_HTTP_CLOSE)
-    {
-        if (status != (ngx_int_t) r->headers_out.status) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "attempt to "
-                          "set status %d via ngx.exit after sending out the "
-                          "response status %ui", status,
-                          r->headers_out.status);
-        }
-
-        status = NGX_HTTP_OK;
-    }
 
     ctx->exit_code = status;
     ctx->exited = 1;

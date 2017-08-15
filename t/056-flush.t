@@ -38,7 +38,7 @@ hiya
 --- no_error_log
 [error]
 --- error_log
-stream lua reuse free buf memory 13 >= 5
+lua reuse free buf memory 13 >= 5
 
 
 

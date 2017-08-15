@@ -118,7 +118,7 @@ Jim: 6
         print("log from init_by_lua")
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block { ngx.say('ok') }
 --- stream_response
 ok
 --- grep_error_log chop
@@ -136,7 +136,7 @@ log from init_by_lua
         ngx.log(ngx.NOTICE, "log from init_by_lua")
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block { ngx.say('ok') }
 --- stream_response
 ok
 --- grep_error_log chop
@@ -246,7 +246,7 @@ Failed to resume our co:
         print("INIT 2: foo = ", ngx.foo)
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block { ngx.say('ok') }
 --- stream_response
 ok
 --- no_error_log

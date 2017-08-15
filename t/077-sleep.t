@@ -29,7 +29,7 @@ __DATA__
 --- stream_response_like chop
 ^0\.(?:4[5-9]\d*|5[0-5]\d*|5)$
 --- error_log
-stream lua ready to sleep for
+lua ready to sleep for
 stream lua sleep timer expired
 
 
@@ -62,7 +62,7 @@ bad argument #1 to 'sleep'
 --- stream_response_like chop
 ^(?:0\.9\d*|1\.[0-2]\d*|1)$
 --- error_log
-stream lua ready to sleep for
+lua ready to sleep for
 stream lua sleep timer expired
 --- no_error_log
 [error]
@@ -79,7 +79,7 @@ stream lua sleep timer expired
 --- stream_response
 blah
 --- error_log
-stream lua ready to sleep
+lua ready to sleep
 stream lua sleep timer expired
 --- no_error_log
 [error]
@@ -98,7 +98,7 @@ stream lua sleep timer expired
 blah
 hiya
 --- error_log
-stream lua ready to sleep for
+lua ready to sleep for
 stream lua sleep timer expired
 --- no_error_log
 [error]
@@ -117,7 +117,7 @@ stream lua sleep timer expired
 --- stream_response_like chop
 elapsed: 0
 --- error_log
-stream lua ready to sleep for
+lua ready to sleep for
 stream lua sleep timer expired
 --- no_error_log
 [error]
@@ -155,7 +155,7 @@ API disabled in the context of log_by_lua*
 --- stream_response
 ok
 --- error_log
-stream lua clean up the timer for pending ngx.sleep
+lua clean up the timer for pending ngx.sleep
 --- no_error_log
 [error]
 
@@ -177,7 +177,7 @@ ngx.sleep(0.001)
 --- wait: 0.2
 --- error_log eval
 [
-"stream lua clean up the timer for pending ngx.sleep",
+"lua clean up the timer for pending ngx.sleep",
 qr{runtime error: attempt to yield across (?:metamethod/)?C-call boundary},
 ]
 

@@ -21,7 +21,7 @@ ngx_stream_lua_get_global_state(ngx_conf_t *cf)
 {
     ngx_stream_lua_main_conf_t *lmcf;
 
-    lmcf = ngx_http_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
 
     return lmcf->lua;
 }
@@ -46,7 +46,7 @@ ngx_stream_lua_add_package_preload(ngx_conf_t *cf, const char *package,
     ngx_stream_lua_main_conf_t      *lmcf;
     ngx_stream_lua_preload_hook_t   *hook;
 
-    lmcf = ngx_http_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
 
     L = lmcf->lua;
 
@@ -93,7 +93,7 @@ ngx_stream_lua_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size,
     ngx_stream_lua_shm_zone_ctx_t  *ctx;
     ngx_int_t                     n;
 
-    lmcf = ngx_http_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
     if (lmcf == NULL) {
         return NULL;
     }

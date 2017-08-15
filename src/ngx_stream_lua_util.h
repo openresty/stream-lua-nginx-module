@@ -65,9 +65,7 @@ extern char ngx_stream_lua_headers_metatable_key;
 #endif
 
 
-#ifndef NGX_HTTP_SWITCHING_PROTOCOLS
-#define NGX_HTTP_SWITCHING_PROTOCOLS 101
-#endif
+
 
 
 #if defined(nginx_version) && nginx_version < 1000000

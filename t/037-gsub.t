@@ -397,7 +397,7 @@ s: aa
 
 === TEST 22: just hit match limit
 --- stream_config
-    lua_regex_match_limit 5600;
+    lua_regex_match_limit 5000;
 --- stream_server_config
     content_by_lua_file html/a.lua;
 

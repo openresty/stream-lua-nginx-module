@@ -126,7 +126,9 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
     { ngx_string("lua_code_cache"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
       ngx_stream_lua_code_cache,
-      NGX_HTTP_LOC_CONF_OFFSET,
+
+      NGX_STREAM_SRV_CONF_OFFSET,
+
       offsetof(ngx_stream_lua_loc_conf_t, enable_code_cache),
       NULL },
 
@@ -135,7 +137,9 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
      { ngx_string("lua_socket_log_errors"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
+
+      NGX_STREAM_SRV_CONF_OFFSET,
+
       offsetof(ngx_stream_lua_loc_conf_t, log_socket_errors),
       NULL },
 

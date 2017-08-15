@@ -14,6 +14,10 @@
 #include "ngx_stream_lua_util.h"
 
 
+#include "ngx_stream_lua_contentby.h"
+
+
+
 static u_char *ngx_stream_lua_log_init_worker_error(ngx_log_t *log,
     u_char *buf, size_t len);
 
@@ -21,19 +25,24 @@ static u_char *ngx_stream_lua_log_init_worker_error(ngx_log_t *log,
 ngx_int_t
 ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 {
-    char                        *rv;
-    void                        *cur, *prev;
-    ngx_uint_t                   i;
-    ngx_conf_t                   conf;
-    ngx_cycle_t                 *fake_cycle;
-    ngx_module_t               **modules;
-    ngx_open_file_t             *file, *ofile;
-    ngx_list_part_t             *part;
-    ngx_connection_t            *c = NULL;
-    ngx_stream_module_t           *module;
-    ngx_stream_lua_request_t          *r = NULL;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_conf_ctx_t         *conf_ctx, stream_ctx;
+    char                               *rv;
+    void                               *cur, *prev;
+    ngx_uint_t                          i;
+    ngx_conf_t                          conf;
+    ngx_cycle_t                        *fake_cycle;
+    ngx_module_t                      **modules;
+    ngx_open_file_t                    *file, *ofile;
+    ngx_list_part_t                    *part;
+    ngx_connection_t                   *c = NULL;
+    ngx_conf_file_t                    *conf_file;
+    ngx_stream_module_t       *module;
+    ngx_stream_lua_request_t                     *r = NULL;
+    ngx_stream_lua_ctx_t      *ctx;
+    ngx_stream_conf_ctx_t     *conf_ctx, stream_ctx;
+
+
+    ngx_stream_core_srv_conf_t  *cscf;
+
 
 
 
@@ -147,10 +156,21 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         goto failed;
     }
 
+    conf_file = ngx_pcalloc(fake_cycle->pool, sizeof(ngx_conf_file_t));
+    if (conf_file == NULL) {
+        return NGX_ERROR;
+    }
+
+    /* workaround to make ngx_stream_core_create_srv_conf not SEGFAULT */
+    conf_file->file.name.data = (u_char *) "dummy";
+    conf_file->file.name.len = sizeof("dummy") - 1;
+    conf_file->line = 1;
+
     conf.ctx = &stream_ctx;
     conf.cycle = fake_cycle;
     conf.pool = fake_cycle->pool;
     conf.log = cycle->log;
+    conf.conf_file = conf_file;
 
 
 
@@ -180,6 +200,16 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
             }
 
             stream_ctx.srv_conf[modules[i]->ctx_index] = cur;
+
+
+            if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
+            {
+                cscf = cur;
+                /* just to silence the error in
+                 * ngx_stream_core_merge_srv_conf */
+                cscf->handler = ngx_stream_lua_content_handler;
+            }
+
 
             if (module->merge_srv_conf) {
                 prev = module->create_srv_conf(&conf);
@@ -223,11 +253,13 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
 #   if nginx_version >= 1009000
 
-    ngx_set_connection_log(r->connection, clcf->error_log);
+
+    ngx_set_connection_log(s->connection, clcf->error_log);
+
 
 #   else
 
-    ngx_http_set_connection_log(r->connection, clcf->error_log);
+
 
 #   endif
 

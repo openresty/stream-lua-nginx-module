@@ -130,8 +130,12 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 
     s = r->session;
 
-    if (rc == NGX_DONE || rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) {
         goto cleanup;
+    }
+
+    if (rc == NGX_DONE) {
+        return;
     }
 
     if (rc == NGX_ERROR) {

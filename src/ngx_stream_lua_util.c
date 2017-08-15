@@ -376,6 +376,12 @@ ngx_int_t
 ngx_stream_lua_send_chain_link(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx,
     ngx_chain_t *in)
 {
+    if (in == NULL) {
+        ctx->eof = 1;
+
+        return NGX_OK;
+    }
+
     return ngx_stream_lua_output_filter(r, in);
 }
 
@@ -504,9 +510,8 @@ ngx_stream_lua_inject_ngx_api(lua_State *L, ngx_stream_lua_main_conf_t *lmcf,
 
     ngx_stream_lua_inject_variable_api(L);
     ngx_stream_lua_inject_shdict_api(lmcf, L);
-
-
-
+    ngx_stream_lua_inject_socket_tcp_api(log, L);
+    ngx_stream_lua_inject_socket_udp_api(log, L);
     ngx_stream_lua_inject_uthread_api(log, L);
     ngx_stream_lua_inject_timer_api(L);
     ngx_stream_lua_inject_config_api(L);
@@ -696,7 +701,9 @@ ngx_stream_lua_run_thread(lua_State *L, ngx_stream_lua_request_t *r,
     lua_State               *next_co;
     lua_State               *old_co;
     const char              *err, *msg, *trace;
-    ngx_int_t                rc;
+
+
+
 #if (NGX_PCRE)
     ngx_pool_t              *old_pool = NULL;
 #endif
@@ -1271,6 +1278,7 @@ ngx_stream_lua_wev_handler(ngx_stream_lua_request_t *r)
                 if (ctx->entered_content_phase) {
                     ngx_stream_lua_finalize_request(r, NGX_ERROR);
                 }
+
                 return NGX_ERROR;
             }
         }
@@ -1292,18 +1300,7 @@ ngx_stream_lua_wev_handler(ngx_stream_lua_request_t *r)
         return NGX_DONE;
     }
 
-    if (c->buffered & NGX_HTTP_LOWLEVEL_BUFFERED) {
-        rc = ngx_stream_lua_flush_pending_output(r, ctx);
 
-        dd("flush pending output returned %d, c->error: %d", (int) rc,
-           c->error);
-
-        if (rc != NGX_ERROR && rc != NGX_OK) {
-            goto useless;
-        }
-
-        /* when rc == NGX_ERROR, c->error must be set */
-    }
 
 flush_coros:
 
@@ -1446,40 +1443,7 @@ ngx_stream_lua_flush_pending_output(ngx_stream_lua_request_t *r,
         return rc;
     }
 
-    if (c->buffered & NGX_HTTP_LOWLEVEL_BUFFERED) {
 
-
-        cllscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
-
-
-
-        if (!wev->delayed) {
-            ngx_add_timer(wev, cllscf->send_timeout);
-        }
-
-        if (ngx_handle_write_event(wev, cllscf->send_lowat) != NGX_OK) {
-            if (ctx->entered_content_phase) {
-                ngx_stream_lua_finalize_request(r, NGX_ERROR);
-            }
-
-            return NGX_ERROR;
-        }
-
-        if (ctx->flushing_coros) {
-            ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                           "lua flush still waiting: buffered 0x%uxd",
-                           c->buffered);
-
-            return NGX_DONE;
-        }
-
-    } else {
-#if 1
-        if (wev->timer_set && !wev->delayed) {
-            ngx_del_timer(wev);
-        }
-#endif
-    }
 
     return NGX_OK;
 }
@@ -1851,7 +1815,7 @@ ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
 
     lua_createtable(L, 0 /* narr */, 24 /* nrec */);    /* .req */
 
-
+    ngx_stream_lua_inject_req_socket_api(L);
 
 
 
@@ -2781,6 +2745,9 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
     ngx_connection_t     *c;
 
 
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ev->log, 0,
+                   "stream lua check client, write event:%d", ev->write);
+
 
     c = r->connection;
 
@@ -2790,18 +2757,19 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
             event = ev->write ? NGX_WRITE_EVENT : NGX_READ_EVENT;
 
             if (ngx_del_event(ev, event, 0) != NGX_OK) {
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+
+                return NGX_ERROR;
+
             }
         }
 
-        return NGX_HTTP_CLIENT_CLOSED_REQUEST;
+
+        return NGX_ERROR;
+
     }
 
-#if (NGX_HTTP_V2)
-    if (r->stream) {
-        return NGX_OK;
-    }
-#endif
+
+
 
 #if (NGX_HAVE_KQUEUE)
 
@@ -3032,7 +3000,9 @@ ngx_stream_lua_finalize_fake_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
         return;
     }
 
-    if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+
+    if (rc == NGX_ERROR) {
+
 
 
 
@@ -3239,7 +3209,7 @@ ngx_stream_lua_cleanup_vm(void *data)
         if (--state->count == 0) {
             L = state->vm;
 
-
+            ngx_stream_lua_cleanup_conn_pools(L);
 
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                            "lua close the global Lua VM %p", L);

@@ -10,9 +10,10 @@ version=$1
 force=$2
 home=~
 
+            #--add-module=$root/../stream-echo-nginx-module \
 ngx-build $force $version \
             --with-ld-opt="-L$PCRE_LIB -Wl,-rpath,$PCRE_LIB:$LIBDRIZZLE_LIB:/usr/local/lib" \
-            --with-cc-opt="-DDEBUG_MALLOC" \
+            --with-cc-opt='-DNGX_LUA_NO_FFI_API' \
             --with-http_stub_status_module \
             --with-http_image_filter_module \
             --without-mail_pop3_module \
@@ -31,7 +32,6 @@ ngx-build $force $version \
             --add-module=$root/../echo-nginx-module \
             --add-module=$root/../memc-nginx-module \
             --add-module=$root/../headers-more-nginx-module \
-            --add-module=$root/../stream-echo-nginx-module \
             --add-module=$root $opts \
             --with-poll_module \
             --without-http_ssi_module \

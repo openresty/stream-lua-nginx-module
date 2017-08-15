@@ -53,7 +53,9 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                       "lua: failed to create new coroutine to handle request");
 
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+
+        return NGX_ERROR;
+
     }
 
     /*  move code closure to new coroutine */
@@ -77,7 +79,9 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
     if (ctx->cleanup == NULL) {
         cln = ngx_stream_lua_cleanup_add(r, 0);
         if (cln == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+
+            return NGX_ERROR;
+
         }
 
         cln->handler = ngx_stream_lua_request_cleanup_handler;
@@ -98,9 +102,7 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
     if (llcf->check_client_abort) {
         r->read_event_handler = ngx_stream_lua_rd_check_broken_connection;
 
-#if (NGX_HTTP_V2)
-        if (!r->stream) {
-#endif
+
 
         rev = r->connection->read;
 
@@ -110,9 +112,7 @@ ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
             }
         }
 
-#if (NGX_HTTP_V2)
-        }
-#endif
+
 
     } else {
         r->read_event_handler = ngx_stream_lua_block_reading;
@@ -271,7 +271,9 @@ ngx_stream_lua_content_handler_inline(ngx_stream_lua_request_t *r)
                                        (const char *)
                                        llcf->content_chunkname);
     if (rc != NGX_OK) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+
+        return NGX_ERROR;
+
     }
 
     return ngx_stream_lua_content_by_chunk(L, r);

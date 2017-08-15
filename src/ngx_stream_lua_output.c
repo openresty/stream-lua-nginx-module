@@ -496,15 +496,6 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         return 2;
     }
 
-    if (ctx->buffering) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                       "lua http 1.0 buffering makes ngx.flush() a no-op");
-
-        lua_pushnil(L);
-        lua_pushliteral(L, "buffering");
-        return 2;
-    }
-
 
 
     cl = ngx_stream_lua_get_flush_chain(r, ctx);
@@ -530,7 +521,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
     wev = r->connection->write;
 
 
-    if (wait || wev->delayed)
+    if (wait && wev->delayed)
 
     {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
@@ -552,6 +543,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         if (!wev->delayed) {
             ngx_add_timer(wev, cllscf->send_timeout);
         }
+
 
         if (ngx_handle_write_event(wev, cllscf->send_lowat) != NGX_OK) {
             if (wev->timer_set) {

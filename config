@@ -334,6 +334,8 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
                 $ngx_addon_dir/src/ngx_stream_lua_misc.c \
                 $ngx_addon_dir/src/ngx_stream_lua_initby.c \
                 $ngx_addon_dir/src/ngx_stream_lua_initworkerby.c \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_tcp.c \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_udp.c \
                 "
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
@@ -369,6 +371,8 @@ NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
                 $ngx_addon_dir/src/ngx_stream_lua_misc.h \
                 $ngx_addon_dir/src/ngx_stream_lua_initby.h \
                 $ngx_addon_dir/src/ngx_stream_lua_initworkerby.h \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_tcp.h \
+                $ngx_addon_dir/src/ngx_stream_lua_socket_udp.h \
                 "
 
 ngx_feature="export symbols by default (-E)"

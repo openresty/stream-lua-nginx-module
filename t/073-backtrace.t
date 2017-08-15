@@ -51,12 +51,12 @@ attempt to call global 'lua_concat'
 --- stream_response
 --- error_log eval
 [
-'stream lua entry thread aborted: runtime error: unknown reason',
+'lua entry thread aborted: runtime error: unknown reason',
 'stack traceback:',
 " in function 'error'",
 ": in function 'bar'",
 ":5: in function 'foo'",
-qr/:7: in function <content_by_lua_block\(nginx\.conf:\d+\):1>/,
+qr/:7: in function <content_by_lua\(nginx\.conf:\d+\):1>/,
 ]
 
 

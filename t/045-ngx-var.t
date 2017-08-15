@@ -102,13 +102,13 @@ value: nil
 
 
 
-=== TEST 7: variable name is *not* caseless
+=== TEST 7: variable name is caseless
 --- stream_server_config
     content_by_lua_block {
         ngx.say("value: ", ngx.var.REMOTE_ADDR)
     }
 --- stream_response
-value: nil
+value: 127.0.0.1
 
 
 
@@ -130,4 +130,4 @@ bad variable name
     }
 --- stream_response
 --- error_log
-can not set variable
+variable "foo" not found for writing
