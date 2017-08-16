@@ -25,7 +25,7 @@ env:
     - LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
     - LUAJIT_INC=$LUAJIT_PREFIX/include/luajit-2.1
     - LUA_INCLUDE_DIR=$LUAJIT_INC
-    - PCRE_VER=8.33
+    - PCRE_VER=8.40
     - PCRE_PREFIX=/opt/pcre
     - PCRE_LIB=$PCRE_PREFIX/lib
     - PCRE_INC=$PCRE_PREFIX/include
@@ -33,8 +33,7 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.9.15
-    - NGINX_VERSION=1.11.2
+    - NGINX_VERSION=1.13.3
 
 services:
  - memcache
@@ -44,7 +43,7 @@ install:
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
   - git clone https://github.com/openresty/nginx-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
-  - git clone https://github.com/openresty/openresty.git ../openresty
+  - git clone -b 1.13.x https://github.com/openresty/openresty.git ../openresty
   - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
   - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
   - git clone https://github.com/openresty/mockeagain.git
@@ -54,7 +53,6 @@ install:
   - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
   - git clone https://github.com/openresty/memc-nginx-module.git ../memc-nginx-module
   - git clone https://github.com/openresty/headers-more-nginx-module.git ../headers-more-nginx-module
-  - git clone https://github.com/openresty/stream-echo-nginx-module.git ../stream-echo-nginx-module
 
 script:
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
