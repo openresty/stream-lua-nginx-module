@@ -9,6 +9,11 @@
 #define _NGX_STREAM_LUA_COMMON_H_INCLUDED_
 
 
+
+#define NGX_LUA_NO_FFI_API
+
+
+
 #include <nginx.h>
 #include <ngx_core.h>
 #include <ngx_stream.h>
