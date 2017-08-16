@@ -156,7 +156,7 @@ cc3: 2
 
 === TEST 3: basic coroutine and cosocket
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         function worker(url)
             local sock = ngx.socket.tcp()
@@ -347,7 +347,7 @@ successfully connected to: openresty.org
 
 === TEST 7: coroutine wrap and cosocket
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         function worker(url)
             local sock = ngx.socket.tcp()
@@ -775,12 +775,12 @@ chunk: true
 
 --- config
 --- stream_response eval
-qr/^child: resume: falsecontent_by_lua_block\(nginx\.conf:\d+\):4: bad
+qr/^child: resume: falsecontent_by_lua\(nginx\.conf:\d+\):4: bad
 child: status: dead
 parent: status: running
 $/s
 --- error_log eval
-qr/stream lua coroutine: runtime error: content_by_lua_block\(nginx\.conf:\d+\):4: bad/
+qr/lua coroutine: runtime error: content_by_lua\(nginx\.conf:\d+\):4: bad/
 
 
 
@@ -861,7 +861,7 @@ test10
 --- stream_config
     init_by_lua_block { return }
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         function worker(url)
             local sock = ngx.socket.tcp()
@@ -913,7 +913,7 @@ successfully connected to: agentzh.org
     init_by_lua_file html/init.lua;
 
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         function worker(url)
             local sock = ngx.socket.tcp()

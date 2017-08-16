@@ -556,7 +556,7 @@ if not from then
 end
 
 --- stream_response
-error: pcre_exec() failed: -8
+failed to match.
 --- no_error_log
 [error]
 

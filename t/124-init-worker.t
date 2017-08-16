@@ -283,7 +283,9 @@ lua tcp socket read timeout: 60000
         warn("foo = ", ngx.ctx.foo)
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- grep_error_log eval: qr/warn\(\): [^,]*/
@@ -300,7 +302,9 @@ warn(): foo = hello world
         print("md5 = ", ngx.md5("hello world"))
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -320,7 +324,9 @@ md5 = 5eb63bbbe01eeed093cb22bb8f5acdc3
         warn(ngx.unescape_uri("hello%20world"))
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -341,7 +347,9 @@ warn(): hello world
         warn(ngx.escape_uri("hello world"))
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -362,7 +370,9 @@ warn(): hello%20world
         warn((ngx.re.sub("hello world", "world", "XXX", "jo")))
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -383,7 +393,9 @@ warn(): hello XXX
         warn("time: ", ngx.time())
     }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -397,8 +409,8 @@ qr/warn\(\): time: \d+/
 === TEST 13: cosocket with resolver
 --- timeout: 10
 --- stream_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_resolver_timeout 3s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
 
     init_worker_by_lua_block {
         -- global
@@ -630,7 +642,9 @@ qq!
     }
 !
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log
@@ -675,7 +689,9 @@ This also affects merge_loc_conf
 --- stream_config
     init_worker_by_lua_block { return }
 --- stream_server_config
-    echo ok;
+    content_by_lua_block {
+        ngx.say('ok')
+    }
 --- stream_response
 ok
 --- no_error_log

@@ -521,7 +521,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
     wev = r->connection->write;
 
 
-    if (wait && wev->delayed)
+    if (wait && (r->connection->buffered || wev->delayed))
 
     {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
@@ -595,11 +595,7 @@ ngx_stream_lua_ngx_eof(lua_State *L)
         return luaL_error(L, "no ctx found");
     }
 
-    if (ctx->acquired_raw_req_socket) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "raw request socket acquired");
-        return 2;
-    }
+
 
     if (ctx->eof) {
         lua_pushnil(L);

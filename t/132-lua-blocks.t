@@ -331,18 +331,20 @@ hello, world!
 
 
 
-=== TEST 15: content_by_lua_block (unexpected closing long brackets)
---- stream_server_config
-    content_by_lua_block {
-        ]=]
-    }
-
+=== TEST 15: content_by_lua_block unexpected closing long brackets ignored (GitHub #748)
 --- config
+    location = /t {
+        content_by_lua_block {
+            local t1, t2 = {"hello world"}, {1}
+            ngx.say(t1[t2[1]])
+        }
+    }
+--- request
+GET /t
+--- response_body
+hello world
 --- no_error_log
 [error]
---- error_log eval
-qr{\[emerg\] .*? unexpected lua closing long-bracket in .*?/nginx\.conf:22}
---- must_die
 
 
 

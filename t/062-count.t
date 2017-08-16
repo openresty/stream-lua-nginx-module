@@ -30,7 +30,7 @@ __DATA__
         ngx.say("ngx: ", n)
     }
 --- stream_response
-ngx: 56
+ngx: 59
 --- no_error_log
 [error]
 
@@ -62,7 +62,7 @@ n = 1
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 3
+n = 4
 --- no_error_log
 [error]
 
@@ -101,7 +101,7 @@ n = 10
         assert(ngx.say("n = ", n))
     }
 --- stream_response
-n = 5
+n = 6
 --- no_error_log
 [error]
 
@@ -121,7 +121,7 @@ n = 5
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 13
+n = 18
 --- no_error_log
 [error]
 
@@ -137,7 +137,7 @@ n = 13
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 3
+n = 4
 --- no_error_log
 [error]
 
@@ -276,6 +276,6 @@ n = 6
         end
     }
 --- stream_response
-n = 5
+n = 6
 --- no_error_log
 [error]

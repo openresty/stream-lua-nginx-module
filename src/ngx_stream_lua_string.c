@@ -48,8 +48,8 @@ static int ngx_stream_lua_ngx_decode_base64(lua_State *L);
 static int ngx_stream_lua_ngx_encode_base64(lua_State *L);
 static int ngx_stream_lua_ngx_crc32_short(lua_State *L);
 static int ngx_stream_lua_ngx_crc32_long(lua_State *L);
-
-
+static int ngx_stream_lua_ngx_encode_args(lua_State *L);
+static int ngx_stream_lua_ngx_decode_args(lua_State *L);
 
 #if (NGX_OPENSSL)
 static int ngx_stream_lua_ngx_hmac_sha1(lua_State *L);
@@ -65,7 +65,11 @@ ngx_stream_lua_inject_string_api(lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_ngx_unescape_uri);
     lua_setfield(L, -2, "unescape_uri");
 
+    lua_pushcfunction(L, ngx_stream_lua_ngx_encode_args);
+    lua_setfield(L, -2, "encode_args");
 
+    lua_pushcfunction(L, ngx_stream_lua_ngx_decode_args);
+    lua_setfield(L, -2, "decode_args");
 
     lua_pushcfunction(L, ngx_stream_lua_ngx_quote_sql_str);
     lua_setfield(L, -2, "quote_sql_str");
@@ -574,7 +578,55 @@ ngx_stream_lua_ngx_crc32_long(lua_State *L)
 }
 
 
+static int
+ngx_stream_lua_ngx_encode_args(lua_State *L)
+{
+    ngx_str_t                    args;
 
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "expecting 1 argument but seen %d",
+                          lua_gettop(L));
+    }
+
+    luaL_checktype(L, 1, LUA_TTABLE);
+    ngx_stream_lua_process_args_option(NULL, L, 1, &args);
+    lua_pushlstring(L, (char *) args.data, args.len);
+    return 1;
+}
+
+
+static int
+ngx_stream_lua_ngx_decode_args(lua_State *L)
+{
+    u_char                      *buf;
+    u_char                      *tmp;
+    size_t                       len = 0;
+    int                          n;
+    int                          max;
+
+    n = lua_gettop(L);
+
+    if (n != 1 && n != 2) {
+        return luaL_error(L, "expecting 1 or 2 arguments but seen %d", n);
+    }
+
+    buf = (u_char *) luaL_checklstring(L, 1, &len);
+
+    if (n == 2) {
+        max = luaL_checkint(L, 2);
+        lua_pop(L, 1);
+
+    } else {
+        max = NGX_STREAM_LUA_MAX_ARGS;
+    }
+
+    tmp = lua_newuserdata(L, len);
+    ngx_memcpy(tmp, buf, len);
+
+    lua_createtable(L, 0, 4);
+
+    return ngx_stream_lua_parse_args(L, tmp, tmp + len, max);
+}
 
 
 #if (NGX_OPENSSL)

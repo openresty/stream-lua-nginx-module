@@ -19,7 +19,7 @@ __DATA__
 
 === TEST 1: log socket errors off (tcp)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_socket_connect_timeout 1ms;
     lua_socket_log_errors off;
     content_by_lua_block {
@@ -38,7 +38,7 @@ timeout
 
 === TEST 2: log socket errors on (tcp)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_socket_connect_timeout 1ms;
     lua_socket_log_errors on;
     content_by_lua_block {
@@ -57,7 +57,7 @@ lua tcp socket connect timed out
 
 === TEST 3: log socket errors on (udp)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_socket_log_errors on;
     lua_socket_read_timeout 1ms;
     content_by_lua_block {
@@ -77,7 +77,7 @@ lua udp socket read timed out
 
 === TEST 4: log socket errors off (udp)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_socket_log_errors off;
     lua_socket_read_timeout 1ms;
     content_by_lua_block {

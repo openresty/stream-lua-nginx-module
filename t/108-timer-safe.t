@@ -63,7 +63,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -110,7 +110,7 @@ registered timer
 --- error_log eval
 [
 qr/\[lua\] .*? my lua timer handler/,
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -350,7 +350,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]

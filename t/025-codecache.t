@@ -586,7 +586,7 @@ stream lua decrementing the reference count for Lua VM: 3
 --- error_log eval
 [
 "lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 "trace: [m][f][g]",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua close the global Lua VM",
@@ -628,7 +628,7 @@ decrementing the reference count for Lua VM: 3
 --- error_log eval
 [
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua close the global Lua VM",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -688,7 +688,7 @@ registered timer
 [
 "stream lua: 1 lua_max_running_timers are not enough",
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -759,7 +759,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 --- stream_response
 registered timer
 
---- wait: 0.1
+--- wait: 0.2
 --- no_error_log
 [error]
 stream lua decrementing the reference count for Lua VM: 4
@@ -767,7 +767,7 @@ stream lua decrementing the reference count for Lua VM: 4
 --- error_log eval
 [
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 "trace: [m][f][g]",
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -952,7 +952,7 @@ registered timer
 [
 "stream lua: 1 lua_max_running_timers are not enough",
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",

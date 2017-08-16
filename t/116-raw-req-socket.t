@@ -200,8 +200,8 @@ ab
 --- wait: 0.1
 --- error_log
 stream lua tcp socket read timed out
-server: 1: failed to receive: timeout, received: ab while
-server: 2: failed to receive: timeout, received:  while
+server: 1: failed to receive: timeout, received: ab
+server: 2: failed to receive: timeout, received: 
 --- no_error_log
 [alert]
 

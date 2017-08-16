@@ -231,7 +231,7 @@ M(http-lua-info) {
 
 --- stream_response
 --- error_log eval
-qr/content_by_lua_block\(nginx\.conf:\d+\):9: bad session/
+qr/content_by_lua\(nginx\.conf:\d+\):9: bad request/
 
 
 
@@ -281,7 +281,7 @@ function get_udp(port)
 end
 --- stream_response
 --- error_log eval
-qr/content_by_lua_block\(nginx\.conf:\d+\):7: bad session/
+qr/content_by_lua\(nginx\.conf:\d+\):7: bad request/
 
 
 
@@ -519,7 +519,7 @@ lua udp socket receive buffer size: 8192
 
 === TEST 11: access the google DNS server (using domain names)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         -- avoid flushing google in "check leak" testing mode:
         local counter = package.loaded.counter
@@ -677,7 +677,7 @@ end
 peer set
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad session/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]
@@ -723,7 +723,7 @@ end
 peer set
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad session/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]
@@ -772,7 +772,7 @@ end
 peer set
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad session/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 --- no_error_log
 [alert]
@@ -818,7 +818,7 @@ end
 peer set
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad session/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 --- no_error_log
 [alert]
@@ -863,7 +863,7 @@ end
 peer set
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad session/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]

@@ -45,7 +45,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -82,7 +82,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -119,7 +119,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -156,7 +156,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -193,7 +193,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -233,7 +233,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[error\] .*? runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
+qr/\[error\] .*? runtime error: content_by_lua\(nginx\.conf:\d+\):3: API disabled in the context of ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]

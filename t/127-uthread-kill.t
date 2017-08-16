@@ -129,7 +129,7 @@ lua clean up the timer for pending ngx.sleep
 
 === TEST 3: kill pending resolver
 --- stream_server_config
-    lua_resolver agentzh.org:12345;
+    resolver agentzh.org:12345;
     content_by_lua_block {
         function f()
             local sock = ngx.socket.tcp()
@@ -177,7 +177,7 @@ resolve name done: -2
 
 === TEST 4: kill pending connect
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local ready = false
         function f()

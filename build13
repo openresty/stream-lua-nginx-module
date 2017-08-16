@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#export NGX_BUILD_DISABLE_NO_POOL=1
+#export NGX_BUILD_NO_DEBUG=1
+
+#export NGX_BUILD_CC_OPTS="-I/opt/systemtap/include"
+#export NGX_BUILD_DTRACE=1
+
+#export LIBDRIZZLE_INC=/opt/drizzle/include/libdrizzle-1.0
+#export LIBDRIZZLE_LIB=/opt/drizzle/lib
+
+#export LUAJIT_LIB=/usr/local/openresty-debug/luajit/lib
+#export LUAJIT_INC=/usr/local/openresty-debug/luajit/include/luajit-2.1
+
+export LUAJIT_LIB=/home/datong/openresty-build/luajit/lib
+export LUAJIT_INC=/home/datong/openresty-build/luajit/include/luajit-2.1
+
+#export LUAJIT_LIB=/opt/luajit21/lib
+#export LUAJIT_INC=/opt/luajit21/include/luajit-2.1
+
+#export PCRE_LIB=/opt/pcre833jit/lib
+#export PCRE_INC=/opt/pcre833jit/include
+
+#export NGX_BUILD_CC=clang
+export CCACHE_BASEDIR=$PWD
+#export NGX_BUILD_CC="ccache gcc"
+export NGX_BUILD_CC="gcc"
+export NGX_BUILD_OPT=-O1
+export NGX_BUILD_CC_OPTS="-DNGX_LUA_USE_ASSERT" # -I/opt/ssl/include"
+export NGX_BUILD_JOBS=8
+#export NGX_BUILD_JOBS=1
+
+#time ./util/build.sh 1.9.15
+#time ./util/build.sh 1.11.2
+time ./util/build.sh 1.13.3

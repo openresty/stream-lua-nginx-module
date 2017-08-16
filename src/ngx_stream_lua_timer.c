@@ -16,6 +16,11 @@
 #include "ngx_stream_lua_probe.h"
 
 
+
+
+
+
+
 typedef struct {
     void        **main_conf;
     void        **srv_conf;
@@ -553,7 +558,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                   "lua ngx.timer expired");
+                   "stream lua ngx.timer expired");
 
     ngx_memcpy(&tctx, ev->data, sizeof(ngx_stream_lua_timer_ctx_t));
     ngx_free(ev);
@@ -573,7 +578,9 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     if (lmcf->running_timers >= lmcf->max_running_timers) {
         ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-                      "%i lua_max_running_timers are not enough",
+
+                      "stream lua: %i lua_max_running_timers are not enough",
+
                       lmcf->max_running_timers);
         goto failed;
     }
@@ -897,7 +904,7 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
     ngx_event_timer_rbtree.root->parent = temp;
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                   "lua found %i pending timers to be aborted prematurely",
+                   "stream lua found %i pending timers to be aborted prematurely",
                    n);
 
     for (i = 0; i < n; i++) {

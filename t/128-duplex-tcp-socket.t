@@ -339,7 +339,7 @@ F(ngx_http_lua_socket_tcp_finalize_write_part) {
 === TEST 5: concurrent socket operations while connecting
 --- stream_server_config
     lua_socket_log_errors off;
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
 
@@ -399,8 +399,8 @@ close: nil closed
 === TEST 6: concurrent operations while resolving
 --- stream_server_config
     lua_socket_log_errors off;
-    lua_resolver agentzh.org:12345;
-    lua_resolver_timeout 300ms;
+    resolver agentzh.org:12345;
+    resolver_timeout 300ms;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
 

@@ -40,12 +40,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     ngx_stream_lua_ctx_t      *ctx;
     ngx_stream_conf_ctx_t     *conf_ctx, stream_ctx;
 
-
-    ngx_stream_core_srv_conf_t  *cscf;
-
-
-
-
     ngx_stream_lua_main_conf_t    *lmcf;
 
 
@@ -53,7 +47,8 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
 
 
-    ngx_stream_core_srv_conf_t    *clcf;
+    ngx_stream_core_srv_conf_t    *clcf, *top_clcf;
+    ngx_stream_lua_srv_conf_t     *llcf, *top_llcf;
 
 
     lmcf = ngx_stream_cycle_get_module_main_conf(cycle, ngx_stream_lua_module);
@@ -69,6 +64,9 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
                cycle->conf_ctx[ngx_stream_module.index];
     stream_ctx.main_conf = conf_ctx->main_conf;
 
+
+    top_clcf = conf_ctx->srv_conf[ngx_stream_core_module.ctx_index];
+    top_llcf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
 
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
@@ -204,10 +202,10 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
             if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
             {
-                cscf = cur;
+                clcf = cur;
                 /* just to silence the error in
                  * ngx_stream_core_merge_srv_conf */
-                cscf->handler = ngx_stream_lua_content_handler;
+                clcf->handler = ngx_stream_lua_content_handler;
             }
 
 
@@ -247,6 +245,20 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     s->srv_conf = stream_ctx.srv_conf;
 
     clcf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
+
+    llcf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
+
+    if (top_llcf->log_socket_errors != NGX_CONF_UNSET) {
+        llcf->log_socket_errors = top_llcf->log_socket_errors;
+    }
+
+    if (top_clcf->resolver != NULL) {
+        clcf->resolver = top_clcf->resolver;
+    }
+
+    if (top_clcf->resolver_timeout != NGX_CONF_UNSET_MSEC) {
+        clcf->resolver_timeout = top_clcf->resolver_timeout;
+    }
 
 
 #if defined(nginx_version) && nginx_version >= 1003014

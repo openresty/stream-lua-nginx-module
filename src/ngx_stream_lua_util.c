@@ -38,6 +38,12 @@
 #include "ngx_stream_lua_timer.h"
 #include "ngx_stream_lua_config.h"
 #include "ngx_stream_lua_worker.h"
+#include "ngx_stream_lua_ssl.h"
+
+
+
+
+
 
 
 
@@ -1095,7 +1101,7 @@ user_co_done:
             if (ctx->cur_co_ctx->is_uthread) {
 
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                              "lua user thread aborted: %s: %s\n%s",
+                              "stream lua user thread aborted: %s: %s\n%s",
                               err, msg, trace);
 
                 lua_settop(L, 0);
@@ -1301,6 +1307,20 @@ ngx_stream_lua_wev_handler(ngx_stream_lua_request_t *r)
     }
 
 
+    if (c->buffered) {
+
+
+        rc = ngx_stream_lua_flush_pending_output(r, ctx);
+
+        dd("flush pending output returned %d, c->error: %d", (int) rc,
+           c->error);
+
+        if (rc != NGX_ERROR && rc != NGX_OK) {
+            goto useless;
+        }
+
+        /* when rc == NGX_ERROR, c->error must be set */
+    }
 
 flush_coros:
 
@@ -1444,6 +1464,38 @@ ngx_stream_lua_flush_pending_output(ngx_stream_lua_request_t *r,
     }
 
 
+    if (c->buffered) {
+
+        cllscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
+
+
+        if (!wev->delayed) {
+            ngx_add_timer(wev, cllscf->send_timeout);
+        }
+
+        if (ngx_handle_write_event(wev, cllscf->send_lowat) != NGX_OK) {
+            if (ctx->entered_content_phase) {
+                ngx_stream_lua_finalize_request(r, NGX_ERROR);
+            }
+
+            return NGX_ERROR;
+        }
+
+        if (ctx->flushing_coros) {
+            ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                           "lua flush still waiting: buffered 0x%uxd",
+                           c->buffered);
+
+            return NGX_DONE;
+        }
+
+    } else {
+#if 1
+        if (wev->timer_set && !wev->delayed) {
+            ngx_del_timer(wev);
+        }
+#endif
+    }
 
     return NGX_OK;
 }
@@ -2842,7 +2894,7 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
     ev->eof = 1;
 
     ngx_log_error(NGX_LOG_INFO, ev->log, err,
-                  "client prematurely closed connection");
+                  "stream client prematurely closed connection");
 
 
     return NGX_ERROR;
@@ -2995,7 +3047,10 @@ ngx_stream_lua_finalize_fake_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 {
     ngx_connection_t          *c;
 
-
+#if (NGX_STREAM_SSL)
+    ngx_ssl_conn_t            *ssl_conn;
+    ngx_stream_lua_ssl_ctx_t    *cctx;
+#endif
 
     c = r->connection;
 
@@ -3005,7 +3060,9 @@ ngx_stream_lua_finalize_fake_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 
 
     if (rc == NGX_DONE) {
-        ngx_stream_lua_close_fake_request(r);
+
+
+
         return;
     }
 
@@ -3013,7 +3070,23 @@ ngx_stream_lua_finalize_fake_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
     if (rc == NGX_ERROR) {
 
 
+#if (NGX_STREAM_SSL)
 
+        if (r->connection->ssl) {
+            ssl_conn = r->connection->ssl->connection;
+            if (ssl_conn) {
+                c = ngx_ssl_get_connection(ssl_conn);
+
+                if (c && c->ssl) {
+                    cctx = ngx_stream_lua_ssl_get_ctx(c->ssl->connection);
+                    if (cctx != NULL) {
+                        cctx->exit_code = 0;
+                    }
+                }
+            }
+        }
+
+#endif
 
         ngx_stream_lua_close_fake_request(r);
         return;
@@ -3061,11 +3134,11 @@ ngx_stream_lua_free_fake_request(ngx_stream_lua_request_t *r)
 
     log = r->connection->log;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, log, 0, "http lua close fake "
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, log, 0, "stream lua close fake "
                    "request");
 
     if (r->pool == NULL) {
-        ngx_log_error(NGX_LOG_ALERT, log, 0, "http lua fake request "
+        ngx_log_error(NGX_LOG_ALERT, log, 0, "stream lua fake request "
                       "already closed");
         return;
     }
@@ -3094,7 +3167,7 @@ ngx_stream_lua_close_fake_connection(ngx_connection_t *c)
     ngx_connection_t    *saved_c = NULL;
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                   "http lua close fake http connection %p", c);
+                   "stream lua close fake stream connection %p", c);
 
     c->destroyed = 1;
 
@@ -3212,7 +3285,7 @@ ngx_stream_lua_cleanup_vm(void *data)
 
     if (state) {
         ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                       "lua decrementing the reference count for Lua VM: %i",
+                       "stream lua decrementing the reference count for Lua VM: %i",
                        state->count);
 
         if (--state->count == 0) {
@@ -3221,7 +3294,7 @@ ngx_stream_lua_cleanup_vm(void *data)
             ngx_stream_lua_cleanup_conn_pools(L);
 
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                           "lua close the global Lua VM %p", L);
+                           "stream lua close the global Lua VM %p", L);
             lua_close(L);
             ngx_free(state);
         }
@@ -3454,7 +3527,7 @@ ngx_stream_lua_cleanup_free(ngx_stream_lua_request_t *r,
             ctx->free_cleanup = cln;
 
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                           "lua http cleanup free: %p", cln);
+                           "lua stream cleanup free: %p", cln);
 
             return;
         }

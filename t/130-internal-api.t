@@ -32,7 +32,7 @@ __DATA__
         end
         ngx.say(string.format("init: cycle=%#x", tonum(my_cycle)))
         ngx.say(string.format("content cycle=%#x", tonum(__ngx_cycle)))
-        ngx.say(string.format("content req=%#x", tonum(__ngx_sess)))
+        ngx.say(string.format("content req=%#x", tonum(__ngx_req)))
     }
 --- stream_response_like chop
 ^init: cycle=(0x[a-f0-9]{4,})
