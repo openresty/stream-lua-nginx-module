@@ -137,26 +137,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
 
-In addition, `ngx_stream_lua_module` provides the following directives:
-
-* `lua_resolver`
-
-    Just an equivalent to the [resolver](http://nginx.org/r/resolver) directive in the NGINX "http" subsystem.
-* `lua_resolver_timeout`
-
-    Just an equivalent to the [resolver_timeout](http://nginx.org/r/resolver_timeout) directive in the NGINX "http" subsystem.
-* `lua_lingering_close`
-
-    Just an equivalent to the [lingering_close](http://nginx.org/r/lingering_close) directive in the NGINX "http" subsystem.
-* `lua_lingering_time`
-
-    Just an equivalent to the [lingering_time](http://nginx.org/r/lingering_time) directive in the NGINX "http" subsystem.
-
-* `lua_lingering_timeout`
-
-    Just an equivalent to the [lingering_timeout](http://nginx.org/r/lingering_timeout) directive in the NGINX "http" subsystem.
-
-The [send_timeout](http://nginx.org/r/send_timeout) directive in the NGINX "http" subsystem is missing in the "stream" subsystem.
+The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
 So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
 
 [Back to TOC](#table-of-contents)
@@ -167,21 +148,11 @@ Nginx API for Lua
 Many Lua API functions are ported from the `ngx_http_lua_module`. Check out the official manual of
 `ngx_http_lua_module` for more details on these Lua API functions.
 
-* ngx.var.VARIABLE
+* [ngx.var.VARIABLE](https://github.com/openresty/lua-nginx-module#ngxvarvariable)
 
-    Unlike the "http" subsystem, the "stream" subsystem of the NGINX core does not support NGINX
-variables at all. But still we emulate some of the NGINX builtin variables in this `ngx.var` API
-for compatibility with `ngx_http_lua_module` and ease of extracting certain session-wise information.
-Currently the following "variables" are supported:
-
-    * `ngx.var.pid` for [$pid](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_pid)
-    * `ngx.var.connection` for [$connection](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_connection)
-    * `ngx.var.remote_addr` for [$remote_addr](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_remote_addr)
-    * `ngx.var.binary_remote_addr` for [$binary_remote_addr](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_binary_remote_addr)
-    * `ngx.var.remote_port` for [$remote_port](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_remote_port)
-    * `ngx.var.nginx_version` for [$nginx_version](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_nginx_version)
-    * `ngx.var.server_addr` for [$server_addr](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_server_addr)
-    * `ngx.var.server_port` for [$server_port](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_server_port)
+This module fully supports the new variable subsystem inside the NGINX stream core. You may access any
+[built-in variables](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#variables) provided by the stream core or
+other stream modules.
 * [Core constants](https://github.com/openresty/lua-nginx-module#core-constants)
 
     `ngx.OK`, `ngx.ERROR`, and etc.
@@ -270,6 +241,7 @@ TODO
 * Add new directives `log_by_lua_block` and `log_by_lua_file`.
 * Add new directives `balancer_by_lua_block` and `balancer_by_lua_file`.
 * Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
+* Port `lua_lingering_close`, `lua_lingering_time` and `lua_lingering_timeout` directives over.
 * Add `ngx.semaphore` API.
 * Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
 of `lua_shared_dict`.
@@ -283,9 +255,9 @@ Nginx Compatibility
 
 The latest version of this module is compatible with the following versions of Nginx:
 
-* 1.9.x >= 1.9.7 (last tested: 1.9.7)
+* 1.13.x >= 1.13.3 (last tested: 1.13.3)
 
-Nginx cores older than 1.9.7 (exclusive) are *not* supported.
+Nginx cores older than 1.13.3 (exclusive) are *not* tested and may or may not work. Use at your own risk!
 
 [Back to TOC](#table-of-contents)
 
@@ -294,20 +266,16 @@ Installation
 
 This module can be manually compiled into Nginx or OpenResty:
 
-1. Install LuaJIT 2.0 or 2.1 (recommended) or Lua 5.1 (Lua 5.2+ are *not* supported yet). LuaJIT can be downloaded from the [the LuaJIT project website](http://luajit.org/download.html) and Lua 5.1, from the [Lua project website](http://www.lua.org/).  Some distribution package managers also distribute LuaJIT and/or Lua.
+1. Install LuaJIT 2.1 or Lua 5.1 (Lua 5.2+ are *not* supported yet). LuaJIT can be downloaded from the [the LuaJIT project website](http://luajit.org/download.html) and Lua 5.1, from the [Lua project website](http://www.lua.org/).  Some distribution package managers also distribute LuaJIT and/or Lua.
 1. Download the latest version of ngx_stream_lua [HERE](https://github.com/openresty/stream-lua-nginx-module/tags).
 1. Download the latest supported version of NGINX [HERE](http://nginx.org/) (See [Nginx Compatibility](#nginx-compatibility)) or the OpenResty bundle from [HERE](https://openresty.org/).
 
 Build the source of NGINX or OpenResty with this module, like below:
 
 ```bash
-wget 'http://nginx.org/download/nginx-1.9.7.tar.gz'
-tar -xzvf nginx-1.9.7.tar.gz
-cd nginx-1.9.7/
-
-# tell nginx's build system where to find LuaJIT 2.0:
-export LUAJIT_LIB=/path/to/luajit/lib
-export LUAJIT_INC=/path/to/luajit/include/luajit-2.0
+wget 'http://nginx.org/download/nginx-1.13.3.tar.gz'
+tar -xzvf nginx-1.13.3.tar.gz
+cd nginx-1.13.3/
 
 # tell nginx's build system where to find LuaJIT 2.1:
 export LUAJIT_LIB=/path/to/luajit/lib
@@ -323,7 +291,14 @@ export LUAJIT_INC=/path/to/luajit/include/luajit-2.1
         --with-stream \
         --with-stream_ssl_module \
         --add-module=/path/to/stream-lua-nginx-module
+
+# Build and install
+make -j4
+make install
 ```
+
+You may use `--without-http` if you do not wish to use this module with the HTTP subsystem.
+ngx_stream_lua will work perfectly fine without the presense of the HTTP subsystem.
 
 [Back to TOC](#table-of-contents)
 
