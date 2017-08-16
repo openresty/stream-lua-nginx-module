@@ -102,6 +102,14 @@ void
 ngx_stream_lua_sleep_handler(ngx_event_t *ev)
 {
 
+#if (NGX_DEBUG)
+
+
+    ngx_connection_t        *c;
+
+
+#endif
+
 
     ngx_stream_lua_request_t      *r;
     ngx_stream_lua_ctx_t      *ctx;
@@ -114,6 +122,14 @@ ngx_stream_lua_sleep_handler(ngx_event_t *ev)
 
     r = coctx->data;
 
+
+#if (NGX_DEBUG)
+
+
+    c = r->connection;
+
+
+#endif
 
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);

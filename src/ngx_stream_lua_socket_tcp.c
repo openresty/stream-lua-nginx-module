@@ -780,6 +780,14 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
     ngx_stream_lua_request_t                      *r;
 
 
+#if (NGX_DEBUG)
+
+
+    ngx_connection_t                    *c;
+
+
+#endif
+
 
     ngx_stream_upstream_resolved_t        *ur;
     ngx_stream_lua_ctx_t                  *lctx;
@@ -799,6 +807,14 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
     u = ctx->data;
     r = u->request;
 
+
+#if (NGX_DEBUG)
+
+
+    c = r->connection;
+
+
+#endif
 
 
     ur = u->resolved;
