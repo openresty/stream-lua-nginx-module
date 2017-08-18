@@ -23,6 +23,7 @@ Table of Contents
     * [Chinese Mailing List](#chinese-mailing-list)
 * [Code Repository](#code-repository)
 * [Bugs and Patches](#bugs-and-patches)
+* [Acknowledgments](#acknowledgments)
 * [Copyright and License](#copyright-and-license)
 * [See Also](#see-also)
 
@@ -337,6 +338,13 @@ Please submit bug reports, wishlists, or patches by
 1. or posting to the [OpenResty community](#community).
 
 [Back to TOC](#table-of-contents)
+
+Acknowledgments
+===============
+
+* We appreciate [Mashape, Inc.](https://www.mashape.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
+this module compatible with Nginx core 1.13.3. In addition, they sponsored the work on making code sharing between this module and
+[lua-nginx-module](https://github.com/openresty/lua-nginx-module) possible.
 
 Copyright and License
 =====================
