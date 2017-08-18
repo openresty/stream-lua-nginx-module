@@ -282,9 +282,13 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
 
 
     ctx = ngx_palloc(r->connection->pool, sizeof(ngx_stream_lua_ctx_t));
+    if (ctx == NULL) {
+        return NULL;
+    }
+
     sreq = ngx_stream_lua_create_request(r);
 
-    if (ctx == NULL || sreq == NULL) {
+    if (sreq == NULL) {
         return NULL;
     }
 
