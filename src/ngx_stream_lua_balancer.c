@@ -39,8 +39,7 @@ struct ngx_stream_lua_balancer_peer_data_s {
 #endif
 };
 
-
-#if (NGX_STREAM_SSL)
+#if (NGX_STREAM_SSL && HAVE_NGX_STREAM_BALANCER_EXPORT_PATCH)
 static ngx_int_t ngx_stream_lua_balancer_set_session(ngx_peer_connection_t *pc,
     void *data);
 static void ngx_stream_lua_balancer_save_session(ngx_peer_connection_t *pc,
@@ -265,8 +264,7 @@ ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
 
     upstream->peer.get = ngx_stream_lua_balancer_get_peer;
     upstream->peer.free = ngx_stream_lua_balancer_free_peer;
-
-#if (NGX_STREAM_SSL)
+#if (NGX_STREAM_SSL && HAVE_NGX_STREAM_BALANCER_EXPORT_PATCH)
     upstream->peer.set_session = ngx_stream_lua_balancer_set_session;
     upstream->peer.save_session = ngx_stream_lua_balancer_save_session;
 #endif
@@ -447,9 +445,7 @@ ngx_stream_lua_balancer_free_peer(ngx_peer_connection_t *pc, void *data,
     ngx_stream_upstream_free_round_robin_peer(pc, data, state);
 }
 
-
-#if (NGX_STREAM_SSL)
-
+#if (NGX_STREAM_SSL && HAVE_NGX_STREAM_BALANCER_EXPORT_PATCH)
 static ngx_int_t
 ngx_stream_lua_balancer_set_session(ngx_peer_connection_t *pc, void *data)
 {
