@@ -17,6 +17,7 @@
 #include "ngx_stream_lua_initby.h"
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_probe.h"
+#include "ngx_stream_lua_balancer.h"
 
 
 
@@ -217,6 +218,20 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       (void *) ngx_stream_lua_content_handler_file },
 
 
+
+    { ngx_string("balancer_by_lua_block"),
+      NGX_STREAM_UPS_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_balancer_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_balancer_handler_inline },
+
+    { ngx_string("balancer_by_lua_file"),
+      NGX_STREAM_UPS_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_balancer_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_balancer_handler_file },
 
 
     

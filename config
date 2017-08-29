@@ -338,6 +338,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
                 $ngx_addon_dir/src/ngx_stream_lua_socket_udp.c \
                 $ngx_addon_dir/src/ngx_stream_lua_args.c \
                 $ngx_addon_dir/src/ngx_stream_lua_ssl.c \
+                $ngx_addon_dir/src/ngx_stream_lua_balancer.c \
                 "
 
 NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
@@ -377,6 +378,7 @@ NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
                 $ngx_addon_dir/src/ngx_stream_lua_socket_udp.h \
                 $ngx_addon_dir/src/ngx_stream_lua_args.h \
                 $ngx_addon_dir/src/ngx_stream_lua_ssl.h \
+                $ngx_addon_dir/src/ngx_stream_lua_balancer.h \
                 "
 
 ngx_feature="export symbols by default (-E)"

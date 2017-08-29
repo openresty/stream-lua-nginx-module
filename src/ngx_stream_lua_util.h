@@ -78,6 +78,7 @@ extern char ngx_stream_lua_headers_metatable_key;
     ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
      : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                       \
      : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"       \
+     : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"             \
      : "(unknown)")
 
 

@@ -66,6 +66,7 @@ ngx_stream_lua_ngx_exit(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
+                               | NGX_STREAM_LUA_CONTEXT_BALANCER
 
         );
 
@@ -80,9 +81,10 @@ ngx_stream_lua_ngx_exit(lua_State *L)
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua exit with code %i", ctx->exit_code);
-
-
-
+    if (ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER)
+    {
+        return 0;
+    }
     dd("calling yield");
     return lua_yield(L, 0);
 }
