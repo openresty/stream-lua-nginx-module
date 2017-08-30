@@ -34,9 +34,6 @@ struct ngx_stream_lua_balancer_peer_data_s {
 
     int                                            last_peer_state;
 
-#if !(HAVE_NGX_UPSTREAM_TIMEOUT_FIELDS)
-    unsigned                                       cloned_upstream_conf;  /* :1 */
-#endif
 };
 
 #if (NGX_STREAM_SSL && HAVE_NGX_STREAM_BALANCER_EXPORT_PATCH)
@@ -268,6 +265,8 @@ ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
 
     upstream->peer.get = ngx_stream_lua_balancer_get_peer;
     upstream->peer.free = ngx_stream_lua_balancer_free_peer;
+
+    upstream->peer.notify = NULL;
 #if (NGX_STREAM_SSL && HAVE_NGX_STREAM_BALANCER_EXPORT_PATCH)
     upstream->peer.set_session = ngx_stream_lua_balancer_set_session;
     upstream->peer.save_session = ngx_stream_lua_balancer_save_session;
@@ -564,6 +563,58 @@ ngx_stream_lua_ffi_balancer_set_current_peer(ngx_stream_lua_request_t *r,
 }
 
 
+#if (NGX_STREAM_HAVE_PROXY_TIMEOUT_FIELDS_PATCH)
+int
+ngx_stream_lua_ffi_balancer_set_timeouts(ngx_stream_lua_request_t *r,
+    long connect_timeout, long timeout,
+    char **err)
+{
+    ngx_stream_lua_ctx_t     *ctx;
+    ngx_stream_proxy_ctx_t   *pctx;
+
+    if (r == NULL) {
+        *err = "no request found";
+        return NGX_ERROR;
+    }
+
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        *err = "no ctx found";
+        return NGX_ERROR;
+    }
+
+    if ((ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER) == 0) {
+        *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
+
+    pctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_proxy_module);
+    ngx_stream_lua_assert(pctx != NULL);
+    if (pctx == NULL) {
+        *err = "no proxy ctx found";
+        return NGX_ERROR;
+    }
+
+    if (connect_timeout > 0) {
+        pctx->connect_timeout = connect_timeout;
+    }
+
+    if (timeout > 0) {
+        pctx->timeout = timeout;
+    }
+
+    return NGX_OK;
+}
+#else
+int
+ngx_stream_lua_ffi_balancer_set_timeouts(ngx_stream_lua_request_t *r,
+    long connect_timeout, long timeout,
+    char **err)
+{
+    *err = "required Nginx patch not present, API disabled";
+    return NGX_ERROR;
+}
+#endif
 
 int
 ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_lua_request_t *r,
