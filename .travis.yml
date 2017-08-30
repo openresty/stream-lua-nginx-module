@@ -41,9 +41,9 @@ services:
 
 install:
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
-  - git clone https://github.com/openresty/nginx-devel-utils.git
+  - git clone -b datong/add_patches https://github.com/dndx/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
-  - git clone -b 1.13.x https://github.com/openresty/openresty.git ../openresty
+  - git clone -b datong/balancer https://github.com/dndx/openresty.git ../openresty
   - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
   - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
   - git clone https://github.com/openresty/mockeagain.git
@@ -67,7 +67,7 @@ script:
   - cd ../test-nginx && sudo cpanm . && cd ..
   - cd lua-cjson/ && make -j$JOBS && sudo make install && cd ..
   - cd mockeagain/ && make CC=$CC -j$JOBS && cd ..
-  - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
+  - export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
   - export NGX_BUILD_CC=$CC
   - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
   - nginx -V
