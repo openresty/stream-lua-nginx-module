@@ -52,8 +52,12 @@ static ngx_int_t ngx_stream_lua_balancer_init(ngx_conf_t *cf,
 
 static ngx_int_t ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
     ngx_stream_upstream_srv_conf_t *us);
+
+
+#if (HAS_NGX_STREAM_PROXY_GET_NEXT_UPSTREAM_TRIES_PATCH)
 ngx_uint_t
 ngx_stream_proxy_get_next_upstream_tries(ngx_stream_session_t *s);
+#endif
 
 
 
@@ -358,7 +362,9 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
 
         bp->rrp.peers->single = 0;
 
-        if (bp->more_tries) {            r->session->upstream->peer.tries += bp->more_tries;        }
+        if (bp->more_tries) {
+            r->session->upstream->peer.tries += bp->more_tries;
+        }
 
         dd("tries: %d", (int) r->upstream->peer.tries);
 
@@ -563,8 +569,8 @@ int
 ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_lua_request_t *r,
     int count, char **err)
 {
-#if (nginx_version >= 1007005)
-    ngx_uint_t             max_tries, total;
+#if (HAS_NGX_STREAM_PROXY_GET_NEXT_UPSTREAM_TRIES_PATCH)
+    ngx_uint_t                                     max_tries, total;
 #endif
     ngx_stream_lua_ctx_t                 *ctx;
     ngx_stream_upstream_t                *u;
@@ -600,6 +606,7 @@ ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_lua_request_t *r,
         *err = "no upstream peer data found";
         return NGX_ERROR;
     }
+#if (HAS_NGX_STREAM_PROXY_GET_NEXT_UPSTREAM_TRIES_PATCH)
     max_tries = ngx_stream_proxy_get_next_upstream_tries(r->session);
     total = bp->total_tries + u->peer.tries - 1;
 
@@ -610,6 +617,9 @@ ngx_stream_lua_ffi_balancer_set_more_tries(ngx_stream_lua_request_t *r,
     } else {
         *err = NULL;
     }
+#else
+    *err = NULL;
+#endif
     bp->more_tries = count;
     return NGX_OK;
 }
