@@ -123,6 +123,8 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
 * [content_by_lua_file](https://github.com/openresty/lua-nginx-module#content_by_lua_file)
+* [balancer_by_lua_block](https://github.com/openresty/lua-nginx-module#balancer_by_lua_block)
+* [balancer_by_lua_file](https://github.com/openresty/lua-nginx-module#balancer_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
@@ -344,7 +346,7 @@ Acknowledgments
 
 * We appreciate [Mashape, Inc.](https://www.mashape.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
 this module compatible with Nginx core 1.13.3. In addition, they sponsored the work on making code sharing between this module and
-[lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua_* support possible.
+[lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua* support possible.
 
 Copyright and License
 =====================
