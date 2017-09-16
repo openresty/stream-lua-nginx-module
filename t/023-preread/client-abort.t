@@ -1,6 +1,7 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use Test::Nginx::Socket::Lua::Stream;use t::StapThread;
+use Test::Nginx::Socket::Lua::Stream;
+use t::StapThread;
 
 our $GCScript = <<_EOC_;
 $t::StapThread::GCScript
@@ -319,7 +320,6 @@ client prematurely closed connection
     }
 
     content_by_lua return;
---- stap2 eval: $::StapScript
 --- stap2 eval: $::StapScript
 --- stap eval: $::GCScript
 --- stap_out
