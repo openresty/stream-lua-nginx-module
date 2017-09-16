@@ -2960,9 +2960,12 @@ ngx_stream_lua_rd_check_broken_connection(ngx_stream_lua_request_t *r)
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua waking up the on_abort callback thread");
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     r->write_event_handler(r);
 }

@@ -18,9 +18,10 @@
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_probe.h"
 #include "ngx_stream_lua_balancer.h"
+#include "ngx_stream_lua_logby.h"
 
 
-
+#include "ngx_stream_lua_prereadby.h"
 
 
 static void *ngx_stream_lua_create_main_conf(ngx_conf_t *cf);
@@ -186,7 +187,21 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_init_worker_by_file },
 
+    /* preread_by_lua_file rel/or/abs/path/to/script */
+    { ngx_string("preread_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_preread_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_preread_handler_file },
 
+    /* preread_by_lua_block { <inline script> } */
+    { ngx_string("preread_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_preread_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_preread_handler_inline },
 
 
     
@@ -216,6 +231,25 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       0,
       (void *) ngx_stream_lua_content_handler_file },
+
+
+
+    /* log_by_lua_block { <inline script> } */
+    { ngx_string("log_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+                        |NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_log_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_log_handler_inline },
+
+    { ngx_string("log_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+                        |NGX_CONF_TAKE1,
+      ngx_stream_lua_log_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_log_handler_file },
 
 
 
@@ -393,16 +427,53 @@ ngx_module_t ngx_stream_lua_module = {
 static ngx_int_t
 ngx_stream_lua_init(ngx_conf_t *cf)
 {
-    ngx_int_t                   rc;
-    volatile ngx_cycle_t       *saved_cycle;
+    ngx_int_t                              rc;
+    volatile ngx_cycle_t                  *saved_cycle;
     ngx_stream_lua_main_conf_t   *lmcf;
-
-
+    ngx_array_t                           *arr;
+    ngx_stream_handler_pt        *h;
+    ngx_stream_core_main_conf_t  *cmcf;
 
 
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf,
                                                          ngx_stream_lua_module);
+
+
+    cmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_core_module);
+
+    if (lmcf->requires_preread) {
+        h = ngx_array_push(&cmcf->phases[NGX_STREAM_PREREAD_PHASE].handlers);
+        if (h == NULL) {
+            return NGX_ERROR;
+        }
+
+        *h = ngx_stream_lua_preread_handler;
+    }
+
+    dd("requires log: %d", (int) lmcf->requires_log);
+
+    if (lmcf->requires_log) {
+        arr = &cmcf->phases[NGX_STREAM_LOG_PHASE].handlers;
+        h = ngx_array_push(arr);
+        if (h == NULL) {
+            return NGX_ERROR;
+        }
+
+        if (arr->nelts > 1) {
+
+            /*
+             * if there are other log handlers, move them back and put ourself
+             * to the front of the list
+             */
+
+            h = arr->elts;
+            ngx_memmove(&h[1], h,
+                        (arr->nelts - 1) * sizeof(ngx_stream_handler_pt));
+        }
+
+        *h = ngx_stream_lua_log_handler;
+    }
 
 
 
@@ -701,6 +772,13 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->log_socket_errors, prev->log_socket_errors, 1);
 
+
+    if (conf->preread_src.value.len == 0) {
+        conf->preread_src = prev->preread_src;
+        conf->preread_handler = prev->preread_handler;
+        conf->preread_src_key = prev->preread_src_key;
+        conf->preread_chunkname = prev->preread_chunkname;
+    }
 
 
     return NGX_CONF_OK;

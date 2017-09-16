@@ -139,7 +139,7 @@ ngx_stream_lua_socket_udp(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
 
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
@@ -204,7 +204,7 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
 
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
@@ -415,9 +415,12 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
 
     coctx->data = u;
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     return lua_yield(L, 0);
 }
@@ -1030,9 +1033,12 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
     coctx->cleanup = ngx_stream_lua_udp_socket_cleanup;
     coctx->data = u;
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     u->co_ctx = coctx;
     u->waiting = 1;

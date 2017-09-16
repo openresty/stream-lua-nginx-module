@@ -16,14 +16,14 @@
 #include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_cache.h"
 #include "ngx_stream_lua_contentby.h"
-
+#include "ngx_stream_lua_logby.h"
 #include "ngx_stream_lua_initby.h"
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_shdict.h"
-
 #include "ngx_stream_lua_lex.h"
 #include "api/ngx_stream_lua_api.h"
 
+#include "ngx_stream_lua_prereadby.h"
 
 
 typedef struct ngx_stream_lua_block_parser_ctx_s
@@ -222,6 +222,116 @@ ngx_stream_lua_package_path(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
 
+
+char *
+ngx_stream_lua_preread_by_lua_block(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    char        *rv;
+    ngx_conf_t   save;
+
+    save = *cf;
+    cf->handler = ngx_stream_lua_preread_by_lua;
+    cf->handler_conf = conf;
+
+    rv = ngx_stream_lua_conf_lua_block_parse(cf, cmd);
+
+    *cf = save;
+
+    return rv;
+}
+
+
+char *
+ngx_stream_lua_preread_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    u_char                                *p, *chunkname;
+    ngx_str_t                             *value;
+    ngx_stream_lua_main_conf_t            *lmcf;
+    ngx_stream_lua_srv_conf_t             *lscf = conf;
+
+    ngx_stream_compile_complex_value_t     ccv;
+
+    dd("enter");
+
+    /*  must specify a content handler */
+    if (cmd->post == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (lscf->preread_handler) {
+        return "is duplicate";
+    }
+
+    value = cf->args->elts;
+
+    if (value[1].len == 0) {
+        /*  Oops...Invalid server conf */
+        ngx_conf_log_error(NGX_LOG_ERR, cf, 0,
+                           "invalid server config: no runnable Lua code");
+
+        return NGX_CONF_ERROR;
+    }
+
+    if (cmd->post == ngx_stream_lua_preread_handler_inline) {
+        chunkname = ngx_stream_lua_gen_chunk_name(cf, "preread_by_lua",
+                                                  sizeof("preread_by_lua") - 1);
+        if (chunkname == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        lscf->preread_chunkname = chunkname;
+
+        /* Don't eval nginx variables for inline lua code */
+
+        lscf->preread_src.value = value[1];
+
+        p = ngx_palloc(cf->pool, NGX_STREAM_LUA_INLINE_KEY_LEN + 1);
+        if (p == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        lscf->preread_src_key = p;
+
+        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG, NGX_STREAM_LUA_INLINE_TAG_LEN);
+        p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
+        *p = '\0';
+
+    } else {
+        ngx_memzero(&ccv, sizeof(ngx_stream_compile_complex_value_t));
+        ccv.cf = cf;
+        ccv.value = &value[1];
+        ccv.complex_value = &lscf->preread_src;
+
+        if (ngx_stream_compile_complex_value(&ccv) != NGX_OK) {
+            return NGX_CONF_ERROR;
+        }
+
+        if (lscf->preread_src.lengths == NULL) {
+            /* no variable found */
+            p = ngx_palloc(cf->pool, NGX_STREAM_LUA_FILE_KEY_LEN + 1);
+            if (p == NULL) {
+                return NGX_CONF_ERROR;
+            }
+
+            lscf->preread_src_key = p;
+
+            p = ngx_copy(p, NGX_STREAM_LUA_FILE_TAG, NGX_STREAM_LUA_FILE_TAG_LEN);
+            p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
+            *p = '\0';
+        }
+    }
+
+    lscf->preread_handler = (ngx_stream_lua_handler_pt) cmd->post;
+
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+
+    lmcf->requires_preread = 1;
+
+    return NGX_CONF_OK;
+}
+
+
 char *
 ngx_stream_lua_content_by_lua_block(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf)
@@ -348,6 +458,115 @@ ngx_stream_lua_content_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     cxcf->handler = ngx_stream_lua_content_handler;
+
+    return NGX_CONF_OK;
+}
+
+
+char *
+ngx_stream_lua_log_by_lua_block(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    char        *rv;
+    ngx_conf_t   save;
+
+    save = *cf;
+    cf->handler = ngx_stream_lua_log_by_lua;
+    cf->handler_conf = conf;
+
+    rv = ngx_stream_lua_conf_lua_block_parse(cf, cmd);
+
+    *cf = save;
+
+    return rv;
+}
+
+
+char *
+ngx_stream_lua_log_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    u_char                                       *p, *chunkname;
+    ngx_str_t                                    *value;
+    ngx_stream_lua_main_conf_t          *lmcf;
+    ngx_stream_lua_loc_conf_t           *llcf = conf;
+
+    ngx_stream_compile_complex_value_t   ccv;
+
+    dd("enter");
+
+    /*  must specify a log handler */
+    if (cmd->post == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (llcf->log_handler) {
+        return "is duplicate";
+    }
+
+    value = cf->args->elts;
+
+    if (value[1].len == 0) {
+        /*  Oops...Invalid location conf */
+        ngx_conf_log_error(NGX_LOG_ERR, cf, 0,
+                           "invalid location config: no runnable Lua code");
+
+        return NGX_CONF_ERROR;
+    }
+
+    if (cmd->post == ngx_stream_lua_log_handler_inline) {
+        chunkname = ngx_stream_lua_gen_chunk_name(cf, "log_by_lua",
+                                                sizeof("log_by_lua") - 1);
+        if (chunkname == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        llcf->log_chunkname = chunkname;
+
+        /* Don't eval nginx variables for inline lua code */
+
+        llcf->log_src.value = value[1];
+
+        p = ngx_palloc(cf->pool, NGX_STREAM_LUA_INLINE_KEY_LEN + 1);
+        if (p == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        llcf->log_src_key = p;
+
+        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG, NGX_STREAM_LUA_INLINE_TAG_LEN);
+        p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
+        *p = '\0';
+
+    } else {
+        ngx_memzero(&ccv, sizeof(ngx_stream_compile_complex_value_t));
+        ccv.cf = cf;
+        ccv.value = &value[1];
+        ccv.complex_value = &llcf->log_src;
+
+        if (ngx_stream_compile_complex_value(&ccv) != NGX_OK) {
+            return NGX_CONF_ERROR;
+        }
+
+        if (llcf->log_src.lengths == NULL) {
+            /* no variable found */
+            p = ngx_palloc(cf->pool, NGX_STREAM_LUA_FILE_KEY_LEN + 1);
+            if (p == NULL) {
+                return NGX_CONF_ERROR;
+            }
+
+            llcf->log_src_key = p;
+
+            p = ngx_copy(p, NGX_STREAM_LUA_FILE_TAG, NGX_STREAM_LUA_FILE_TAG_LEN);
+            p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
+            *p = '\0';
+        }
+    }
+
+    llcf->log_handler = (ngx_stream_lua_handler_pt) cmd->post;
+
+    lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
+
+    lmcf->requires_log = 1;
 
     return NGX_CONF_OK;
 }

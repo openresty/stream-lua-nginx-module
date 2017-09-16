@@ -75,7 +75,7 @@ ngx_stream_lua_coroutine_create_helper(lua_State *L, ngx_stream_lua_request_t *r
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
         );
 
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
@@ -150,7 +150,7 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
         );
 
     p_coctx = ctx->cur_co_ctx;
@@ -209,7 +209,7 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
         );
 
     coctx = ctx->cur_co_ctx;
@@ -357,7 +357,7 @@ ngx_stream_lua_coroutine_status(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
         );
 
     coctx = ngx_stream_lua_get_co_ctx(co, ctx);

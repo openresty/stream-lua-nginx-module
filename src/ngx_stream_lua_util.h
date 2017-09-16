@@ -75,18 +75,20 @@ extern char ngx_stream_lua_headers_metatable_key;
 
 
 #define ngx_stream_lua_context_name(c)                                         \
-    ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
+    ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"                 \
+     : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                       \
      : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                       \
      : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"       \
      : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"             \
+     : (c) == NGX_STREAM_LUA_CONTEXT_PREREAD ? "preread_by_lua*"               \
      : "(unknown)")
 
 
 
-#define ngx_stream_lua_check_context(L, ctx, flags)                            \
-    if (!((ctx)->context & (flags))) {                                       \
-        return luaL_error(L, "API disabled in the context of %s",            \
-                          ngx_stream_lua_context_name((ctx)->context));        \
+#define ngx_stream_lua_check_context(L, ctx, flags)                     \
+    if (!((ctx)->context & (flags))) {                                           \
+        return luaL_error(L, "API disabled in the context of %s",                \
+                          ngx_stream_lua_context_name((ctx)->context)); \
     }
 
 

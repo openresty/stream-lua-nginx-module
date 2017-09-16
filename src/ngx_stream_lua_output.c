@@ -64,9 +64,8 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
         return luaL_error(L, "no request ctx found");
     }
 
-
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
-
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
 
 
 
@@ -478,7 +477,8 @@ ngx_stream_lua_ngx_flush(lua_State *L)
     }
 
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
 
 
 
@@ -532,9 +532,13 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         coctx->flushing = 1;
         ctx->flushing_coros++;
 
+        if (ctx->entered_content_phase) {
+            /* mimic ngx_http_set_write_handler */
+            r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-        r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+        } else {
+            r->write_event_handler = ngx_stream_lua_core_run_phases;
+        }
 
 
         cllscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
@@ -604,7 +608,8 @@ ngx_stream_lua_ngx_eof(lua_State *L)
     }
 
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
 
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,

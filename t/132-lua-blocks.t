@@ -9,7 +9,7 @@ use Test::Nginx::Socket::Lua::Stream;
 repeat_each(2);
 #repeat_each(1);
 
-plan tests => repeat_each() * (blocks() * 3);
+plan tests => repeat_each() * ((blocks() * 3) + 1);
 
 #no_diff();
 no_long_string();
@@ -218,16 +218,16 @@ close: 1 nil
         ngx.say(s)
         ngx.say("glob: ", glob)
     }
-    #log_by_lua_block {
-        #print("log by lua running \"}{!\"")
-    #}
+    log_by_lua_block {
+        print("log by lua running \"}{!\"")
+    }
 
 --- config
 --- stream_response
 }content{
 glob: init by lua }here{, init worker }here{
 
---- error_log2
+--- error_log
 log by lua running "}{!"
 --- no_error_log
 [error]

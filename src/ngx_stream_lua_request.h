@@ -38,6 +38,8 @@ ngx_stream_lua_cleanup_add(ngx_stream_lua_request_t *r, size_t size);
 ngx_stream_lua_request_t *
 ngx_stream_lua_create_request(ngx_stream_session_t *s);
 void ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc);
+void ngx_stream_lua_core_run_phases(ngx_stream_lua_request_t *r);
+
 
 typedef ngx_int_t (*ngx_stream_lua_handler_pt)(ngx_stream_lua_request_t *r);
 

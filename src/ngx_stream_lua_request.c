@@ -64,6 +64,7 @@ ngx_stream_lua_cleanup_add(ngx_stream_lua_request_t *r, size_t size)
     return cln;
 }
 
+
 ngx_stream_lua_request_t *
 ngx_stream_lua_create_request(ngx_stream_session_t *s)
 {
@@ -90,6 +91,7 @@ ngx_stream_lua_create_request(ngx_stream_session_t *s)
 
     return r;
 }
+
 
 void
 ngx_stream_lua_request_handler(ngx_event_t *ev)
@@ -125,6 +127,7 @@ ngx_stream_lua_request_handler(ngx_event_t *ev)
     }
 }
 
+
 void
 ngx_stream_lua_empty_handler(ngx_event_t *wev)
 {
@@ -132,6 +135,7 @@ ngx_stream_lua_empty_handler(ngx_event_t *wev)
                    "stream lua empty handler");
     return;
 }
+
 
 void
 ngx_stream_lua_block_reading(ngx_stream_lua_request_t *r)
@@ -149,6 +153,7 @@ ngx_stream_lua_block_reading(ngx_stream_lua_request_t *r)
         }
     }
 }
+
 
 void
 ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
@@ -208,6 +213,7 @@ cleanup:
     return;
 }
 
+
 void
 ngx_stream_lua_request_empty_handler(ngx_stream_lua_request_t *r)
 {
@@ -216,6 +222,7 @@ ngx_stream_lua_request_empty_handler(ngx_stream_lua_request_t *r)
 
     return;
 }
+
 
 static void
 ngx_stream_lua_writer(ngx_stream_lua_request_t *r)
@@ -272,6 +279,7 @@ ngx_stream_lua_writer(ngx_stream_lua_request_t *r)
     ngx_stream_lua_finalize_real_request(r, rc);
 }
 
+
 static ngx_int_t
 ngx_stream_lua_set_write_handler(ngx_stream_lua_request_t *r)
 {
@@ -297,4 +305,18 @@ ngx_stream_lua_set_write_handler(ngx_stream_lua_request_t *r)
     }
 
     return NGX_OK;
+}
+
+
+void
+ngx_stream_lua_core_run_phases(ngx_stream_lua_request_t *r)
+{
+    ngx_stream_session_t      *s;
+
+    s = r->session;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "lua session run phases: \"%p\"", r);
+
+    ngx_stream_core_run_phases(s);
 }

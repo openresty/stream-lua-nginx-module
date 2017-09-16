@@ -41,12 +41,11 @@ ngx_stream_lua_inject_misc_api(lua_State *L)
 static int
 ngx_stream_lua_ngx_get(lua_State *L)
 {
-
-
-    ngx_stream_lua_request_t          *r;
-    u_char                      *p;
-    size_t                       len;
-    ngx_stream_lua_ctx_t          *ctx;
+    int                             status;
+    ngx_stream_lua_request_t                 *r;
+    u_char                         *p;
+    size_t                          len;
+    ngx_stream_lua_ctx_t  *ctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -64,7 +63,18 @@ ngx_stream_lua_ngx_get(lua_State *L)
 
     dd("ngx get %s", p);
 
+    if (len == sizeof("status") - 1
+        && ngx_strncmp(p, "status", sizeof("status") - 1) == 0)
+    {
+        ngx_stream_lua_check_fake_request(L, r);
 
+    /* same as $status */
+
+    status = r->session->status;
+
+        lua_pushinteger(L, status);
+        return 1;
+    }
 
     if (len == sizeof("ctx") - 1
         && ngx_strncmp(p, "ctx", sizeof("ctx") - 1) == 0)

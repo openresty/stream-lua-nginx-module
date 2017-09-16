@@ -67,7 +67,7 @@ ngx_stream_lua_ngx_exit(lua_State *L)
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                | NGX_STREAM_LUA_CONTEXT_TIMER
                                | NGX_STREAM_LUA_CONTEXT_BALANCER
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
         );
 
     rc = (ngx_int_t) luaL_checkinteger(L, 1);

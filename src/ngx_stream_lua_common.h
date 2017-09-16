@@ -124,6 +124,7 @@
 #define NGX_STREAM_LUA_CONTEXT_TIMER                                0x0004
 #define NGX_STREAM_LUA_CONTEXT_INIT_WORKER                          0x0008
 #define NGX_STREAM_LUA_CONTEXT_BALANCER                             0x0010
+#define NGX_STREAM_LUA_CONTEXT_PREREAD                              0x0020
 
 
 
@@ -216,8 +217,11 @@ struct ngx_stream_lua_main_conf_s {
 
 
 
+    unsigned             requires_preread:1;
 
+    unsigned             requires_log:1;
     unsigned             requires_shm:1;
+
 
 };
 
@@ -240,10 +244,17 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_flag_t              enable_code_cache; /* whether to enable
                                                   code cache */
 
-
+    ngx_stream_lua_handler_pt     preread_handler;
 
     ngx_stream_lua_handler_pt     content_handler;
+    ngx_stream_lua_handler_pt     log_handler;
 
+    u_char                      *preread_chunkname;
+    ngx_stream_complex_value_t   preread_src;     /*  access_by_lua
+                                                inline script/script
+                                                file path */
+
+    u_char                      *preread_src_key; /* cached key for access_src */
 
 
     u_char                  *content_chunkname;
@@ -252,6 +263,12 @@ struct ngx_stream_lua_srv_conf_s {
                                                 file path */
 
     u_char                 *content_src_key; /* cached key for content_src */
+
+    u_char                                 *log_chunkname;
+    ngx_stream_complex_value_t     log_src;     /* log_by_lua inline script/script
+                                                 file path */
+
+    u_char                                 *log_src_key; /* cached key for log_src */
 
 
 
@@ -453,8 +470,9 @@ typedef struct ngx_stream_lua_ctx_s {
     unsigned         headers_set:1; /* whether the user has set custom
                                        response headers */
 
-    unsigned         entered_rewrite_phase:1;
-    unsigned         entered_access_phase:1;
+
+    unsigned         entered_preread_phase:1;
+
     unsigned         entered_content_phase:1;
 
     unsigned         buffering:1; /* HTTP 1.0 response body buffering flag */

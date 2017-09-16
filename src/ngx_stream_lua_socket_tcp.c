@@ -382,7 +382,7 @@ ngx_stream_lua_socket_tcp(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
 
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
@@ -444,7 +444,7 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
-
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
 
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
@@ -759,9 +759,12 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
 
     dd("setting data to %p", u);
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     return lua_yield(L, 0);
 }
@@ -1171,9 +1174,12 @@ ngx_stream_lua_socket_resolve_retval_handler(ngx_stream_lua_request_t *r,
 
     dd("setting data to %p", u);
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     return NGX_AGAIN;
 }
@@ -1436,9 +1442,12 @@ new_ssl_name:
 
         c->ssl->handler = ngx_stream_lua_ssl_handshake_handler;
 
-
+    if (ctx->entered_content_phase) {
         r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
         return lua_yield(L, 0);
     }
@@ -1887,9 +1896,12 @@ ngx_stream_lua_socket_tcp_receive(lua_State *L)
     coctx->cleanup = ngx_stream_lua_coctx_cleanup;
     coctx->data = u;
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     u->read_co_ctx = coctx;
     u->read_waiting = 1;
@@ -2454,9 +2466,12 @@ ngx_stream_lua_socket_tcp_send(lua_State *L)
         ctx->writing_raw_req_socket = 1;
     }
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     u->write_co_ctx = coctx;
     u->write_waiting = 1;
@@ -3757,9 +3772,12 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
     coctx->cleanup = ngx_stream_lua_coctx_cleanup;
     coctx->data = u;
 
+    if (ctx->entered_content_phase) {
+        r->write_event_handler = ngx_stream_lua_content_wev_handler;
 
-    r->write_event_handler = ngx_stream_lua_content_wev_handler;
-
+    } else {
+        r->write_event_handler = ngx_stream_lua_core_run_phases;
+    }
 
     u->read_co_ctx = coctx;
     u->read_waiting = 1;
@@ -4129,7 +4147,8 @@ ngx_stream_lua_req_socket(lua_State *L)
     }
 
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+                                 |NGX_STREAM_LUA_CONTEXT_PREREAD);
 
     raw = 1;
 
