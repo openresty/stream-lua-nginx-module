@@ -33,7 +33,7 @@ __DATA__
     preread_by_lua_block { ngx.exit(500);ngx.say('hi') }
     content_by_lua_block { ngx.exit(ngx.OK) }
 --- error_log
-finalize stream session: 500
+finalize stream request: 500
 
 
 
