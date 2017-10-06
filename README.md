@@ -143,6 +143,9 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
 So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
 
+**Note:** the lingering close directive that used to exist in older version of stream_lua_nginx_module has been removed and can
+now be simulated with the newly added [tcpsock:shutdown](#tcpsockshutdown) method if necessary.
+
 [Back to TOC](#table-of-contents)
 
 Nginx API for Lua
@@ -170,6 +173,57 @@ other stream modules.
 is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_module`,
 you can still call output API functions like `ngx.say`, `ngx.print`, and `ngx.flush`
 after acquiring the raw request socket via this function.
+
+Raw request socket returned by this module will contain the following extra method:
+
+tcpsock:shutdown
+----------------
+**syntax:** *ok, err = tcpsock:shutdown("send")*
+
+**context:** *content_by_lua&#42;*
+
+Shuts down the write part of the request socket, prevents all further writing to the client
+and sends TCP FIN, while keeping the reading half open.
+
+Currently only the `"send"` direction is supported. Using any parameters other than "send" will return
+an error.
+
+If you called any output functions (like [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay))
+before calling this method, consider use `ngx.flush(true)` to make sure all busy buffers are complely
+flushed before shutting down the socket. If any busy buffers were detected, this method will return `nil`
+will error message `"socket busy writing"`.
+
+This feature is particularly useful for protocols that generates response before actually
+finishes consuming all incoming data. Normally Kernel will send out RST to the client when
+[tcpsock:close](https://github.com/openresty/lua-nginx-module#tcpsockclose) is called without
+emptying the receiving buffer first. Calling this method will allow you to keep reading from
+the receiving buffer and prevents RST from being sent.
+
+You can also use this method to simulate lingering close similar to that
+[provided by the ngx_http_core_module](https://nginx.org/en/docs/http/ngx_http_core_module.html#lingering_close)
+for protocols that needs such behavior. Here is an example:
+
+```lua
+local LINGERING_TIME = 30 -- 30 seconds
+local LINGERING_TIMEOUT = 5000 -- 5 seconds
+
+local ok, err = sock:shutdown("send")
+if not ok then
+    ngx.log(ngx.ERR, "failed to shutdown: ", err)
+    return
+end
+
+local deadline = ngx.time() + LINGERING_TIME
+
+sock:settimeouts(nil, nil, LINGERING_TIMEOUT)
+
+repeat
+    local data, _, partial = sock:receive(1024)
+until (not data and not partial) or ngx.time() >= deadline
+```
+
+[Back to TOC](#directives)
+
 * [ngx.print](https://github.com/openresty/lua-nginx-module#ngxprint)
 * [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
 * [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
@@ -244,7 +298,6 @@ TODO
 * Add new directives `log_by_lua_block` and `log_by_lua_file`.
 * Add new directives `balancer_by_lua_block` and `balancer_by_lua_file`.
 * Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
-* Port `lua_lingering_close`, `lua_lingering_time` and `lua_lingering_timeout` directives over.
 * Add `ngx.semaphore` API.
 * Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
 of `lua_shared_dict`.

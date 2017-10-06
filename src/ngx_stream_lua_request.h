@@ -1,3 +1,9 @@
+
+/*
+ * Copyright (C) OpenResty Inc.
+ */
+
+
 #ifndef _NGX_STREAM_LUA_REQUEST_H_INCLUDED_
 #define _NGX_STREAM_LUA_REQUEST_H_INCLUDED_
 

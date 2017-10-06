@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 43;
+plan tests => repeat_each() * 49;
 
 our $HtmlDir = html_dir;
 
@@ -326,14 +326,32 @@ server: failed to receive: client aborted
             ngx.log(ngx.ERR, "server: failed to send: ", err)
             return
         end
+
+        local LINGERING_TIME = 30 -- 30 seconds
+        local LINGERING_TIMEOUT = 5000 -- 5 seconds
+
+        local ok, err = sock:shutdown("send")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to shutdown ", err)
+            return
+        end
+
+        local deadline = ngx.time() + LINGERING_TIME
+
+        sock:settimeouts(nil, nil, LINGERING_TIMEOUT)
+
+        repeat
+            local data, _, partial = sock:receive(1024)
+        until (not data and not partial) or ngx.time() >= deadline
     }
 
 --- stream_request
 hello, world
 --- stream_response
 1: received: hello, wo
---- no_error_log
-[error]
+--- error_log
+stream lua shutdown socket write direction
+attempt to receive data on a closed socket
 
 
 
@@ -355,6 +373,12 @@ hello, world
         local ok, err = sock:send("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n" .. data)
         if not ok then
             ngx.log(ngx.ERR, "failed to send: ", err)
+            return
+        end
+
+        local res, err = sock:shutdown('send')
+        if not res then
+            ngx.log(ngx.ERR, "server: failed to shutdown: ", err)
             return
         end
     }
@@ -460,3 +484,93 @@ request body: hey, hello world
 --- no_error_log
 [error]
 [alert]
+
+
+
+=== TEST 13: shutdown can only be called once and prevents all further output
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if not sock then
+            ngx.log(ngx.ERR, "server: failed to get raw req socket: ", err)
+            return
+        end
+
+        local data, err = sock:receive(5)
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return
+        end
+
+        local ok, err = sock:send("it works\n")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return
+        end
+
+        local ok, err = sock:shutdown("send")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to shutdown ", err)
+            return
+        end
+
+        ok, err = sock:shutdown("send")
+        if ok or err ~= "already shutdown" then
+            ngx.log(ngx.ERR, "shutdown called multiple times without proper error: ", err)
+            return
+        end
+
+        ok, err = ngx.say("this should not work")
+        if ok or err ~= "seen eof" then
+            ngx.log(ngx.ERR, "ngx.say completed without proper error: ", err)
+            return
+        end
+
+        ok, err = sock:send("this should not work")
+        if ok or err ~= "closed" then
+            ngx.log(ngx.ERR, "sock:send completed without proper error: ", err)
+            return
+        end
+    }
+
+--- stream_request
+hello
+--- stream_response
+it works
+--- error_log
+stream lua shutdown socket write direction
+
+
+
+=== TEST 14: simulated lingering close
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if not sock then
+            ngx.log(ngx.ERR, "server: failed to get raw req socket: ", err)
+            return
+        end
+
+        local data, err = sock:receive(5)
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return
+        end
+
+        local ok, err = sock:shutdown("send")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to shutdown ", err)
+            return
+        end
+
+        sock:settimeouts(nil, nil, 5000)
+
+        repeat
+            local data = sock:receive(1024)
+        until not data
+    }
+
+--- stream_request
+1234567890
+--- error_log
+stream lua shutdown socket write direction

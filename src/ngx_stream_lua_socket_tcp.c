@@ -31,6 +31,7 @@ static int ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L);
 static int ngx_stream_lua_socket_tcp_receive(lua_State *L);
 static int ngx_stream_lua_socket_tcp_send(lua_State *L);
 static int ngx_stream_lua_socket_tcp_close(lua_State *L);
+static int ngx_stream_lua_socket_tcp_shutdown(lua_State *L);
 static int ngx_stream_lua_socket_tcp_setoption(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeout(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeouts(lua_State *L);
@@ -49,7 +50,7 @@ static void ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
 static void ngx_stream_lua_socket_tcp_finalize_read_part(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u);
 static void ngx_stream_lua_socket_tcp_finalize_write_part(ngx_stream_lua_request_t *r,
-    ngx_stream_lua_socket_tcp_upstream_t *u);
+    ngx_stream_lua_socket_tcp_upstream_t *u, int do_shutdown);
 static ngx_int_t ngx_stream_lua_socket_send(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u);
 static ngx_int_t ngx_stream_lua_socket_test_connect(ngx_stream_lua_request_t *r,
@@ -179,7 +180,7 @@ enum {
         return 2;                                                            \
     }                                                                        \
     if ((u)->raw_downstream                                                  \
-        && ((r)->connection->buffered))         \
+        && ((r)->connection->buffered))                                      \
     {                                                                        \
         lua_pushnil(L);                                                      \
         lua_pushliteral(L, "socket busy writing");                           \
@@ -253,6 +254,9 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_settimeouts);
     lua_setfield(L, -2, "settimeouts"); /* ngx socket mt */
 
+    lua_pushcfunction(L, ngx_stream_lua_socket_tcp_shutdown);
+    lua_setfield(L, -2, "shutdown");
+
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
 
@@ -284,6 +288,9 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_close);
     lua_setfield(L, -2, "close");
+
+    lua_pushcfunction(L, ngx_stream_lua_socket_tcp_shutdown);
+    lua_setfield(L, -2, "shutdown");
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_setoption);
     lua_setfield(L, -2, "setoption");
@@ -1642,7 +1649,7 @@ ngx_stream_lua_socket_write_error_retval_handler(ngx_stream_lua_request_t *r,
         u->write_co_ctx->cleanup = NULL;
     }
 
-    ngx_stream_lua_socket_tcp_finalize_write_part(r, u);
+    ngx_stream_lua_socket_tcp_finalize_write_part(r, u, 0);
 
     ft_type = u->ft_type;
     u->ft_type = 0;
@@ -2634,6 +2641,102 @@ ngx_stream_lua_socket_tcp_close(lua_State *L)
 
 
 static int
+ngx_stream_lua_socket_tcp_shutdown(lua_State *L)
+{
+    ngx_stream_lua_request_t                                 *r;
+    ngx_stream_lua_socket_tcp_upstream_t  *u;
+    ngx_str_t                                       direction;
+    char                                           *p;
+    ngx_stream_lua_ctx_t                  *ctx;
+
+    if (lua_gettop(L) != 2) {
+        return luaL_error(L, "expecting 2 arguments "
+                          "(including the object) but seen %d", lua_gettop(L));
+    }
+
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    lua_rawgeti(L, 1, SOCKET_CTX_INDEX);
+    u = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
+    }
+
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        ngx_stream_lua_socket_handle_write_error(r, u,
+                                               NGX_STREAM_LUA_SOCKET_FT_ERROR);
+        return NGX_ERROR;
+    }
+
+    /*
+     * only allow shutdown on raw request in stream module in content phase.
+     * in http module, lingering close will take care of the shutdown.
+     * in stream module, it is unsafe to shutdown prior on reaching content phase
+     * as later phases may still need to write to the socket.
+     */
+
+    if (u->raw_downstream) {
+        ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT);
+
+        if (ctx->eof) {
+            lua_pushnil(L);
+            lua_pushliteral(L, "seen eof");
+            return 2;
+        }
+
+        /* prevent all further output attempt */
+        ctx->eof = 1;
+    }
+
+    if (u == NULL
+        || u->peer.connection == NULL
+        || (u->read_closed && u->write_closed))
+    {
+        lua_pushnil(L);
+        lua_pushliteral(L, "closed");
+        return 2;
+    }
+
+    if (u->write_closed) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "already shutdown");
+        return 2;
+    }
+
+    if (u->request != r) {
+        return luaL_error(L, "bad request");
+    }
+
+    ngx_stream_lua_socket_check_busy_connecting(r, u, L);
+    ngx_stream_lua_socket_check_busy_writing(r, u, L);
+
+    /* shutdown */
+    direction.data = (u_char *) luaL_checklstring(L, 2, &direction.len);
+    if (direction.len == 0) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "pattern is empty");
+        return 2;
+    }
+
+    if (direction.len != 4 || ngx_strcmp(direction.data, "send") != 0) {
+        p = (char *) lua_pushfstring(L, "bad shutdown argument: %s",
+                                     (char *) direction.data);
+
+        return luaL_argerror(L, 2, p);
+    }
+
+    ngx_stream_lua_socket_tcp_finalize_write_part(r, u, 1);
+
+    lua_pushinteger(L, 1);
+    return 1;
+}
+
+
+static int
 ngx_stream_lua_socket_tcp_setoption(lua_State *L)
 {
     /* TODO */
@@ -3330,10 +3433,12 @@ ngx_stream_lua_socket_tcp_finalize_read_part(ngx_stream_lua_request_t *r,
 
 static void
 ngx_stream_lua_socket_tcp_finalize_write_part(ngx_stream_lua_request_t *r,
-    ngx_stream_lua_socket_tcp_upstream_t *u)
+    ngx_stream_lua_socket_tcp_upstream_t *u, int do_shutdown)
 {
-    ngx_connection_t                    *c;
+    ngx_connection_t                               *c;
     ngx_stream_lua_ctx_t                  *ctx;
+
+    c = u->peer.connection;
 
     if (u->write_closed) {
         return;
@@ -3342,6 +3447,17 @@ ngx_stream_lua_socket_tcp_finalize_write_part(ngx_stream_lua_request_t *r,
     u->write_closed = 1;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+
+    if (c && do_shutdown) {
+        if (ngx_shutdown_socket(c->fd, NGX_WRITE_SHUTDOWN) == -1) {
+            ngx_connection_error(c, ngx_socket_errno,
+                                 ngx_shutdown_socket_n " failed");
+            return;
+        }
+
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "stream lua shutdown socket write direction");
+    }
 
     if (u->raw_downstream || u->body_downstream) {
         if (ctx && ctx->writing_raw_req_socket) {
@@ -3354,8 +3470,6 @@ ngx_stream_lua_socket_tcp_finalize_write_part(ngx_stream_lua_request_t *r,
         }
         return;
     }
-
-    c = u->peer.connection;
 
     if (c) {
         if (c->write->timer_set) {
@@ -3375,8 +3489,6 @@ ngx_stream_lua_socket_tcp_finalize_write_part(ngx_stream_lua_request_t *r,
         }
 
         c->write->closed = 1;
-
-        /* TODO: shutdown the writing part of the connection */
     }
 }
 
@@ -3400,7 +3512,7 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
     }
 
     ngx_stream_lua_socket_tcp_finalize_read_part(r, u);
-    ngx_stream_lua_socket_tcp_finalize_write_part(r, u);
+    ngx_stream_lua_socket_tcp_finalize_write_part(r, u, 0);
 
     if (u->raw_downstream || u->body_downstream) {
         u->peer.connection = NULL;

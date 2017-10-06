@@ -101,7 +101,7 @@ n = 10
         assert(ngx.say("n = ", n))
     }
 --- stream_response
-n = 6
+n = 7
 --- no_error_log
 [error]
 
@@ -276,6 +276,6 @@ n = 6
         end
     }
 --- stream_response
-n = 6
+n = 7
 --- no_error_log
 [error]

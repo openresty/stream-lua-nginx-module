@@ -342,7 +342,6 @@ See https://groups.google.com/group/openresty/browse_thread/thread/43cf01da3c681
     content_by_lua_block {
         local test = require "test"
         test.go()
-        ngx.say("done")
     }
 --- user_files
 >>> test.lua
@@ -378,6 +377,15 @@ function go()
       ngx.say("received: ", data)
    else
       ngx.say("failed to receive: ", err, " [", part, "]")
+   end
+
+   ngx.say("done")
+   ngx.flush(true)
+
+   local res, err = sock:shutdown('send')
+   if not res then
+       ngx.log(ngx.ERR, "server: failed to shutdown: ", err)
+       return
    end
 end
 --- stream_request

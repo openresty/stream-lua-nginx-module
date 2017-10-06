@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 179;
+plan tests => repeat_each() * 183;
 
 our $HtmlDir = html_dir;
 
@@ -3035,3 +3035,39 @@ lua stream cleanup reuse
 total_send_bytes: 114
 --- no_error_log
 [error]
+
+
+
+=== TEST 56: setkeepalive on socket already shutdown
+--- stream_server_config
+    lua_socket_connect_timeout 1s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("openresty.org", 443)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local ok, err = sock:shutdown('send')
+        if not ok then
+            ngx.log(ngx.ERR, 'failed to shutdown socket: ', err)
+            return
+        end
+
+        local ok, err = sock:setkeepalive()
+        if not ok then
+            ngx.log(ngx.ERR, "failed to setkeepalive: ", err)
+        end
+    }
+
+--- stream_response
+connected: 1
+--- error_log
+stream lua shutdown socket write direction
+failed to setkeepalive: closed
