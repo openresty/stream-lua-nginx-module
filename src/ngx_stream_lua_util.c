@@ -1169,7 +1169,7 @@ user_co_done:
                 }
 
 
-                return NGX_ERROR;
+                return NGX_STREAM_INTERNAL_SERVER_ERROR;
 
             }
 
@@ -1223,7 +1223,7 @@ no_parent:
                   "user coroutine has no parent");
 
 
-    return NGX_ERROR;
+    return NGX_STREAM_INTERNAL_SERVER_ERROR;
 
 
 done:
@@ -2561,13 +2561,13 @@ ngx_stream_lua_create_co_ctx(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *
 /* this is for callers other than the content handler */
 ngx_int_t
 ngx_stream_lua_run_posted_threads(ngx_connection_t *c, lua_State *L,
-    ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
+    ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx, ngx_uint_t nreqs)
 {
     ngx_int_t                        rc;
     ngx_stream_lua_posted_thread_t    *pt;
 
     for ( ;; ) {
-        if (c->destroyed) {
+        if (c->destroyed || c->requests != nreqs) {
             return NGX_DONE;
         }
 
@@ -2809,9 +2809,7 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
             event = ev->write ? NGX_WRITE_EVENT : NGX_READ_EVENT;
 
             if (ngx_del_event(ev, event, 0) != NGX_OK) {
-
-                return NGX_ERROR;
-
+                return NGX_STREAM_INTERNAL_SERVER_ERROR;
             }
         }
 
@@ -2866,9 +2864,7 @@ ngx_stream_lua_check_broken_connection(ngx_stream_lua_request_t *r, ngx_event_t 
 
 #if 1
         if (ngx_del_event(ev, event, 0) != NGX_OK) {
-
-            return NGX_ERROR;
-
+            return NGX_STREAM_INTERNAL_SERVER_ERROR;
         }
 #endif
     }
@@ -2941,10 +2937,8 @@ ngx_stream_lua_rd_check_broken_connection(ngx_stream_lua_request_t *r)
             if (ngx_del_event(rev, NGX_READ_EVENT, 0) != NGX_OK) {
                 ngx_stream_lua_request_cleanup(ctx, 0);
 
-
                 ngx_stream_lua_finalize_request(r,
-                                              NGX_STREAM_INTERNAL_SERVER_ERROR);
-
+                    NGX_STREAM_INTERNAL_SERVER_ERROR);
                 return;
             }
         }
@@ -2974,9 +2968,10 @@ ngx_stream_lua_rd_check_broken_connection(ngx_stream_lua_request_t *r)
 static ngx_int_t
 ngx_stream_lua_on_abort_resume(ngx_stream_lua_request_t *r)
 {
-    lua_State                   *vm;
-    ngx_int_t                    rc;
-    ngx_connection_t            *c;
+    lua_State                              *vm;
+    ngx_int_t                               rc;
+    ngx_uint_t                              nreqs;
+    ngx_connection_t                       *c;
     ngx_stream_lua_ctx_t          *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
@@ -2995,6 +2990,7 @@ ngx_stream_lua_on_abort_resume(ngx_stream_lua_request_t *r)
 
     c = r->connection;
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
+    nreqs = c->requests;
 
     rc = ngx_stream_lua_run_thread(vm, r, ctx, 0);
 
@@ -3002,12 +2998,12 @@ ngx_stream_lua_on_abort_resume(ngx_stream_lua_request_t *r)
                    "lua run thread returned %d", rc);
 
     if (rc == NGX_AGAIN) {
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (rc == NGX_DONE) {
         ngx_stream_lua_finalize_request(r, NGX_DONE);
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (ctx->entered_content_phase) {
@@ -3070,7 +3066,7 @@ ngx_stream_lua_finalize_fake_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
     }
 
 
-    if (rc == NGX_ERROR) {
+    if (rc == NGX_ERROR || rc >= NGX_STREAM_BAD_REQUEST) {
 
 
 #if (NGX_STREAM_SSL)

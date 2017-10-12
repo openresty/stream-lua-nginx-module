@@ -33,7 +33,7 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.13.4
+    - NGINX_VERSION=1.13.5
 
 services:
  - memcache
@@ -43,7 +43,7 @@ install:
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
   - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
-  - git clone -b 1.13.x https://github.com/openresty/openresty.git ../openresty
+  - git clone https://github.com/openresty/openresty.git ../openresty
   - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
   - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
   - git clone https://github.com/openresty/mockeagain.git
@@ -53,6 +53,7 @@ install:
   - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
   - git clone https://github.com/openresty/memc-nginx-module.git ../memc-nginx-module
   - git clone https://github.com/openresty/headers-more-nginx-module.git ../headers-more-nginx-module
+  - git clone https://github.com/openresty/lua-resty-core.git ../lua-resty-core
 
 script:
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz

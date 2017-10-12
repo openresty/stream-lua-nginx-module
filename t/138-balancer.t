@@ -191,7 +191,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
 
 === TEST 15: test if execeed proxy_next_upstream_limit
 --- stream_config
-    lua_package_path "../stream-lua-resty-core/lib/?.lua;;";
+    lua_package_path "../lua-resty-core/lib/?.lua;;";
 
     proxy_next_upstream_tries 5;
     upstream backend {
@@ -238,7 +238,7 @@ set more tries: reduced tries due to limit
 
 === TEST 16: set_more_tries bugfix
 --- stream_config
-    lua_package_path "../stream-lua-resty-core/lib/?.lua;;";
+    lua_package_path "../lua-resty-core/lib/?.lua;;";
 	proxy_next_upstream_tries 0;
     upstream backend {
         server 0.0.0.1:1234;

@@ -156,6 +156,7 @@ ngx_stream_lua_sleep_handler(ngx_event_t *ev)
         ctx->resume_handler = ngx_stream_lua_sleep_resume;
         ngx_stream_lua_core_run_phases(r);
     }
+
 }
 
 
@@ -193,9 +194,10 @@ ngx_stream_lua_sleep_cleanup(void *data)
 static ngx_int_t
 ngx_stream_lua_sleep_resume(ngx_stream_lua_request_t *r)
 {
-    lua_State                   *vm;
-    ngx_connection_t            *c;
-    ngx_int_t                    rc;
+    lua_State                              *vm;
+    ngx_connection_t                       *c;
+    ngx_int_t                               rc;
+    ngx_uint_t                              nreqs;
     ngx_stream_lua_ctx_t          *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
@@ -207,6 +209,7 @@ ngx_stream_lua_sleep_resume(ngx_stream_lua_request_t *r)
 
     c = r->connection;
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
+    nreqs = c->requests;
 
     rc = ngx_stream_lua_run_thread(vm, r, ctx, 0);
 
@@ -214,12 +217,12 @@ ngx_stream_lua_sleep_resume(ngx_stream_lua_request_t *r)
                    "lua run thread returned %d", rc);
 
     if (rc == NGX_AGAIN) {
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (rc == NGX_DONE) {
         ngx_stream_lua_finalize_request(r, NGX_DONE);
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (ctx->entered_content_phase) {
