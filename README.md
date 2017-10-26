@@ -32,6 +32,8 @@ Status
 
 Experimental.
 
+The API is still in flux and may change without notice.
+
 Synopsis
 ========
 
