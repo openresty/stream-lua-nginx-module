@@ -23,7 +23,7 @@ BEGIN {
 use Test::Nginx::Socket::Lua::Stream;
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 4 + 14);
+plan tests => repeat_each() * (blocks() * 4 + 8);
 
 our $HtmlDir = html_dir;
 
@@ -153,7 +153,7 @@ lua tcp socket connect timeout: 102
 
 
 
-=== TEST 5: sock:settimeout(-1) does not override lua_socket_connect_timeout
+=== TEST 5: -1 is bad timeout value
 --- stream_server_config
     lua_socket_connect_timeout 102ms;
     lua_socket_log_errors off;
@@ -172,13 +172,9 @@ lua tcp socket connect timeout: 102
     }
 
     content_by_lua return;
---- stream_response
-failed to connect: timeout
 --- error_log
-lua tcp socket connect timeout: 102
---- no_error_log
-[error]
-[alert]
+bad timeout value
+finalize stream request: 500
 --- timeout: 10
 
 
@@ -324,7 +320,7 @@ lua tcp socket read timed out
 
 
 
-=== TEST 10: sock:settimeout(-1) does not override lua_socket_read_timeout
+=== TEST 10: -1 is bad timeout value
 --- stream_server_config
     lua_socket_read_timeout 102ms;
     #resolver $TEST_NGINX_RESOLVER ipv6=off;
@@ -350,13 +346,9 @@ lua tcp socket read timed out
     }
 
     content_by_lua return;
---- stream_response
-connected: 1
-failed to receive: timeout
 --- error_log
-lua tcp socket read timeout: 102
-lua tcp socket connect timeout: 60000
-lua tcp socket read timed out
+bad timeout value
+finalize stream request: 500
 
 
 
@@ -502,7 +494,7 @@ lua tcp socket write timed out
 
 
 
-=== TEST 15: sock:settimeout(-1) does not override lua_socket_send_timeout
+=== TEST 15: -1 is bad timeout value
 --- stream_server_config
     lua_socket_send_timeout 102ms;
     #resolver $TEST_NGINX_RESOLVER ipv6=off;
@@ -528,10 +520,6 @@ lua tcp socket write timed out
     }
 
     content_by_lua return;
---- stream_response
-connected: 1
-failed to send: timeout
 --- error_log
-lua tcp socket send timeout: 102
-lua tcp socket connect timeout: 60000
-lua tcp socket write timed out
+bad timeout value
+finalize stream request: 500

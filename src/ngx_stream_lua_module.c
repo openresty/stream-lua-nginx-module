@@ -126,7 +126,8 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NULL },
 
     { ngx_string("lua_code_cache"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_FLAG,
       ngx_stream_lua_code_cache,
 
       NGX_STREAM_SRV_CONF_OFFSET,
@@ -137,7 +138,8 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
 
      { ngx_string("lua_socket_log_errors"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
 
       NGX_STREAM_SRV_CONF_OFFSET,
@@ -273,49 +275,56 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
 
     { ngx_string("lua_socket_keepalive_timeout"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, keepalive_timeout),
       NULL },
 
     { ngx_string("lua_socket_connect_timeout"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, connect_timeout),
       NULL },
 
     { ngx_string("lua_socket_send_timeout"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, send_timeout),
       NULL },
 
     { ngx_string("lua_socket_send_lowat"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, send_lowat),
       &ngx_stream_lua_lowat_post },
 
     { ngx_string("lua_socket_buffer_size"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, buffer_size),
       NULL },
 
     { ngx_string("lua_socket_pool_size"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, pool_size),
       NULL },
 
     { ngx_string("lua_socket_read_timeout"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, read_timeout),
@@ -324,7 +333,8 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
 
     { ngx_string("lua_check_client_abort"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, check_client_abort),
@@ -715,9 +725,9 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 static char *
 ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
+
     ngx_stream_lua_srv_conf_t *prev = parent;
     ngx_stream_lua_srv_conf_t *conf = child;
-
 
     
 #if (NGX_STREAM_SSL)

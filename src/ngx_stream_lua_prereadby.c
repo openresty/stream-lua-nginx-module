@@ -251,7 +251,7 @@ ngx_stream_lua_preread_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
     c = r->connection;
 
     if (rc == NGX_AGAIN) {
-        rc = ngx_stream_lua_run_posted_threads(c, L, r, ctx);
+        rc = ngx_stream_lua_run_posted_threads(c, L, r, ctx, 0);
 
         if (rc == NGX_ERROR || rc == NGX_DONE || rc > NGX_OK) {
             return rc;
@@ -264,7 +264,7 @@ ngx_stream_lua_preread_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
     } else if (rc == NGX_DONE) {
         ngx_stream_lua_finalize_request(r, NGX_DONE);
 
-        rc = ngx_stream_lua_run_posted_threads(c, L, r, ctx);
+        rc = ngx_stream_lua_run_posted_threads(c, L, r, ctx, 0);
 
         if (rc == NGX_ERROR || rc == NGX_DONE || rc > NGX_OK) {
             return rc;

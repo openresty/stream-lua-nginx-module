@@ -18,21 +18,21 @@
 
 struct ngx_stream_lua_balancer_peer_data_s {
     /* the round robin data must be first */
-    ngx_stream_upstream_rr_peer_data_t    rrp;
+    ngx_stream_upstream_rr_peer_data_t  rrp;
 
-    ngx_stream_lua_srv_conf_t            *conf;
-    ngx_stream_lua_request_t                                *request;
+    ngx_stream_lua_srv_conf_t          *conf;
+    ngx_stream_lua_request_t                              *request;
 
-    ngx_uint_t                                     more_tries;
-    ngx_uint_t                                     total_tries;
+    ngx_uint_t                                   more_tries;
+    ngx_uint_t                                   total_tries;
 
-    struct sockaddr                               *sockaddr;
-    socklen_t                                      socklen;
+    struct sockaddr                             *sockaddr;
+    socklen_t                                    socklen;
 
-    ngx_str_t                                     *host;
-    in_port_t                                      port;
+    ngx_str_t                                   *host;
+    in_port_t                                    port;
 
-    int                                            last_peer_state;
+    int                                          last_peer_state;
 
 };
 
@@ -259,6 +259,7 @@ ngx_stream_lua_balancer_init_peer(ngx_stream_session_t *s,
     }
 
     upstream->peer.data = &bp->rrp;
+
     if (ngx_stream_upstream_init_round_robin_peer(s, us) != NGX_OK) {
         return NGX_ERROR;
     }

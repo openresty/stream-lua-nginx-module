@@ -268,7 +268,8 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_stream_complex_value_t     log_src;     /* log_by_lua inline script/script
                                                  file path */
 
-    u_char                                 *log_src_key; /* cached key for log_src */
+    u_char                                 *log_src_key;
+    /* cached key for log_src */
 
 
 

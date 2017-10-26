@@ -1530,10 +1530,11 @@ ngx_stream_lua_socket_udp_close(lua_State *L)
 static ngx_int_t
 ngx_stream_lua_socket_udp_resume(ngx_stream_lua_request_t *r)
 {
-    int                          nret;
-    lua_State                   *vm;
-    ngx_int_t                    rc;
-    ngx_connection_t            *c;
+    int                                     nret;
+    lua_State                              *vm;
+    ngx_int_t                               rc;
+    ngx_uint_t                              nreqs;
+    ngx_connection_t                       *c;
     ngx_stream_lua_ctx_t          *ctx;
     ngx_stream_lua_co_ctx_t       *coctx;
 
@@ -1568,6 +1569,7 @@ ngx_stream_lua_socket_udp_resume(ngx_stream_lua_request_t *r)
 
     c = r->connection;
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
+    nreqs = c->requests;
 
     rc = ngx_stream_lua_run_thread(vm, r, ctx, nret);
 
@@ -1575,12 +1577,12 @@ ngx_stream_lua_socket_udp_resume(ngx_stream_lua_request_t *r)
                    "lua run thread returned %d", rc);
 
     if (rc == NGX_AGAIN) {
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (rc == NGX_DONE) {
         ngx_stream_lua_finalize_request(r, NGX_DONE);
-        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx);
+        return ngx_stream_lua_run_posted_threads(c, vm, r, ctx, nreqs);
     }
 
     if (ctx->entered_content_phase) {

@@ -1000,7 +1000,7 @@ ngx_stream_lua_conf_read_lua_token(ngx_conf_t *cf,
 
 #if nginx_version >= 1009002
             if (dump) {
-                dump->last = ngx_cpymem(dump->last, b->pos, size);
+                dump->last = ngx_cpymem(dump->last, b->start + len, size);
             }
 #endif
         }

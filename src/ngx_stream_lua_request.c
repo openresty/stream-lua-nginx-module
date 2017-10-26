@@ -175,7 +175,11 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 
     s = r->session;
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_ERROR) {
+        rc = NGX_STREAM_INTERNAL_SERVER_ERROR;
+    }
+
+    if (rc == NGX_DECLINED || rc == NGX_STREAM_INTERNAL_SERVER_ERROR) {
         goto cleanup;
     }
 
@@ -183,9 +187,8 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
         return;
     }
 
-    if (rc == NGX_ERROR) {
-        rc = NGX_STREAM_INTERNAL_SERVER_ERROR;
-        goto cleanup;
+    if (rc == NGX_OK) {
+        rc = NGX_STREAM_OK;
     }
 
     if (r->connection->buffered) {
@@ -215,7 +218,7 @@ cleanup:
     ngx_destroy_pool(pool);
 #endif
 
-    ngx_stream_finalize_session(s, NGX_STREAM_OK);
+    ngx_stream_finalize_session(s, rc);
     return;
 }
 

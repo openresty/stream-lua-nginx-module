@@ -53,6 +53,7 @@ install:
   - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
   - git clone https://github.com/openresty/memc-nginx-module.git ../memc-nginx-module
   - git clone https://github.com/openresty/headers-more-nginx-module.git ../headers-more-nginx-module
+  - git clone https://github.com/openresty/lua-resty-core.git ../lua-resty-core
 
 script:
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
