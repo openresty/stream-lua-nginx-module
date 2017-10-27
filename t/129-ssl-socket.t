@@ -741,7 +741,7 @@ SSL reused session
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
-        sock:settimeout(2000)
+        sock:settimeout(3000)
 
         do
             local ok, err = sock:connect("openresty.org", 443)
@@ -1122,9 +1122,11 @@ close: 1 nil
 qr/^lua ssl save session: ([0-9A-F]+):2
 lua ssl free session: ([0-9A-F]+):1
 $/
---- error_log
-lua ssl server name: "openresty.org"
-SSL: TLSv1.2, cipher: "ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2
+--- error_log eval
+[
+'lua ssl server name: "openresty.org"',
+qr/SSL: TLSv1\.2, cipher: "ECDHE-RSA-AES(?:256|128)-GCM-SHA(?:384|256) TLSv1\.2/,
+]
 --- no_error_log
 SSL reused session
 [error]
@@ -1271,9 +1273,11 @@ close: 1 nil
 qr/^lua ssl save session: ([0-9A-F]+):2
 lua ssl free session: ([0-9A-F]+):1
 $/
---- error_log
-lua ssl server name: "openresty.org"
-SSL: TLSv1, cipher: "ECDHE-RSA-AES256-SHA
+--- error_log eval
+[
+'lua ssl server name: "openresty.org"',
+qr/SSL: TLSv1, cipher: "ECDHE-RSA-AES(?:256|128)-SHA\b/,
+]
 --- no_error_log
 SSL reused session
 [error]
