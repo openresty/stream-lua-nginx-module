@@ -9,6 +9,7 @@ our $HtmlDir = html_dir;
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
+$ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 
 #log_level 'warn';
 
@@ -21,7 +22,7 @@ __DATA__
 === TEST 1: sanity
 --- stream_config
 server {
-    listen 127.0.0.1:9988;
+    listen unix:$TEST_NGINX_HTML_DIR/nginx.sock;
 
     return testing\npreread\n;
 }
@@ -29,8 +30,7 @@ server {
 --- stream_server_config
     preread_by_lua_block {
         local sock = ngx.socket.tcp()
-        local port = 9988
-        local ok, err = sock:connect("127.0.0.1", port)
+        local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -38,16 +38,16 @@ server {
 
         ngx.say("connected: ", ok)
 
-    local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-            -- req = "OK"
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+        -- req = "OK"
 
-            local bytes, err = sock:send(req)
-            if not bytes then
-                ngx.say("failed to send request: ", err)
-                return
-            end
+        local bytes, err = sock:send(req)
+        if not bytes then
+        ngx.say("failed to send request: ", err)
+        return
+        end
 
-            ngx.say("request sent: ", bytes)
+        ngx.say("request sent: ", bytes)
 
         while true do
             local line, err, part = sock:receive()
