@@ -29,6 +29,9 @@ env:
     - PCRE_PREFIX=/opt/pcre
     - PCRE_LIB=$PCRE_PREFIX/lib
     - PCRE_INC=$PCRE_PREFIX/include
+    - OPENSSL_PREFIX=/opt/ssl
+    - OPENSSL_LIB=$OPENSSL_PREFIX/lib
+    - OPENSSL_INC=$OPENSSL_PREFIX/include
     - JOBS=3
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
