@@ -2861,18 +2861,18 @@ ngx_stream_lua_socket_tcp_settimeouts(lua_State *L)
 static void
 ngx_stream_lua_socket_tcp_handler(ngx_event_t *ev)
 {
-    ngx_connection_t                *c;
-    ngx_stream_lua_request_t              *r;
-
-
+    ngx_stream_lua_request_t                                 *r;
     ngx_stream_lua_socket_tcp_upstream_t  *u;
+    ngx_connection_t                               *c;
+
 
     c = ev->data;
     u = c->data;
     r = u->request;
     c = r->connection;
 
-
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                   "stream lua tcp socket handler: wev %d", (int) ev->write);
 
     if (ev->write) {
         u->write_event_handler(r, u);
@@ -4251,17 +4251,17 @@ ngx_stream_lua_req_socket(lua_State *L)
     ngx_stream_lua_socket_tcp_upstream_t  *u;
 
     n = lua_gettop(L);
-    if (n == 0) {
-        raw = 0;
 
-    } else if (n == 1) {
-        raw = lua_toboolean(L, 1);
-        lua_pop(L, 1);
-
-    } else {
+    if (n != 0 && n != 1) {
         return luaL_error(L, "expecting zero arguments, but got %d",
                           lua_gettop(L));
     }
+
+    if (n == 1) {
+        lua_pop(L, 1);
+    }
+
+    raw = 1;
 
     r = ngx_stream_lua_get_req(L);
 
@@ -4272,12 +4272,8 @@ ngx_stream_lua_req_socket(lua_State *L)
         return luaL_error(L, "no ctx found");
     }
 
-
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  |NGX_STREAM_LUA_CONTEXT_PREREAD);
-
-    raw = 1;
-
 
     c = r->connection;
 

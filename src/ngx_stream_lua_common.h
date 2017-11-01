@@ -10,7 +10,9 @@
 
 
 
+#ifndef NGX_LUA_NO_FFI_API
 #define NGX_LUA_NO_FFI_API
+#endif
 
 
 

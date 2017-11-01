@@ -1315,18 +1315,19 @@ ngx_stream_lua_socket_udp_cleanup(void *data)
 static void
 ngx_stream_lua_socket_udp_handler(ngx_event_t *ev)
 {
-    ngx_connection_t                *c;
-    ngx_stream_lua_request_t              *r;
-
-
-
+    ngx_stream_lua_request_t                                 *r;
     ngx_stream_lua_socket_udp_upstream_t  *u;
+    ngx_connection_t                               *c;
+
 
     c = ev->data;
     u = c->data;
     r = u->request;
     c = r->connection;
 
+
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                   "lua udp socket handler: wev %d", (int) ev->write);
 
 
     u->read_event_handler(r, u);
