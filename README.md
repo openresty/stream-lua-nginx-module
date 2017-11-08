@@ -123,10 +123,14 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [init_by_lua_file](https://github.com/openresty/lua-nginx-module#init_by_lua_file)
 * [init_worker_by_lua_block](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_block)
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
+* [preread_by_lua_block](#preread_by_lua_block)
+* [preread_by_lua_file](#preread_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
 * [content_by_lua_file](https://github.com/openresty/lua-nginx-module#content_by_lua_file)
 * [balancer_by_lua_block](https://github.com/openresty/lua-nginx-module#balancer_by_lua_block)
 * [balancer_by_lua_file](https://github.com/openresty/lua-nginx-module#balancer_by_lua_file)
+* [log_by_lua_block](#log_by_lua_block)
+* [log_by_lua_file](#log_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
@@ -150,6 +154,89 @@ now be simulated with the newly added [tcpsock:shutdown](#tcpsockshutdown) metho
 
 [Back to TOC](#table-of-contents)
 
+preread_by_lua_block
+--------------------
+
+**syntax:** *preread_by_lua_block { lua-script }*
+
+**context:** *stream, server*
+
+**phase:** *preread*
+
+Acts as a rewrite phase handler and executes Lua code string specified in `lua-script` for every connection
+(or packet in datagram mode).
+The Lua code may make [API calls](#nginx-api-for-lua) and is executed as a new spawned coroutine in an independent global environment (i.e. a sandbox).
+
+It is possible to acquire raw request socket using [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
+and receive data from or send data to the client. However, keep in mind that calling the `receive()` method
+of the request socket will consume the data from the buffer and those data will not be seen by handlers
+further down the chain.
+
+This directive was first introduced in the `v0.0.3` release.
+
+[Back to TOC](#directives)
+
+preread_by_lua_file
+--------------------
+
+**syntax:** *preread_by_lua_file &lt;path-to-lua-script-file&gt;*
+
+**context:** *stream, server*
+
+**phase:** *preread*
+
+Equivalent to [preread_by_lua_block](#preread_by_lua_block), except that the file specified by `<path-to-lua-script-file>` contains the Lua code
+or LuaJIT bytecode to be executed.
+
+Nginx variables can be used in the `<path-to-lua-script-file>` string to provide flexibility. This however carries some risks and is not ordinarily recommended.
+
+When a relative path like `foo/bar.lua` is given, they will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option while starting the Nginx server.
+
+When the Lua code cache is turned on (by default), the user code is loaded once at the first request and cached and the Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid reloading Nginx.
+
+This directive was first introduced in the `v0.0.3` release.
+
+[Back to TOC](#directives)
+
+log_by_lua_block
+--------------------
+
+**syntax:** *log_by_lua_block { lua-script }*
+
+**context:** *stream, server*
+
+**phase:** *log*
+
+Runs the Lua source code inlined as the `<lua-script-str>` at the `log` request processing phase. This does not replace the current access logs, but runs before.
+
+Yielding APIs in this phase, such as `ngx.req.socket`, `ngx.socket.*`, `ngx.sleep`, `ngx.say` are **not** available in this phase.
+
+This directive was first introduced in the `v0.0.3` release.
+
+[Back to TOC](#directives)
+
+log_by_lua_file
+--------------------
+
+**syntax:** *preread_by_lua_file &lt;path-to-lua-script-file&gt;*
+
+**context:** *stream, server*
+
+**phase:** *preread*
+
+Equivalent to [log_by_lua_block](#log_by_lua_block), except that the file specified by `<path-to-lua-script-file>` contains the Lua code
+or LuaJIT bytecode to be executed.
+
+Nginx variables can be used in the `<path-to-lua-script-file>` string to provide flexibility. This however carries some risks and is not ordinarily recommended.
+
+When a relative path like `foo/bar.lua` is given, they will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option while starting the Nginx server.
+
+When the Lua code cache is turned on (by default), the user code is loaded once at the first request and cached and the Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid reloading Nginx.
+
+This directive was first introduced in the `v0.0.3` release.
+
+[Back to TOC](#directives)
+
 Nginx API for Lua
 -----------------
 
@@ -170,8 +257,9 @@ other stream modules.
 * [print](https://github.com/openresty/lua-nginx-module#print)
 * [ngx.ctx](https://github.com/openresty/lua-nginx-module#ngxctx)
 * [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
+* [ngx.balancer](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md)
 
-    Only raw request sockets are supported, for obvious reasons. The `raw` argument value
+Only raw request sockets are supported, for obvious reasons. The `raw` argument value
 is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_module`,
 you can still call output API functions like `ngx.say`, `ngx.print`, and `ngx.flush`
 after acquiring the raw request socket via this function.
@@ -297,12 +385,8 @@ TODO
 ====
 
 * Add new directives `access_by_lua_block` and `access_by_lua_file`.
-* Add new directives `log_by_lua_block` and `log_by_lua_file`.
-* Add new directives `balancer_by_lua_block` and `balancer_by_lua_file`.
 * Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
 * Add `ngx.semaphore` API.
-* Add `ngx_meta_lua_module` to share as much code as possible between this module and `ngx_http_lua_module` and allow sharing
-of `lua_shared_dict`.
 * Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
 * Add `lua_postpone_output` to emulate the [postpone_output](http://nginx.org/r/postpone_output) directive.
 
@@ -313,7 +397,7 @@ Nginx Compatibility
 
 The latest version of this module is compatible with the following versions of Nginx:
 
-* 1.13.x >= 1.13.3 (last tested: 1.13.3)
+* 1.13.x >= 1.13.3 (last tested: 1.13.6)
 
 Nginx cores older than 1.13.3 (exclusive) are *not* tested and may or may not work. Use at your own risk!
 
@@ -401,7 +485,7 @@ Acknowledgments
 
 * We appreciate [Mashape, Inc.](https://www.mashape.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
 this module compatible with Nginx core 1.13.3. In addition, they sponsored the work on making code sharing between this module and
-[lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua* support possible.
+[lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua_*, preread_by_lua_* and log_by_lua_* support possible.
 
 Copyright and License
 =====================
