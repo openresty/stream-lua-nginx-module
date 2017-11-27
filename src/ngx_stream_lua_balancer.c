@@ -366,7 +366,7 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
             r->session->upstream->peer.tries += bp->more_tries;
         }
 
-        dd("tries: %d", (int) r->upstream->peer.tries);
+        dd("tries: %d", (int) r->session->upstream->peer.tries);
 
         return NGX_OK;
     }
