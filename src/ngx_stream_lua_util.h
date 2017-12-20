@@ -446,6 +446,36 @@ ngx_stream_lua_get_flush_chain(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t
 }
 
 
+#if (nginx_version < 1011002)
+static ngx_inline in_port_t
+ngx_inet_get_port(struct sockaddr *sa)
+{
+    struct sockaddr_in   *sin;
+#if (NGX_HAVE_INET6)
+    struct sockaddr_in6  *sin6;
+#endif
+
+    switch (sa->sa_family) {
+
+#if (NGX_HAVE_INET6)
+    case AF_INET6:
+        sin6 = (struct sockaddr_in6 *) sa;
+        return ntohs(sin6->sin6_port);
+#endif
+
+#if (NGX_HAVE_UNIX_DOMAIN)
+    case AF_UNIX:
+        return 0;
+#endif
+
+    default: /* AF_INET */
+        sin = (struct sockaddr_in *) sa;
+        return ntohs(sin->sin_port);
+    }
+}
+#endif
+
+
 extern ngx_uint_t  ngx_stream_lua_location_hash;
 extern ngx_uint_t  ngx_stream_lua_content_length_hash;
 

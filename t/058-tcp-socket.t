@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 183;
+plan tests => repeat_each() * 186;
 
 our $HtmlDir = html_dir;
 
@@ -290,7 +290,7 @@ send: nil closed
 receive: nil closed
 close: nil closed
 --- error_log
-lua tcp socket connect timed out
+lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
 --- timeout: 10
 
 
@@ -3071,3 +3071,19 @@ connected: 1
 --- error_log
 stream lua shutdown socket write direction
 failed to setkeepalive: closed
+
+
+
+=== TEST 62: TEST 62: the upper bound of port range should be 2^16 - 1
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.socket.connect("127.0.0.1", 65536)
+        if not sock then
+            ngx.say("failed to connect: ", err)
+        end
+    }
+
+--- stream_response
+failed to connect: bad port number: 65536
+--- no_error_log
+[error]

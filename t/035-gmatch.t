@@ -354,6 +354,7 @@ done
 --- stream_server_config
     content_by_lua_block {
     package.loaded.foo = nil
+    collectgarbage()
     local foo = require "foo"
     local m = foo.go()
     ngx.say(m and "matched" or "no")

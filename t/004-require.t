@@ -29,6 +29,7 @@ __DATA__
     # load
     content_by_lua_block {
         package.loaded.foo = nil;
+        collectgarbage()
         local foo = require "foo";
         foo.hi()
     }

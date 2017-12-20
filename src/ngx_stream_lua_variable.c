@@ -338,7 +338,7 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
 int
 ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
     size_t name_len, u_char *lowcase_buf, u_char *value, size_t value_len,
-    u_char *errbuf, size_t errlen)
+    u_char *errbuf, size_t *errlen)
 {
     u_char                      *p;
     ngx_uint_t                   hash;
@@ -347,12 +347,15 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
     ngx_stream_core_main_conf_t   *cmcf;
 
     if (r == NULL) {
-        ngx_snprintf(errbuf, errlen, "no request object found");
+        *errlen = ngx_snprintf(errbuf, *errlen, "no request object found")
+                  - errbuf;
         return NGX_ERROR;
     }
 
     if ((r)->connection->fd == (ngx_socket_t) -1) {
-        ngx_snprintf(errbuf, errlen, "API disabled in the current context");
+        *errlen = ngx_snprintf(errbuf, *errlen,
+                               "API disabled in the current context")
+                  - errbuf;
         return NGX_ERROR;
     }
 
@@ -369,8 +372,10 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
     if (v) {
         if (!(v->flags & NGX_STREAM_VAR_CHANGEABLE)) {
             dd("variable not changeable");
-            ngx_snprintf(errbuf, errlen, "variable \"%*s\" not changeable",
-                         name_len, lowcase_buf);
+            *errlen = ngx_snprintf(errbuf, *errlen,
+                                   "variable \"%*s\" not changeable",
+                                   name_len, lowcase_buf)
+                      - errbuf;
             return NGX_ERROR;
         }
 
@@ -449,23 +454,27 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
             return NGX_OK;
         }
 
-        ngx_snprintf(errbuf, errlen, "variable \"%*s\" cannot be assigned "
-                     "a value", name_len, lowcase_buf);
+        *errlen = ngx_snprintf(errbuf, *errlen,
+                               "variable \"%*s\" cannot be assigned "
+                               "a value", name_len, lowcase_buf)
+                  - errbuf;
         return NGX_ERROR;
     }
 
     /* variable not found */
 
-    ngx_snprintf(errbuf, errlen, "variable \"%*s\" not found for writing; "
-                 "maybe it is a built-in variable that is not changeable "
-                 "or you forgot to use \"set $%*s '';\" "
-                 "in the config file to define it first",
-                 name_len, lowcase_buf, name_len, lowcase_buf);
+    *errlen = ngx_snprintf(errbuf, *errlen,
+                           "variable \"%*s\" not found for writing; "
+                           "maybe it is a built-in variable that is not "
+                           "changeable or you forgot to use \"set $%*s '';\" "
+                           "in the config file to define it first",
+                           name_len, lowcase_buf, name_len, lowcase_buf)
+              - errbuf;
     return NGX_ERROR;
 
 nomem:
 
-    ngx_snprintf(errbuf, errlen, "no memory");
+    *errlen = ngx_snprintf(errbuf, *errlen, "no memory") - errbuf;
     return NGX_ERROR;
 }
 #endif /* NGX_LUA_NO_FFI_API */
