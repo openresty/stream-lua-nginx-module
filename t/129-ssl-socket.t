@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 7);
+plan tests => repeat_each() * 216;
 
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 
@@ -26,7 +26,7 @@ sub read_file {
     $cert;
 }
 
-our $ComodoRootCertificate = read_file("t/cert/comodo-ca.crt");
+our $DSTRootCertificate = read_file("t/cert/dst-ca.crt");
 our $EquifaxRootCertificate = read_file("t/cert/equifax.crt");
 our $TestCertificate = read_file("t/cert/test.crt");
 our $TestCertificateKey = read_file("t/cert/test.key");
@@ -406,19 +406,19 @@ The certificate of "openresty.org" does not contain the name "blah.openresty.org
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
---- stream_response
-connected: 1
-failed to do SSL handshake: certificate host mismatch
+--- stream_response_like chomp
+\Aconnected: 1
+failed to do SSL handshake: (?:handshake failed|certificate host mismatch)
 failed to send stream request: closed
+\z
 
 --- log_level: debug
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+:\d+/
 --- grep_error_log_out
 --- error_log
 stream lua ssl server name: "blah.openresty.org"
-stream lua ssl certificate does not match host "blah.openresty.org"
 --- no_error_log
 SSL reused session
 [alert]
@@ -482,12 +482,13 @@ The certificate for "openresty.org" does not contain the name "blah.openresty.or
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
---- stream_response
-connected: 1
-failed to do SSL handshake: certificate host mismatch
+--- stream_response_like chomp
+\Aconnected: 1
+failed to do SSL handshake: (?:handshake failed|certificate host mismatch)
 failed to send stream request: closed
+\z
 
 --- log_level: debug
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+:\d+/
@@ -632,7 +633,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -712,7 +713,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -787,7 +788,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -961,7 +962,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -1035,7 +1036,7 @@ SSL reused session
 --- user_files eval
 ">>> trusted.crt
 $::EquifaxRootCertificate
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -1402,7 +1403,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -1476,7 +1477,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 connected: 1
@@ -1528,7 +1529,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::ComodoRootCertificate"
+$::DSTRootCertificate"
 
 --- stream_response
 --- log_level: debug

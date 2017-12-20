@@ -22,7 +22,7 @@
 /* Public API for other Nginx modules */
 
 
-#define ngx_stream_lua_version  4
+#define ngx_stream_lua_version  10012
 
 
 typedef struct {

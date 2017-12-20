@@ -836,7 +836,7 @@ stream lua tcp socket keepalive max idle timeout
 [
 qq{stream lua tcp socket keepalive create connection pool for key "127.0.0.1:$ENV{TEST_NGINX_MEMCACHED_PORT}"},
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
-"stream lua tcp socket keepalive: free connection pool for ",
+qr/\blua tcp socket keepalive: free connection pool [0-9A-F]+ for "127.0.0.1:/,
 ]
 
 
