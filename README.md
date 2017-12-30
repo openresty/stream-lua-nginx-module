@@ -145,6 +145,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_check_client_abort](https://github.com/openresty/lua-nginx-module#lua_check_client_abort)
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
+* [lua_add_variable](#lua_add_variable)
 
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
 So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
@@ -222,7 +223,7 @@ log_by_lua_file
 
 **context:** *stream, server*
 
-**phase:** *preread*
+**phase:** *log*
 
 Equivalent to [log_by_lua_block](#log_by_lua_block), except that the file specified by `<path-to-lua-script-file>` contains the Lua code
 or LuaJIT bytecode to be executed.
@@ -234,6 +235,23 @@ When a relative path like `foo/bar.lua` is given, they will be turned into the a
 When the Lua code cache is turned on (by default), the user code is loaded once at the first request and cached and the Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid reloading Nginx.
 
 This directive was first introduced in the `v0.0.3` release.
+
+[Back to TOC](#directives)
+
+lua_add_variable
+----------------
+
+**syntax:** *lua_add_variable $var*
+
+**context:** *stream*
+
+Add variable `$var` to the stream subsystem and makes it changeable. If `$var` already exists,
+this directive will do nothing.
+
+By default, variables added using this directive are considered "not found" and reading them
+using `ngx.var` will return `nil`. However, they could be re-assigned using `ngx.var` code at any time.
+
+This directive was first introduced in the `v0.0.x` release.
 
 [Back to TOC](#directives)
 
