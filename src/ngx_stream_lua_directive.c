@@ -1197,4 +1197,52 @@ ngx_stream_lua_strlstrn(u_char *s1, u_char *last, u_char *s2, size_t n)
 }
 
 
+static ngx_int_t
+ngx_stream_lua_undefined_var(ngx_stream_session_t *s,
+    ngx_stream_variable_value_t *v, uintptr_t data)
+{
+    v->not_found = 1;
+
+    return NGX_OK;
+}
+
+
+char *
+ngx_stream_lua_add_variable(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    ngx_stream_variable_t           *var;
+    ngx_str_t                       *value;
+    ngx_int_t                        ret;
+
+    value = cf->args->elts;
+
+    if (value[1].data[0] != '$') {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "invalid variable name \"%V\"", &value[1]);
+        return NGX_CONF_ERROR;
+    }
+
+    value[1].len--;
+    value[1].data++;
+
+    var = ngx_stream_add_variable(cf, value + 1, NGX_STREAM_VAR_CHANGEABLE
+                                                 |NGX_STREAM_VAR_WEAK);
+    if (var == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (var->get_handler == NULL) {
+        var->get_handler = ngx_stream_lua_undefined_var;
+    }
+
+    ret = ngx_stream_get_variable_index(cf, value + 1);
+    if (ret == NGX_ERROR) {
+        return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+
+
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

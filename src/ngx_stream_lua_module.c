@@ -400,6 +400,13 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       NULL },
 
+     { ngx_string("lua_add_variable"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_add_variable,
+      0,
+      0,
+      NULL },
+
     ngx_null_command
 };
 
