@@ -8,7 +8,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 4);
+plan tests => repeat_each() * (blocks() * 4 + 1);
 
 #no_diff();
 no_long_string();
@@ -48,3 +48,43 @@ bar
 --- no_error_log
 [warn]
 [error]
+
+
+
+=== TEST 3: multiple add with same name works
+--- stream_config
+    lua_add_variable $foo;
+    lua_add_variable $foo;
+--- stream_server_config
+    preread_by_lua_block {
+        ngx.var.foo = "bar"
+    }
+
+    return $foo\n;
+--- stream_response
+bar
+--- no_error_log
+[warn]
+[error]
+
+
+
+=== TEST 4: accessible in log phase
+--- stream_config
+    lua_add_variable $foo;
+
+    log_format test "access log: $foo";
+    access_log logs/error.log test;
+--- stream_server_config
+    preread_by_lua_block {
+        ngx.var.foo = "bar"
+    }
+
+    return $foo\n;
+--- stream_response
+bar
+--- no_error_log
+[warn]
+[error]
+--- error_log
+access log: bar
