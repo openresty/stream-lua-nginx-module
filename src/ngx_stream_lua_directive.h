@@ -45,6 +45,9 @@ ngx_stream_lua_preread_by_lua_block(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 char *
 ngx_stream_lua_preread_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+char *
+ngx_stream_lua_add_variable(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
 char *ngx_stream_lua_conf_lua_block_parse(ngx_conf_t *cf,
     ngx_command_t *cmd);
