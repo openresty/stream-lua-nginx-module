@@ -1385,9 +1385,8 @@ ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L)
                     return 2;
                 }
 
-                ngx_log_debug2(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                               "stream lua ssl set session: %p:%d",
-                               *psession, (*psession)->references);
+                ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                               "stream lua ssl set session: %p", *psession);
             }
         }
 
@@ -1651,9 +1650,8 @@ ngx_stream_lua_ssl_handshake_retval_handler(ngx_stream_lua_request_t *r,
     } else {
         *ud = ssl_session;
 
-       ngx_log_debug2(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                      "stream lua ssl save session: %p:%d", ssl_session,
-                      ssl_session->references);
+       ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
+                      "stream lua ssl save session: %p", ssl_session);
 
         /* set up the __gc metamethod */
         lua_pushlightuserdata(L, &ngx_stream_lua_ssl_session_metatable_key);
@@ -5420,9 +5418,8 @@ ngx_stream_lua_ssl_free_session(lua_State *L)
 
     psession = lua_touserdata(L, 1);
     if (psession && *psession != NULL) {
-        ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                       "stream lua ssl free session: %p:%d", *psession,
-                       (*psession)->references);
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                       "stream lua ssl free session: %p", *psession);
 
         ngx_ssl_free_session(*psession);
     }
