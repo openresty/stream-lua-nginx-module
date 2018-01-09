@@ -4,12 +4,13 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 215;
+plan tests => repeat_each() * 216;
 
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
+$ENV{TEST_NGINX_SERVER_SSL_PORT} ||= 12345;
 
 #log_level 'warn';
 log_level 'debug';
@@ -119,15 +120,27 @@ SSL reused session
 
 
 === TEST 2: no SNI, no verify
+--- stream_config
+    server {
+        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        ssl_certificate ../html/test.crt;
+        ssl_certificate_key ../html/test.key;
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()
+            if data == "ping" then
+                ngx.say("pong")
+            end
+        }
+    }
+
 --- stream_server_config
-    resolver $TEST_NGINX_RESOLVER ipv6=off;
-
     content_by_lua_block {
-        local sock = ngx.socket.tcp()
-        sock:settimeout(2000)
-
         do
-            local ok, err = sock:connect("openresty.org", 443)
+            local sock = ngx.socket.tcp()
+            sock:settimeout(2000)
+            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -143,18 +156,18 @@ SSL reused session
 
             ngx.say("ssl handshake: ", type(session))
 
-            local req = "GET / HTTP/1.1\r\nHost: openresty.org\r\nConnection: close\r\n\r\n"
-            local bytes, err = sock:send(req)
+            local req = "ping"
+            local bytes, err = sock:send(req .. '\n')
             if not bytes then
-                ngx.say("failed to send stream request: ", err)
+                ngx.say("failed to send request: ", err)
                 return
             end
 
-            ngx.say("sent stream request: ", bytes, " bytes.")
+            ngx.say("sent: ", req)
 
             local line, err = sock:receive()
             if not line then
-                ngx.say("failed to recieve response status line: ", err)
+                ngx.say("failed to receive response: ", err)
                 return
             end
 
@@ -166,19 +179,28 @@ SSL reused session
         collectgarbage()
     }
 
---- config
-    server_tokens off;
-
 --- stream_response
 connected: 1
-failed to do SSL handshake: handshake failed
+ssl handshake: userdata
+sent: ping
+received: pong
+close: 1 nil
 
---- log_level: debug
+--- user_files eval
+">>> test.key
+$::TestCertificateKey
+>>> test.crt
+$::TestCertificate"
+
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
---- grep_error_log_out
+--- grep_error_log_out eval
+qr/^lua ssl save session: ([0-9A-F]+)
+lua ssl free session: ([0-9A-F]+)
+$/
 --- no_error_log
 lua ssl server name:
 SSL reused session
+[error]
 [alert]
 --- timeout: 5
 
