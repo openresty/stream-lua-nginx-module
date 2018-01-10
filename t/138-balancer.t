@@ -49,6 +49,10 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
         proxy_pass backend;
 --- error_log
 [lua] balancer_by_lua:2: hello from balancer by lua! while connecting to upstream,
+lua exit with code 403
+proxy connect: 403
+finalize stream proxy: 403
+finalize stream session: 403
 --- no_error_log eval
 [
 '[warn]',
