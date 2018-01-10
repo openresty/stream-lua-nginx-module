@@ -344,7 +344,11 @@ ngx_stream_lua_balancer_get_peer(ngx_peer_connection_t *pc, void *data)
         rc = ctx->exit_code;
         if (rc == NGX_ERROR
             || rc == NGX_BUSY
-            || rc == NGX_DECLINED        ) {
+            || rc == NGX_DECLINED
+#ifdef HAVE_BALANCER_STATUS_CODE_PATCH
+            || rc >= NGX_STREAM_SPECIAL_RESPONSE
+#endif
+        ) {
             return rc;
         }
 
