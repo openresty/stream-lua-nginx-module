@@ -196,7 +196,7 @@ struct ngx_stream_lua_main_conf_s {
 
     ngx_array_t         *preload_hooks; /* of ngx_stream_lua_preload_hook_t */
 
-
+    ngx_flag_t           postponed_to_preread_phase_end;
 
     ngx_stream_lua_main_conf_handler_pt    init_handler;
     ngx_str_t                            init_src;

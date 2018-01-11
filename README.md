@@ -146,6 +146,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
 * [lua_add_variable](#lua_add_variable)
+* [preread_by_lua_no_postpone](#rewrite_by_lua_no_postpone)
 
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
 So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
@@ -172,6 +173,9 @@ It is possible to acquire raw request socket using [ngx.req.socket](https://gith
 and receive data from or send data to the client. However, keep in mind that calling the `receive()` method
 of the request socket will consume the data from the buffer and those data will not be seen by handlers
 further down the chain.
+
+The `preread_by_lua_block` code will always run at the end of the `preread` processing phase unless
+[preread\_by\_lua\_no\_postpone](#preread_by_lua_no_postpone) is turned on.
 
 This directive was first introduced in the `v0.0.3` release.
 
@@ -250,6 +254,21 @@ this directive will do nothing.
 
 By default, variables added using this directive are considered "not found" and reading them
 using `ngx.var` will return `nil`. However, they could be re-assigned using `ngx.var` code at any time.
+
+This directive was first introduced in the `v0.0.x` release.
+
+[Back to TOC](#directives)
+
+preread_by_lua_no_postpone
+--------------------------
+
+**syntax:** *preread_by_lua_no_postpone on|off*
+
+**context:** *stream*
+
+Controls whether or not to disable postponing [preread\_by\_lua*](#preread_by_lua_block) directives
+to run at the end of the `preread` processing phase. By default, this directive is turned off
+and the Lua code is postponed to run at the end of the `preread` phase.
 
 This directive was first introduced in the `v0.0.x` release.
 
