@@ -61,7 +61,7 @@ __DATA__
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 100
-stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
+stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
 --- timeout: 10
 
 
@@ -86,7 +86,7 @@ stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 150
-stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
+stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
 --- timeout: 10
 
 
@@ -110,7 +110,7 @@ stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 102
-stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
+stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
 
 
 
@@ -134,7 +134,7 @@ stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 102
-stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
+stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
 --- timeout: 10
 
 
@@ -613,7 +613,7 @@ after
 2: connected: 1
 --- error_log
 lua tcp socket connect timeout: 100
-stream lua tcp socket connect timed out, when connecting to 106.184.1.99:12345
+stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
 --- timeout: 10
 
 
