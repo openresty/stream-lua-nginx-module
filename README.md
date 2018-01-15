@@ -146,7 +146,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
 * [lua_add_variable](#lua_add_variable)
-* [preread_by_lua_no_postpone](#rewrite_by_lua_no_postpone)
+* [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)
 
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
 So `ngx_stream_lua_module` uses the `lua_socket_send_timeout` for this purpose.
@@ -165,7 +165,7 @@ preread_by_lua_block
 
 **phase:** *preread*
 
-Acts as a rewrite phase handler and executes Lua code string specified in `lua-script` for every connection
+Acts as a `preread` phase handler and executes Lua code string specified in `lua-script` for every connection
 (or packet in datagram mode).
 The Lua code may make [API calls](#nginx-api-for-lua) and is executed as a new spawned coroutine in an independent global environment (i.e. a sandbox).
 
