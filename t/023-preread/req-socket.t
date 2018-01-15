@@ -163,6 +163,7 @@ done
             ngx.say("got the request socket")
         else
             ngx.say("failed to get the request socket: ", err)
+            return
         end
 
         for i = 1, 2 do
@@ -171,6 +172,7 @@ done
                 ngx.say("received: ", data)
             else
                 ngx.say("failed to receive: ", err, " [", part, "]")
+                return
             end
         end
     }
@@ -197,6 +199,7 @@ received:  worl
             ngx.say("got the request socket")
         else
             ngx.say("failed to get the request socket: ", err)
+            return
         end
 
         for i = 1, 2 do
@@ -205,6 +208,7 @@ received:  worl
                 ngx.say("received: ", data)
             else
                 ngx.say("failed to receive: ", err, " [", part, "]")
+                return
             end
         end
     }
