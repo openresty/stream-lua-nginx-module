@@ -153,3 +153,71 @@ done
 
 
 
+=== TEST 6: read from preread buffer
+--- stream_server_config
+    ssl_preread on;
+
+    preread_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if sock then
+            ngx.say("got the request socket")
+        else
+            ngx.say("failed to get the request socket: ", err)
+            return
+        end
+
+        for i = 1, 2 do
+            local data, err, part = sock:receive(5)
+            if data then
+                ngx.say("received: ", data)
+            else
+                ngx.say("failed to receive: ", err, " [", part, "]")
+                return
+            end
+        end
+    }
+    content_by_lua return;
+--- stream_request
+hello world
+--- stream_response
+got the request socket
+received: hello
+received:  worl
+--- no_error_log
+[error]
+
+
+
+=== TEST 7: small preread buffer
+--- stream_server_config
+    ssl_preread on;
+    preread_buffer_size 5;
+
+    preread_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if sock then
+            ngx.say("got the request socket")
+        else
+            ngx.say("failed to get the request socket: ", err)
+            return
+        end
+
+        for i = 1, 2 do
+            local data, err, part = sock:receive(5)
+            if data then
+                ngx.say("received: ", data)
+            else
+                ngx.say("failed to receive: ", err, " [", part, "]")
+                return
+            end
+        end
+    }
+    content_by_lua return;
+--- stream_request
+hello world
+--- stream_response
+got the request socket
+received: hello
+received:  worl
+--- no_error_log
+[error]

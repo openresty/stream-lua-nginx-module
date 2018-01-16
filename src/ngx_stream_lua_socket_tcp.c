@@ -2128,8 +2128,7 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
     size_t                       size;
     ssize_t                      n;
     unsigned                     read;
-
-
+    off_t                        preread = 0;
 
     ngx_stream_lua_loc_conf_t     *llcf;
 
@@ -2159,35 +2158,6 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
                                (int) u->read_waiting, (int) u->eof);
 
 
-                if (u->body_downstream
-                    && b->last == b->pos
-
-                )
-                {
-
-                    llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
-
-                    if (llcf->check_client_abort) {
-                        rc = ngx_stream_lua_check_broken_connection(r, rev);
-
-                        if (rc == NGX_OK) {
-                            goto success;
-                        }
-
-
-                        if (rc == NGX_ERROR) {
-
-                            ngx_stream_lua_socket_handle_read_error(r, u,
-                                          NGX_STREAM_LUA_SOCKET_FT_CLIENTABORT);
-
-                        } else {
-                            ngx_stream_lua_socket_handle_read_error(r, u,
-                                             NGX_STREAM_LUA_SOCKET_FT_ERROR);
-                        }
-
-                        return NGX_ERROR;
-                    }
-                }
 
 #if 1
                 if (ngx_handle_read_event(rev, 0) != NGX_OK) {
@@ -2197,7 +2167,6 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
                 }
 #endif
 
-success:
 
                 ngx_stream_lua_socket_handle_read_success(r, u);
                 return NGX_OK;
@@ -2214,12 +2183,6 @@ success:
 
             /* rc == NGX_AGAIN */
 
-            if (u->body_downstream
-
-            )
-            {
-                u->eof = 1;
-            }
 
             continue;
         }
@@ -2244,7 +2207,27 @@ success:
             size = (size_t) (b->end - b->last);
         }
 
+        if (u->raw_downstream) {
+            if (r->connection->buffer != NULL) {
+                preread = ngx_buf_size(r->connection->buffer);
+            }
 
+            if (preread) {
+
+                if ((off_t) size > preread) {
+                    size = (size_t) preread;
+                }
+
+                ngx_stream_lua_probe_req_socket_consume_preread(r,
+                                                                         r->connection->buffer->pos,
+                                                                         size);
+
+                b->last = ngx_copy(b->last, r->connection->buffer->pos, size);
+                r->connection->buffer->pos += size;
+                continue;
+            }
+
+        }
 
 #if 1
         if (rev->active && !rev->ready) {
