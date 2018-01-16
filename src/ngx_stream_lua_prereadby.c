@@ -27,10 +27,42 @@ ngx_stream_lua_preread_handler(ngx_stream_session_t *s)
     ngx_int_t                     rc;
     ngx_stream_lua_ctx_t         *ctx;
     ngx_stream_lua_srv_conf_t    *lscf;
+    ngx_stream_lua_main_conf_t   *lmcf;
     ngx_stream_lua_request_t     *r;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, s->connection->log, 0,
                    "lua preread handler");
+
+    lmcf = ngx_stream_get_module_main_conf(s, ngx_stream_lua_module);
+
+    if (!lmcf->postponed_to_preread_phase_end) {
+        ngx_stream_core_main_conf_t       *cmcf;
+        ngx_stream_phase_handler_t         tmp;
+        ngx_stream_phase_handler_t        *ph;
+        ngx_stream_phase_handler_t        *cur_ph;
+        ngx_stream_phase_handler_t        *last_ph;
+
+        lmcf->postponed_to_preread_phase_end = 1;
+
+        cmcf = ngx_stream_get_module_main_conf(s, ngx_stream_core_module);
+
+        ph = cmcf->phase_engine.handlers;
+        cur_ph = &ph[s->phase_handler];
+        last_ph = &ph[cur_ph->next - 1];
+
+        if (cur_ph < last_ph) {
+            tmp      = *cur_ph;
+
+            ngx_memmove(cur_ph, cur_ph + 1,
+                        (last_ph - cur_ph) * sizeof (ngx_stream_phase_handler_t));
+
+            *last_ph = tmp;
+
+            s->phase_handler--; /* redo the current ph */
+
+            return NGX_DECLINED;
+        }
+    }
 
     lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 

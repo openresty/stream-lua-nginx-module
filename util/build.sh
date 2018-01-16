@@ -27,6 +27,7 @@ ngx-build $force $version \
             --without-http_userid_module \
             --with-stream_ssl_module \
             --with-stream \
+            --with-stream_ssl_preread_module \
             --with-ipv6 \
             --add-module=$root/../lua-nginx-module \
             --add-module=$root/../echo-nginx-module \

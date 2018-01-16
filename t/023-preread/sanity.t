@@ -7,7 +7,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 2);
+plan tests => repeat_each() * (blocks() * 2 + 4);
 
 #no_diff();
 #no_long_string();
@@ -156,6 +156,46 @@ ngx.eof()
 ngx.exit(ngx.OK)
 --- stream_response
 Hi
+
+
+
+=== TEST 32: phase postponing works
+--- stream_server_config
+    ssl_preread on;
+    preread_by_lua_block {
+        ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. ngx.var.ssl_preread_server_name)
+
+        if ngx.var.ssl_preread_server_name == "my.sni.server.name" then
+            ngx.exit(200)
+        end
+
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("127.0.0.1", tonumber(ngx.var.server_port))
+        if not ok then
+            ngx.say(err)
+            return ngx.exit(500)
+        end
+
+        local _, err = sock:sslhandshake(nil, "my.sni.server.name")
+        if not err then
+            ngx.say("did not error as expected")
+            return ngx.exit(500)
+        end
+
+        sock:close()
+    }
+
+    return done;
+--- stream_request
+hello world
+--- stream_response chop
+done
+--- error_log
+$ssl_preread_server_name =  while prereading client data
+$ssl_preread_server_name = my.sni.server.name while prereading client data
+--- no_error_log
+[crit]
+[warn]
 
 
 

@@ -253,7 +253,12 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_log_handler_file },
 
-
+    { ngx_string("preread_by_lua_no_postpone"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, postponed_to_preread_phase_end),
+      NULL },
 
     { ngx_string("balancer_by_lua_block"),
       NGX_STREAM_UPS_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -468,6 +473,10 @@ ngx_stream_lua_init(ngx_conf_t *cf)
         *h = ngx_stream_lua_preread_handler;
     }
 
+    if (lmcf->postponed_to_preread_phase_end == NGX_CONF_UNSET) {
+        lmcf->postponed_to_preread_phase_end = 0;
+    }
+
     dd("requires log: %d", (int) lmcf->requires_log);
 
     if (lmcf->requires_log) {
@@ -616,7 +625,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
     lmcf->regex_match_limit = NGX_CONF_UNSET;
 #endif
 
-
+    lmcf->postponed_to_preread_phase_end = NGX_CONF_UNSET;
 
 #if (NGX_STREAM_LUA_HAVE_MALLOC_TRIM)
     lmcf->malloc_trim_cycle = NGX_CONF_UNSET_UINT;
