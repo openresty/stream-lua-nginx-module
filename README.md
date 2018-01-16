@@ -255,7 +255,7 @@ this directive will do nothing.
 By default, variables added using this directive are considered "not found" and reading them
 using `ngx.var` will return `nil`. However, they could be re-assigned using `ngx.var` code at any time.
 
-This directive was first introduced in the `v0.0.x` release.
+This directive was first introduced in the `v0.0.4` release.
 
 [Back to TOC](#directives)
 
@@ -270,7 +270,7 @@ Controls whether or not to disable postponing [preread\_by\_lua*](#preread_by_lu
 to run at the end of the `preread` processing phase. By default, this directive is turned off
 and the Lua code is postponed to run at the end of the `preread` phase.
 
-This directive was first introduced in the `v0.0.x` release.
+This directive was first introduced in the `v0.0.4` release.
 
 [Back to TOC](#directives)
 
