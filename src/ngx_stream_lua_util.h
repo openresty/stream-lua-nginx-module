@@ -274,9 +274,9 @@ static ngx_inline ngx_stream_lua_ctx_t *
 ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
 
 {
-    lua_State                   *L;
+    lua_State                              *L;
     ngx_stream_lua_ctx_t          *ctx;
-    ngx_pool_cleanup_t          *cln;
+    ngx_pool_cleanup_t                     *cln;
     ngx_stream_lua_loc_conf_t     *llcf;
     ngx_stream_lua_main_conf_t    *lmcf;
 
@@ -312,9 +312,25 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
 
         dd("lmcf: %p", lmcf);
 
+        /*
+         * caveats: we need to move the vm cleanup hook to the list end
+         * to ensure it will be executed *after* the request cleanup
+         * hook registered by ngx_stream_lua_create_request to preserve
+         * the correct semantics.
+         */
 
         L = ngx_stream_lua_init_vm(lmcf->lua, lmcf->cycle, sreq->pool, lmcf,
                                    r->connection->log, &cln);
+
+        while (cln->next != NULL) {
+            cln = cln->next;
+        }
+
+        cln->next = sreq->pool->cleanup;
+
+        cln = sreq->pool->cleanup;
+        sreq->pool->cleanup = cln->next;
+        cln->next = NULL;
 
         if (L == NULL) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
