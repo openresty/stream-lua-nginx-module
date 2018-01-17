@@ -15,6 +15,7 @@
 
 static ngx_int_t ngx_stream_lua_set_write_handler(ngx_stream_lua_request_t *r);
 static void ngx_stream_lua_writer(ngx_stream_lua_request_t *r);
+static void ngx_stream_lua_request_cleanup(void *data);
 
 
 ngx_stream_lua_cleanup_t *
@@ -71,11 +72,31 @@ ngx_stream_lua_cleanup_add(ngx_stream_lua_request_t *r, size_t size)
 }
 
 
+static void
+ngx_stream_lua_request_cleanup(void *data)
+{
+    ngx_stream_lua_request_t    *r = data;
+    ngx_stream_lua_cleanup_t    *cln;
+
+    cln = r->cleanup;
+    r->cleanup = NULL;
+
+    while (cln) {
+        if (cln->handler) {
+            cln->handler(cln->data);
+        }
+
+        cln = cln->next;
+    }
+}
+
+
 ngx_stream_lua_request_t *
 ngx_stream_lua_create_request(ngx_stream_session_t *s)
 {
-    ngx_pool_t               *pool;
-    ngx_stream_lua_request_t *r;
+    ngx_pool_t                  *pool;
+    ngx_stream_lua_request_t    *r;
+    ngx_pool_cleanup_t          *cln;
 
 #if 0
     pool = ngx_create_pool(NGX_DEFAULT_POOL_SIZE, s->connection->log);
@@ -94,6 +115,14 @@ ngx_stream_lua_create_request(ngx_stream_session_t *s)
     r->connection = s->connection;
     r->session = s;
     r->pool = pool;
+
+    cln = ngx_pool_cleanup_add(pool, 0);
+    if (cln == NULL) {
+        return NULL;
+    }
+
+    cln->handler = ngx_stream_lua_request_cleanup;
+    cln->data = r;
 
     return r;
 }
@@ -164,7 +193,6 @@ ngx_stream_lua_block_reading(ngx_stream_lua_request_t *r)
 void
 ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 {
-    ngx_stream_lua_cleanup_t  *cln;
 #if 0
     ngx_pool_t                *pool;
 #endif
@@ -180,7 +208,7 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
     }
 
     if (rc == NGX_DECLINED || rc == NGX_STREAM_INTERNAL_SERVER_ERROR) {
-        goto cleanup;
+        goto done;
     }
 
     if (rc == NGX_DONE) {
@@ -193,23 +221,13 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 
     if (r->connection->buffered) {
         if (ngx_stream_lua_set_write_handler(r) != NGX_OK) {
-            goto cleanup;
+            goto done;
         }
 
         return;
     }
 
-cleanup:
-    cln = r->cleanup;
-    r->cleanup = NULL;
-
-    while (cln) {
-        if (cln->handler) {
-            cln->handler(cln->data);
-        }
-
-        cln = cln->next;
-    }
+done:
 
 #if 0
     pool = r->pool;
