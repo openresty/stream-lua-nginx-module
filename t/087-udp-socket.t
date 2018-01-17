@@ -870,7 +870,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 
 
-=== TEST 20: the upper bound of port range should be 2^16 - 1
+=== TEST 18: the upper bound of port range should be 2^16 - 1
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -888,7 +888,7 @@ failed to connect: bad port number: 65536
 
 
 
-=== TEST 21: UDP socket GC'ed in preread phase without Lua content phase
+=== TEST 19: UDP socket GC'ed in preread phase without Lua content phase
 --- stream_server_config
     preread_by_lua_block {
         do

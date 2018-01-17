@@ -3074,7 +3074,7 @@ failed to setkeepalive: closed
 
 
 
-=== TEST 62: TEST 62: the upper bound of port range should be 2^16 - 1
+=== TEST 57: TEST 62: the upper bound of port range should be 2^16 - 1
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.socket.connect("127.0.0.1", 65536)
@@ -3089,7 +3089,8 @@ failed to connect: bad port number: 65536
 [error]
 
 
-=== TEST 63: TCP socket GC'ed in preread phase without Lua content phase
+
+=== TEST 58: TCP socket GC'ed in preread phase without Lua content phase
 --- stream_server_config
     lua_socket_connect_timeout 1s;
     resolver $TEST_NGINX_RESOLVER ipv6=off;
