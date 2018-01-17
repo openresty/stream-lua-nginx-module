@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (3 * blocks() + 12);
+plan tests => repeat_each() * (3 * blocks() + 14);
 
 our $HtmlDir = html_dir;
 
@@ -885,3 +885,33 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 failed to connect: bad port number: 65536
 --- no_error_log
 [error]
+
+
+
+=== TEST 21: UDP socket GC'ed in preread phase without Lua content phase
+--- stream_server_config
+    preread_by_lua_block {
+        do
+            local udpsock = ngx.socket.udp()
+
+            local res, err = udpsock:setpeername("127.0.0.1", 1234)
+            if not res then
+                ngx.log(ngx.ERR, err)
+            end
+        end
+
+        ngx.timer.at(0, function()
+            collectgarbage()
+            ngx.log(ngx.WARN, "GC cycle done")
+        end)
+    }
+
+    return 1;
+
+--- stream_response chomp
+1
+--- no_error_log
+[error]
+--- error_log
+cleanup lua udp socket upstream request
+GC cycle done
