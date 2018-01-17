@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 186;
+plan tests => repeat_each() * 191;
 
 our $HtmlDir = html_dir;
 
@@ -3087,3 +3087,39 @@ failed to setkeepalive: closed
 failed to connect: bad port number: 65536
 --- no_error_log
 [error]
+
+
+=== TEST 63: TCP socket GC'ed in preread phase without Lua content phase
+--- stream_server_config
+    lua_socket_connect_timeout 1s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
+
+    preread_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+            local ok, err = sock:connect("openresty.org", 443)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+        end
+
+        ngx.timer.at(0, function()
+            collectgarbage()
+            ngx.log(ngx.WARN, "GC cycle done")
+        end)
+    }
+
+    return 1;
+
+--- stream_response chomp
+connected: 1
+1
+--- no_error_log
+[error]
+--- error_log
+cleanup lua tcp socket request
+GC cycle done
