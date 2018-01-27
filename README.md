@@ -223,7 +223,7 @@ This directive was first introduced in the `v0.0.3` release.
 log_by_lua_file
 --------------------
 
-**syntax:** *preread_by_lua_file &lt;path-to-lua-script-file&gt;*
+**syntax:** *log_by_lua_file &lt;path-to-lua-script-file&gt;*
 
 **context:** *stream, server*
 
