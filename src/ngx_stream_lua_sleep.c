@@ -27,9 +27,10 @@ ngx_stream_lua_ngx_sleep(lua_State *L)
 {
     int                          n;
     ngx_int_t                    delay; /* in msec */
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx;
+    ngx_stream_lua_request_t    *r;
+
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx;
 
     n = lua_gettop(L);
     if (n != 1) {
@@ -100,36 +101,22 @@ ngx_stream_lua_ngx_sleep(lua_State *L)
 void
 ngx_stream_lua_sleep_handler(ngx_event_t *ev)
 {
-
 #if (NGX_DEBUG)
-
-
-    ngx_connection_t        *c;
-
-
+    ngx_connection_t                *c;
 #endif
-
-
-    ngx_stream_lua_request_t      *r;
-    ngx_stream_lua_ctx_t      *ctx;
-
-
-
-    ngx_stream_lua_co_ctx_t   *coctx;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
+    ngx_stream_lua_co_ctx_t         *coctx;
 
     coctx = ev->data;
 
     r = coctx->data;
 
-
 #if (NGX_DEBUG)
-
 
     c = r->connection;
 
-
 #endif
-
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
 
@@ -138,13 +125,10 @@ ngx_stream_lua_sleep_handler(ngx_event_t *ev)
     }
 
 
-
     coctx->cleanup = NULL;
-
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
                    "stream lua sleep timer expired");
-
 
     ctx->cur_co_ctx = coctx;
 
@@ -170,7 +154,7 @@ ngx_stream_lua_inject_sleep_api(lua_State *L)
 static void
 ngx_stream_lua_sleep_cleanup(void *data)
 {
-    ngx_stream_lua_co_ctx_t          *coctx = data;
+    ngx_stream_lua_co_ctx_t                *coctx = data;
 
     if (coctx->sleep.timer_set) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
@@ -193,11 +177,11 @@ ngx_stream_lua_sleep_cleanup(void *data)
 static ngx_int_t
 ngx_stream_lua_sleep_resume(ngx_stream_lua_request_t *r)
 {
-    lua_State                              *vm;
-    ngx_connection_t                       *c;
-    ngx_int_t                               rc;
-    ngx_uint_t                              nreqs;
-    ngx_stream_lua_ctx_t          *ctx;
+    lua_State                           *vm;
+    ngx_connection_t                    *c;
+    ngx_int_t                            rc;
+    ngx_uint_t                           nreqs;
+    ngx_stream_lua_ctx_t                *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {

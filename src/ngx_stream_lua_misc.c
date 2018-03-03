@@ -21,7 +21,6 @@ static int ngx_stream_lua_ngx_set(lua_State *L);
 
 
 
-
 void
 ngx_stream_lua_inject_misc_api(lua_State *L)
 {
@@ -37,15 +36,14 @@ ngx_stream_lua_inject_misc_api(lua_State *L)
 
 
 
-
 static int
 ngx_stream_lua_ngx_get(lua_State *L)
 {
-    int                             status;
-    ngx_stream_lua_request_t                 *r;
-    u_char                         *p;
-    size_t                          len;
-    ngx_stream_lua_ctx_t  *ctx;
+    int                          status;
+    ngx_stream_lua_request_t    *r;
+    u_char                      *p;
+    size_t                       len;
+    ngx_stream_lua_ctx_t        *ctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -83,7 +81,6 @@ ngx_stream_lua_ngx_get(lua_State *L)
     }
 
 
-
     dd("key %s not matched", p);
 
     lua_pushnil(L);
@@ -94,13 +91,12 @@ ngx_stream_lua_ngx_get(lua_State *L)
 static int
 ngx_stream_lua_ngx_set(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
+    ngx_stream_lua_request_t    *r;
     u_char                      *p;
     size_t                       len;
 
     /* we skip the first argument that is the table */
     p = (u_char *) luaL_checklstring(L, 2, &len);
-
 
 
     if (len == sizeof("ctx") - 1
@@ -120,7 +116,6 @@ ngx_stream_lua_ngx_set(lua_State *L)
 
 
 #ifndef NGX_LUA_NO_FFI_API
-
 #endif /* NGX_LUA_NO_FFI_API */
 
 

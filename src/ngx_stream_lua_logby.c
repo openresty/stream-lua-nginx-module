@@ -25,7 +25,8 @@
 #endif
 
 
-static ngx_int_t ngx_stream_lua_log_by_chunk(lua_State *L, ngx_stream_lua_request_t *r);
+static ngx_int_t ngx_stream_lua_log_by_chunk(lua_State *L,
+    ngx_stream_lua_request_t *r);
 
 
 static void
@@ -64,11 +65,11 @@ ngx_int_t
 ngx_stream_lua_log_handler(ngx_stream_session_t *r)
 {
 #if (NGX_STREAM_LUA_HAVE_MALLOC_TRIM)
-    ngx_uint_t                              trim_cycle, trim_nreq;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_uint_t                           trim_cycle, trim_nreq;
+    ngx_stream_lua_main_conf_t          *lmcf;
 #endif
-    ngx_stream_lua_loc_conf_t     *llcf;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_loc_conf_t           *llcf;
+    ngx_stream_lua_ctx_t                *ctx;
 
 #if (NGX_STREAM_LUA_HAVE_MALLOC_TRIM)
     lmcf = ngx_stream_lua_get_module_main_conf(r, ngx_stream_lua_module);
@@ -131,9 +132,9 @@ ngx_stream_lua_log_handler(ngx_stream_session_t *r)
 ngx_int_t
 ngx_stream_lua_log_handler_inline(ngx_stream_lua_request_t *r)
 {
-    lua_State                              *L;
-    ngx_int_t                               rc;
-    ngx_stream_lua_loc_conf_t     *llcf;
+    lua_State                           *L;
+    ngx_int_t                            rc;
+    ngx_stream_lua_loc_conf_t           *llcf;
 
     dd("log by lua inline");
 
@@ -143,10 +144,10 @@ ngx_stream_lua_log_handler_inline(ngx_stream_lua_request_t *r)
 
     /*  load Lua inline script (w/ cache) sp = 1 */
     rc = ngx_stream_lua_cache_loadbuffer(r->connection->log, L,
-                                       llcf->log_src.value.data,
-                                       llcf->log_src.value.len,
-                                       llcf->log_src_key,
-                                       (const char *) llcf->log_chunkname);
+                                         llcf->log_src.value.data,
+                                         llcf->log_src.value.len,
+                                         llcf->log_src_key,
+                                         (const char *) llcf->log_chunkname);
     if (rc != NGX_OK) {
         return NGX_ERROR;
     }
@@ -158,20 +159,22 @@ ngx_stream_lua_log_handler_inline(ngx_stream_lua_request_t *r)
 ngx_int_t
 ngx_stream_lua_log_handler_file(ngx_stream_lua_request_t *r)
 {
-    lua_State                                  *L;
-    ngx_int_t                                   rc;
-    u_char                                     *script_path;
-    ngx_stream_lua_loc_conf_t         *llcf;
-    ngx_str_t                                   eval_src;
+    lua_State                               *L;
+    ngx_int_t                                rc;
+    u_char                                  *script_path;
+    ngx_stream_lua_loc_conf_t               *llcf;
+    ngx_str_t                                eval_src;
 
     llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
 
-    if (ngx_stream_complex_value(r->session, &llcf->log_src, &eval_src) != NGX_OK) {
+    if (ngx_stream_complex_value(r->session, &llcf->log_src, &eval_src)
+        != NGX_OK)
+    {
         return NGX_ERROR;
     }
 
     script_path = ngx_stream_lua_rebase_path(r->pool, eval_src.data,
-                                                      eval_src.len);
+                                             eval_src.len);
 
     if (script_path == NULL) {
         return NGX_ERROR;
@@ -181,7 +184,7 @@ ngx_stream_lua_log_handler_file(ngx_stream_lua_request_t *r)
 
     /*  load Lua script file (w/ cache)        sp = 1 */
     rc = ngx_stream_lua_cache_loadfile(r->connection->log, L, script_path,
-                                                llcf->log_src_key);
+                                       llcf->log_src_key);
     if (rc != NGX_OK) {
         return NGX_ERROR;
     }

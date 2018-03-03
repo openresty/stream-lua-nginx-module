@@ -40,5 +40,4 @@ ngx_stream_lua_inject_core_consts(lua_State *L)
 
 
 
-
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

@@ -39,19 +39,19 @@ typedef struct {
 
 
 typedef struct {
-    ngx_stream_lua_shdict_shctx_t  *sh;
-    ngx_slab_pool_t              *shpool;
-    ngx_str_t                     name;
-    ngx_stream_lua_main_conf_t     *main_conf;
-    ngx_log_t                    *log;
+    ngx_stream_lua_shdict_shctx_t       *sh;
+    ngx_slab_pool_t                     *shpool;
+    ngx_str_t                            name;
+    ngx_stream_lua_main_conf_t          *main_conf;
+    ngx_log_t                           *log;
 } ngx_stream_lua_shdict_ctx_t;
 
 
 typedef struct {
-    ngx_log_t                   *log;
-    ngx_stream_lua_main_conf_t    *lmcf;
-    ngx_cycle_t                 *cycle;
-    ngx_shm_zone_t               zone;
+    ngx_log_t                           *log;
+    ngx_stream_lua_main_conf_t          *lmcf;
+    ngx_cycle_t                         *cycle;
+    ngx_shm_zone_t                       zone;
 } ngx_stream_lua_shm_zone_ctx_t;
 
 

@@ -33,7 +33,6 @@ static char *ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent,
 
 
 
-
 static ngx_int_t ngx_stream_lua_init(ngx_conf_t *cf);
 static char *ngx_stream_lua_lowat_check(ngx_conf_t *cf, void *post, void *data);
 #if (NGX_STREAM_SSL)
@@ -50,7 +49,6 @@ static ngx_conf_post_t  ngx_stream_lua_lowat_post =
 
 
 
-
 #if (NGX_STREAM_SSL) && defined(nginx_version) && nginx_version >= 1001013
 
 static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
@@ -59,14 +57,14 @@ static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
     { ngx_string("TLSv1"), NGX_SSL_TLSv1 },
     { ngx_string("TLSv1.1"), NGX_SSL_TLSv1_1 },
     { ngx_string("TLSv1.2"), NGX_SSL_TLSv1_2 },
+#ifdef NGX_SSL_TLSv1_3
+    { ngx_string("TLSv1.3"), NGX_SSL_TLSv1_3 },
+#endif
     { ngx_null_string, 0 }
 };
 
 #endif
 
-
-
-    
 
 
 
@@ -92,7 +90,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       0,
       NULL },
-
 
 
 #if (NGX_PCRE)
@@ -129,21 +126,16 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
           |NGX_CONF_FLAG,
       ngx_stream_lua_code_cache,
-
       NGX_STREAM_SRV_CONF_OFFSET,
-
       offsetof(ngx_stream_lua_loc_conf_t, enable_code_cache),
       NULL },
-
 
 
      { ngx_string("lua_socket_log_errors"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
           |NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
-
       NGX_STREAM_SRV_CONF_OFFSET,
-
       offsetof(ngx_stream_lua_loc_conf_t, log_socket_errors),
       NULL },
 
@@ -204,10 +196,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       0,
       (void *) ngx_stream_lua_preread_handler_inline },
-
-
-    
-    
 
 
     /* content_by_lua "<inline script>" */
@@ -275,10 +263,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       (void *) ngx_stream_lua_balancer_handler_file },
 
 
-    
-    
-
-
     { ngx_string("lua_socket_keepalive_timeout"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
           |NGX_CONF_TAKE1,
@@ -336,7 +320,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NULL },
 
 
-
     { ngx_string("lua_check_client_abort"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
           |NGX_CONF_FLAG,
@@ -345,12 +328,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       offsetof(ngx_stream_lua_srv_conf_t, check_client_abort),
       NULL },
 
-
-
-
-    
-    
-    
 
 
 #if (NGX_STREAM_SSL)
@@ -372,7 +349,6 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, ssl_ciphers),
       NULL },
-
 
 
     { ngx_string("lua_ssl_verify_depth"),
@@ -426,7 +402,6 @@ ngx_stream_module_t ngx_stream_lua_module_ctx = {
     ngx_stream_lua_create_srv_conf,     /*  create server configuration */
     ngx_stream_lua_merge_srv_conf,      /*  merge server configuration */
 
-
 };
 
 
@@ -449,17 +424,16 @@ ngx_module_t ngx_stream_lua_module = {
 static ngx_int_t
 ngx_stream_lua_init(ngx_conf_t *cf)
 {
-    ngx_int_t                              rc;
-    volatile ngx_cycle_t                  *saved_cycle;
-    ngx_stream_lua_main_conf_t   *lmcf;
-    ngx_array_t                           *arr;
-    ngx_stream_handler_pt        *h;
-    ngx_stream_core_main_conf_t  *cmcf;
-
+    ngx_int_t                           rc;
+    volatile ngx_cycle_t               *saved_cycle;
+    ngx_stream_lua_main_conf_t         *lmcf;
+    ngx_array_t                        *arr;
+    ngx_stream_handler_pt              *h;
+    ngx_stream_core_main_conf_t        *cmcf;
 
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf,
-                                                         ngx_stream_lua_module);
+                                                ngx_stream_lua_module);
 
 
     cmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_core_module);
@@ -502,7 +476,6 @@ ngx_stream_lua_init(ngx_conf_t *cf)
     }
 
 
-
 #ifndef NGX_LUA_NO_FFI_API
     /* add the cleanup of semaphores after the lua_close */
     cln = ngx_pool_cleanup_add(cf->pool, 0);
@@ -515,14 +488,12 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 #endif
 
 
-
     if (lmcf->lua == NULL) {
         dd("initializing lua vm");
 
 
-
         lmcf->lua = ngx_stream_lua_init_vm(NULL, cf->cycle, cf->pool, lmcf,
-                                         cf->log, NULL);
+                                           cf->log, NULL);
         if (lmcf->lua == NULL) {
             ngx_conf_log_error(NGX_LOG_ERR, cf, 0,
                                "failed to initialize Lua VM");
@@ -586,7 +557,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
     ngx_int_t       rc;
 #endif
 
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     lmcf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_lua_main_conf_t));
     if (lmcf == NULL) {
@@ -647,7 +618,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
 static char *
 ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 {
-    ngx_stream_lua_main_conf_t *lmcf = conf;
+    ngx_stream_lua_main_conf_t       *lmcf = conf;
 
 #if (NGX_PCRE)
     if (lmcf->regex_cache_max_entries == NGX_CONF_UNSET) {
@@ -683,12 +654,10 @@ ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 
 
 
-
-
 static void *
 ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 {
-    ngx_stream_lua_srv_conf_t     *conf;
+    ngx_stream_lua_srv_conf_t           *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_lua_srv_conf_t));
     if (conf == NULL) {
@@ -713,8 +682,6 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
      *      lscf->balancer.src_key = NULL;
      */
 
-    
-        
     conf->enable_code_cache  = NGX_CONF_UNSET;
     conf->check_client_abort = NGX_CONF_UNSET;
 
@@ -732,8 +699,6 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
     conf->ssl_verify_depth = NGX_CONF_UNSET_UINT;
 #endif
 
-    
-
     return conf;
 }
 
@@ -741,19 +706,17 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 static char *
 ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
+    ngx_stream_lua_srv_conf_t       *prev = parent;
+    ngx_stream_lua_srv_conf_t       *conf = child;
 
-    ngx_stream_lua_srv_conf_t *prev = parent;
-    ngx_stream_lua_srv_conf_t *conf = child;
-
-    
 #if (NGX_STREAM_SSL)
 
 #   if defined(nginx_version) && nginx_version >= 1001013
 
     ngx_conf_merge_bitmask_value(conf->ssl_protocols, prev->ssl_protocols,
-                                 (NGX_CONF_BITMASK_SET|NGX_SSL_SSLv3
-                                  |NGX_SSL_TLSv1|NGX_SSL_TLSv1_1
-                                  |NGX_SSL_TLSv1_2));
+                                 NGX_CONF_BITMASK_SET|NGX_SSL_SSLv3
+                                 |NGX_SSL_TLSv1|NGX_SSL_TLSv1_1
+                                 |NGX_SSL_TLSv1_2);
 
 #   endif
 
@@ -798,7 +761,6 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->log_socket_errors, prev->log_socket_errors, 1);
 
-
     if (conf->preread_src.value.len == 0) {
         conf->preread_src = prev->preread_src;
         conf->preread_handler = prev->preread_handler;
@@ -806,10 +768,8 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->preread_chunkname = prev->preread_chunkname;
     }
 
-
     return NGX_CONF_OK;
 }
-
 
 
 
@@ -817,9 +777,7 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #if (NGX_STREAM_SSL)
 
 static ngx_int_t
-
 ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lxcf)
-
 {
     ngx_pool_cleanup_t  *cln;
 
@@ -894,7 +852,7 @@ ngx_stream_lua_malloc_trim(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_int_t       nreqs;
     ngx_str_t      *value;
 
-    ngx_stream_lua_main_conf_t    *lmcf = conf;
+    ngx_stream_lua_main_conf_t          *lmcf = conf;
 
     value = cf->args->elts;
 

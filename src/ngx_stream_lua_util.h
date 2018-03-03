@@ -26,8 +26,8 @@ typedef struct {
 
 
 typedef struct {
-    ngx_stream_lua_ffi_str_t   key;
-    ngx_stream_lua_ffi_str_t   value;
+    ngx_stream_lua_ffi_str_t         key;
+    ngx_stream_lua_ffi_str_t         value;
 } ngx_stream_lua_ffi_table_elt_t;
 #endif /* NGX_LUA_NO_FFI_API */
 
@@ -67,29 +67,25 @@ extern char ngx_stream_lua_headers_metatable_key;
 
 
 
-
 #if defined(nginx_version) && nginx_version < 1000000
 #define ngx_memmove(dst, src, n)   (void) memmove(dst, src, n)
 #endif
 
 
-
-#define ngx_stream_lua_context_name(c)                                         \
-    ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"                 \
-     : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                       \
-     : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                       \
-     : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"       \
-     : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"             \
-     : (c) == NGX_STREAM_LUA_CONTEXT_PREREAD ? "preread_by_lua*"               \
+#define ngx_stream_lua_context_name(c)                                       \
+    ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
+     : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"           \
+     : (c) == NGX_STREAM_LUA_CONTEXT_PREREAD ? "preread_by_lua*"             \
      : "(unknown)")
 
 
-
-#define ngx_stream_lua_check_context(L, ctx, flags)                   \
-    if (!((ctx)->context & (flags))) {                                         \
-        return luaL_error(L, "API disabled in the context of %s",              \
-                          ngx_stream_lua_context_name((ctx)           \
-                                                                   ->context));\
+#define ngx_stream_lua_check_context(L, ctx, flags)                          \
+    if (!((ctx)->context & (flags))) {                                       \
+        return luaL_error(L, "API disabled in the context of %s",            \
+                          ngx_stream_lua_context_name((ctx)->context));      \
     }
 
 
@@ -112,20 +108,21 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx,
 #endif
 
 
-#define ngx_stream_lua_check_fake_request(L, r)                                \
+#define ngx_stream_lua_check_fake_request(L, r)                              \
     if ((r)->connection->fd == (ngx_socket_t) -1) {                          \
         return luaL_error(L, "API disabled in the current context");         \
     }
 
 
-#define ngx_stream_lua_check_fake_request2(L, r, ctx)                          \
+#define ngx_stream_lua_check_fake_request2(L, r, ctx)                        \
     if ((r)->connection->fd == (ngx_socket_t) -1) {                          \
         return luaL_error(L, "API disabled in the context of %s",            \
-                          ngx_stream_lua_context_name((ctx)->context));        \
+                          ngx_stream_lua_context_name((ctx)                  \
+                          ->context));                                       \
     }
 
 
-#define ngx_stream_lua_ssl_get_ctx(ssl_conn)                                   \
+#define ngx_stream_lua_ssl_get_ctx(ssl_conn)                                 \
     SSL_get_ex_data(ssl_conn, ngx_stream_lua_ssl_ctx_index)
 
 
@@ -193,8 +190,8 @@ int ngx_stream_lua_traceback(lua_State *L);
 ngx_stream_lua_co_ctx_t *ngx_stream_lua_get_co_ctx(lua_State *L,
     ngx_stream_lua_ctx_t *ctx);
 
-ngx_stream_lua_co_ctx_t *ngx_stream_lua_create_co_ctx(ngx_stream_lua_request_t *r,
-    ngx_stream_lua_ctx_t *ctx);
+ngx_stream_lua_co_ctx_t *ngx_stream_lua_create_co_ctx(
+    ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx);
 
 ngx_int_t ngx_stream_lua_run_posted_threads(ngx_connection_t *c, lua_State *L,
     ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx, ngx_uint_t nreqs);
@@ -228,14 +225,10 @@ void ngx_stream_lua_cleanup_vm(void *data);
 
 ngx_connection_t *ngx_stream_lua_create_fake_connection(ngx_pool_t *pool);
 
-
 ngx_stream_lua_request_t *
     ngx_stream_lua_create_fake_request(ngx_stream_session_t *s);
 
-
-
 ngx_stream_session_t *ngx_stream_lua_create_fake_session(ngx_connection_t *c);
-
 
 ngx_int_t ngx_stream_lua_report(ngx_log_t *log, lua_State *L, int status,
     const char *prefix);
@@ -244,17 +237,13 @@ int ngx_stream_lua_do_call(ngx_log_t *log, lua_State *L);
 
 
 
-
-
-
-
 void ngx_stream_lua_cleanup_free(ngx_stream_lua_request_t *r,
     ngx_stream_lua_cleanup_pt *cleanup);
 
 
-#define ngx_stream_lua_check_if_abortable(L, ctx)                             \
-    if ((ctx)->no_abort) {                                                  \
-        return luaL_error(L, "attempt to abort with pending subrequests");  \
+#define ngx_stream_lua_check_if_abortable(L, ctx)                            \
+    if ((ctx)->no_abort) {                                                   \
+        return luaL_error(L, "attempt to abort with pending subrequests");   \
     }
 
 
@@ -270,20 +259,15 @@ ngx_stream_lua_init_ctx(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
 
 
 static ngx_inline ngx_stream_lua_ctx_t *
-
 ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
-
 {
-    lua_State                              *L;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_pool_cleanup_t                     *cln;
-    ngx_stream_lua_loc_conf_t     *llcf;
-    ngx_stream_lua_main_conf_t    *lmcf;
-
+    lua_State                           *L;
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_pool_cleanup_t                  *cln;
+    ngx_stream_lua_loc_conf_t           *llcf;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     ngx_stream_lua_request_t               *sreq;
-
-
 
     ctx = ngx_palloc(r->connection->pool, sizeof(ngx_stream_lua_ctx_t));
     if (ctx == NULL) {
@@ -296,16 +280,11 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
         return NULL;
     }
 
-
-
     ngx_stream_lua_init_ctx(sreq, ctx);
-
 
     ngx_stream_set_ctx(r, ctx, ngx_stream_lua_module);
 
-
     llcf = ngx_stream_get_module_srv_conf(r, ngx_stream_lua_module);
-
 
     if (!llcf->enable_code_cache && r->connection->fd != (ngx_socket_t) -1) {
         lmcf = ngx_stream_get_module_main_conf(r, ngx_stream_lua_module);
@@ -356,9 +335,10 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
 
 
 static ngx_inline lua_State *
-ngx_stream_lua_get_lua_vm(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
+ngx_stream_lua_get_lua_vm(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_ctx_t *ctx)
 {
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     if (ctx == NULL) {
         ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
@@ -412,7 +392,7 @@ ngx_stream_lua_set_globals_table(lua_State *L)
 }
 
 
-#define ngx_stream_lua_hash_literal(s)                                        \
+#define ngx_stream_lua_hash_literal(s)                                       \
     ngx_stream_lua_hash_str((u_char *) s, sizeof(s) - 1)
 
 
@@ -434,7 +414,6 @@ ngx_stream_lua_hash_str(u_char *src, size_t n)
 
 
 
-
 static ngx_inline void
 ngx_stream_lua_cleanup_pending_operation(ngx_stream_lua_co_ctx_t *coctx)
 {
@@ -446,12 +425,13 @@ ngx_stream_lua_cleanup_pending_operation(ngx_stream_lua_co_ctx_t *coctx)
 
 
 static ngx_inline ngx_chain_t *
-ngx_stream_lua_get_flush_chain(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
+ngx_stream_lua_get_flush_chain(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_ctx_t *ctx)
 {
     ngx_chain_t  *cl;
 
     cl = ngx_stream_lua_chain_get_free_buf(r->connection->log, r->pool,
-                                         &ctx->free_bufs, 0);
+                                           &ctx->free_bufs, 0);
     if (cl == NULL) {
         return NULL;
     }

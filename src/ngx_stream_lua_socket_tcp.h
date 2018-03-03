@@ -52,23 +52,24 @@ typedef struct {
 
 
 struct ngx_stream_lua_socket_tcp_upstream_s {
-    ngx_stream_lua_socket_tcp_retval_handler          read_prepare_retvals;
-    ngx_stream_lua_socket_tcp_retval_handler          write_prepare_retvals;
-    ngx_stream_lua_socket_tcp_upstream_handler_pt     read_event_handler;
-    ngx_stream_lua_socket_tcp_upstream_handler_pt     write_event_handler;
+    ngx_stream_lua_socket_tcp_retval_handler            read_prepare_retvals;
+    ngx_stream_lua_socket_tcp_retval_handler            write_prepare_retvals;
+    ngx_stream_lua_socket_tcp_upstream_handler_pt       read_event_handler;
+    ngx_stream_lua_socket_tcp_upstream_handler_pt       write_event_handler;
 
-    ngx_stream_lua_socket_pool_t      *socket_pool;
+    ngx_stream_lua_socket_pool_t            *socket_pool;
 
-    ngx_stream_lua_loc_conf_t         *conf;
-    ngx_stream_lua_cleanup_pt             *cleanup;
-    ngx_stream_lua_request_t              *request;
+    ngx_stream_lua_loc_conf_t               *conf;
+    ngx_stream_lua_cleanup_pt               *cleanup;
+    ngx_stream_lua_request_t                *request;
+
     ngx_peer_connection_t            peer;
 
     ngx_msec_t                       read_timeout;
     ngx_msec_t                       send_timeout;
     ngx_msec_t                       connect_timeout;
 
-    ngx_stream_upstream_resolved_t    *resolved;
+    ngx_stream_upstream_resolved_t          *resolved;
 
     ngx_chain_t                     *bufs_in; /* input data buffers */
     ngx_chain_t                     *buf_in; /* last input data buffer */
@@ -85,8 +86,8 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     size_t                           request_len;
     ngx_chain_t                     *request_bufs;
 
-    ngx_stream_lua_co_ctx_t           *read_co_ctx;
-    ngx_stream_lua_co_ctx_t           *write_co_ctx;
+    ngx_stream_lua_co_ctx_t                 *read_co_ctx;
+    ngx_stream_lua_co_ctx_t                 *write_co_ctx;
 
     ngx_uint_t                       reused;
 
@@ -115,25 +116,25 @@ typedef struct ngx_stream_lua_dfa_edge_s  ngx_stream_lua_dfa_edge_t;
 
 
 struct ngx_stream_lua_dfa_edge_s {
-    u_char                           chr;
+    ngx_stream_lua_dfa_edge_t       *next;
     int                              new_state;
-    ngx_stream_lua_dfa_edge_t         *next;
+    u_char                           chr;
 };
 
 
 typedef struct {
-    ngx_stream_lua_socket_tcp_upstream_t  *upstream;
+    ngx_stream_lua_socket_tcp_upstream_t        *upstream;
 
     ngx_str_t                            pattern;
+    ngx_stream_lua_dfa_edge_t          **recovering;
     int                                  state;
-    ngx_stream_lua_dfa_edge_t            **recovering;
 
     unsigned                             inclusive:1;
 } ngx_stream_lua_socket_compiled_pattern_t;
 
 
 typedef struct {
-    ngx_stream_lua_socket_pool_t      *socket_pool;
+    ngx_stream_lua_socket_pool_t            *socket_pool;
 
     ngx_queue_t                      queue;
     ngx_connection_t                *connection;

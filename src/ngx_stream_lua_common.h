@@ -9,11 +9,9 @@
 #define _NGX_STREAM_LUA_COMMON_H_INCLUDED_
 
 
-
 #ifndef NGX_LUA_NO_FFI_API
 #define NGX_LUA_NO_FFI_API
 #endif
-
 
 
 #include <nginx.h>
@@ -29,9 +27,7 @@
 #include <lauxlib.h>
 
 
-
 #include "ngx_stream_lua_request.h"
-
 
 
 #if (NGX_PCRE)
@@ -50,7 +46,6 @@
 #if !defined(nginx_version) || (nginx_version < 1006000)
 #error at least nginx 1.6.0 is required but found an older version
 #endif
-
 
 
 
@@ -89,27 +84,24 @@
 
 #define NGX_STREAM_LUA_INLINE_TAG "nhli_"
 
-#define NGX_STREAM_LUA_INLINE_TAG_LEN \
+#define NGX_STREAM_LUA_INLINE_TAG_LEN                                        \
     (sizeof(NGX_STREAM_LUA_INLINE_TAG) - 1)
 
-#define NGX_STREAM_LUA_INLINE_KEY_LEN \
+#define NGX_STREAM_LUA_INLINE_KEY_LEN                                        \
     (NGX_STREAM_LUA_INLINE_TAG_LEN + 2 * MD5_DIGEST_LENGTH)
 
 /* Nginx HTTP Lua File tag prefix */
 
 #define NGX_STREAM_LUA_FILE_TAG "nhlf_"
 
-#define NGX_STREAM_LUA_FILE_TAG_LEN \
+#define NGX_STREAM_LUA_FILE_TAG_LEN                                          \
     (sizeof(NGX_STREAM_LUA_FILE_TAG) - 1)
 
-#define NGX_STREAM_LUA_FILE_KEY_LEN \
+#define NGX_STREAM_LUA_FILE_KEY_LEN                                          \
     (NGX_STREAM_LUA_FILE_TAG_LEN + 2 * MD5_DIGEST_LENGTH)
 
 
-
 #define NGX_STREAM_CLIENT_CLOSED_REQUEST     499
-
-
 
 
 
@@ -120,14 +112,12 @@
 
 
 /* must be within 16 bit */
-
 #define NGX_STREAM_LUA_CONTEXT_CONTENT                              0x0001
 #define NGX_STREAM_LUA_CONTEXT_LOG                                  0x0002
 #define NGX_STREAM_LUA_CONTEXT_TIMER                                0x0004
 #define NGX_STREAM_LUA_CONTEXT_INIT_WORKER                          0x0008
 #define NGX_STREAM_LUA_CONTEXT_BALANCER                             0x0010
 #define NGX_STREAM_LUA_CONTEXT_PREREAD                              0x0020
-
 
 
 #ifndef NGX_LUA_NO_FFI_API
@@ -137,9 +127,7 @@
 
 
 typedef struct ngx_stream_lua_main_conf_s  ngx_stream_lua_main_conf_t;
-
-typedef struct ngx_stream_lua_srv_conf_s ngx_stream_lua_srv_conf_t;
-
+typedef struct ngx_stream_lua_srv_conf_s  ngx_stream_lua_srv_conf_t;
 
 
 typedef struct ngx_stream_lua_balancer_peer_data_s
@@ -151,8 +139,8 @@ typedef struct ngx_stream_lua_sema_mm_s  ngx_stream_lua_sema_mm_t;
 
 typedef ngx_int_t (*ngx_stream_lua_main_conf_handler_pt)(ngx_log_t *log,
     ngx_stream_lua_main_conf_t *lmcf, lua_State *L);
-typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(ngx_stream_lua_request_t *r,
-    ngx_stream_lua_srv_conf_t *lscf, lua_State *L);
+typedef ngx_int_t (*ngx_stream_lua_srv_conf_handler_pt)(
+    ngx_stream_lua_request_t *r, ngx_stream_lua_srv_conf_t *lscf, lua_State *L);
 
 
 typedef struct {
@@ -198,13 +186,13 @@ struct ngx_stream_lua_main_conf_s {
 
     ngx_flag_t           postponed_to_preread_phase_end;
 
-    ngx_stream_lua_main_conf_handler_pt    init_handler;
-    ngx_str_t                            init_src;
+    ngx_stream_lua_main_conf_handler_pt          init_handler;
+    ngx_str_t                                    init_src;
 
-    ngx_stream_lua_main_conf_handler_pt    init_worker_handler;
-    ngx_str_t                            init_worker_src;
+    ngx_stream_lua_main_conf_handler_pt          init_worker_handler;
+    ngx_str_t                                    init_worker_src;
 
-    ngx_stream_lua_balancer_peer_data_t    *balancer_peer_data;
+    ngx_stream_lua_balancer_peer_data_t          *balancer_peer_data;
     /* balancer_by_lua does not support yielding and
      * there cannot be any conflicts among concurrent requests,
      * thus it is safe to store the peer data in the main conf.
@@ -212,12 +200,11 @@ struct ngx_stream_lua_main_conf_s {
 
     ngx_uint_t                      shm_zones_inited;
 
-    ngx_stream_lua_sema_mm_t         *sema_mm;
+    ngx_stream_lua_sema_mm_t               *sema_mm;
 
     ngx_uint_t           malloc_trim_cycle;  /* a cycle is defined as the number
                                                 of reqeusts */
     ngx_uint_t           malloc_trim_req_count;
-
 
 
     unsigned             requires_preread:1;
@@ -225,16 +212,12 @@ struct ngx_stream_lua_main_conf_s {
     unsigned             requires_log:1;
     unsigned             requires_shm:1;
 
-
 };
 
 
 
 
-
-
 struct ngx_stream_lua_srv_conf_s {
-
 #if (NGX_STREAM_SSL)
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
     ngx_uint_t              ssl_protocols;
@@ -247,33 +230,34 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_flag_t              enable_code_cache; /* whether to enable
                                                   code cache */
 
-    ngx_stream_lua_handler_pt     preread_handler;
+    ngx_stream_lua_handler_pt           preread_handler;
 
-    ngx_stream_lua_handler_pt     content_handler;
-    ngx_stream_lua_handler_pt     log_handler;
+    ngx_stream_lua_handler_pt           content_handler;
+    ngx_stream_lua_handler_pt           log_handler;
 
     u_char                      *preread_chunkname;
-    ngx_stream_complex_value_t   preread_src;     /*  access_by_lua
+    ngx_stream_complex_value_t   preread_src;     /* access_by_lua
                                                 inline script/script
                                                 file path */
 
-    u_char                      *preread_src_key; /* cached key for access_src */
-
+    u_char                  *preread_src_key; /* cached key for access_src */
 
     u_char                  *content_chunkname;
-    ngx_stream_complex_value_t content_src;    /*  content_by_lua
-                                                inline script/script
-                                                file path */
+
+    ngx_stream_complex_value_t       content_src;
+                                                  /* content_by_lua
+                                                   * inline script/script
+                                                   * file path */
 
     u_char                 *content_src_key; /* cached key for content_src */
 
-    u_char                                 *log_chunkname;
-    ngx_stream_complex_value_t     log_src;     /* log_by_lua inline script/script
-                                                 file path */
+    u_char                           *log_chunkname;
+    ngx_stream_complex_value_t        log_src;
+                                              /* log_by_lua inline script/script
+                                               * file path */
 
     u_char                                 *log_src_key;
     /* cached key for log_src */
-
 
 
     ngx_msec_t                       keepalive_timeout;
@@ -287,7 +271,6 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_uint_t                       pool_size;
 
 
-
     ngx_flag_t                       log_socket_errors;
     ngx_flag_t                       check_client_abort;
 
@@ -296,14 +279,12 @@ struct ngx_stream_lua_srv_conf_s {
         ngx_str_t           src;
         u_char             *src_key;
 
-        ngx_stream_lua_srv_conf_handler_pt  handler;
+        ngx_stream_lua_srv_conf_handler_pt        handler;
     } balancer;
-
 
 };
 
 typedef ngx_stream_lua_srv_conf_t ngx_stream_lua_loc_conf_t;
-
 
 
 typedef enum {
@@ -328,10 +309,9 @@ typedef struct ngx_stream_lua_co_ctx_s  ngx_stream_lua_co_ctx_t;
 typedef struct ngx_stream_lua_posted_thread_s  ngx_stream_lua_posted_thread_t;
 
 struct ngx_stream_lua_posted_thread_s {
-    ngx_stream_lua_co_ctx_t               *co_ctx;
-    ngx_stream_lua_posted_thread_t        *next;
+    ngx_stream_lua_co_ctx_t                     *co_ctx;
+    ngx_stream_lua_posted_thread_t              *next;
 };
-
 
 
 
@@ -339,15 +319,12 @@ struct ngx_stream_lua_posted_thread_s {
 struct ngx_stream_lua_co_ctx_s {
     void                    *data;      /* user state for cosockets */
 
-    lua_State               *co;
-    ngx_stream_lua_co_ctx_t   *parent_co_ctx;
+    lua_State                       *co;
+    ngx_stream_lua_co_ctx_t         *parent_co_ctx;
 
-    ngx_stream_lua_posted_thread_t    *zombie_child_threads;
-
+    ngx_stream_lua_posted_thread_t          *zombie_child_threads;
 
     ngx_stream_lua_cleanup_pt      cleanup;
-
-
 
 
     ngx_event_t              sleep;  /* used for ngx.sleep */
@@ -393,12 +370,13 @@ typedef struct {
 
 typedef struct ngx_stream_lua_ctx_s {
     /* for lua_coce_cache off: */
-    ngx_stream_lua_vm_state_t  *vm_state;
+    ngx_stream_lua_vm_state_t           *vm_state;
 
-    ngx_stream_lua_request_t      *request;
-    ngx_stream_lua_handler_pt      resume_handler;
+    ngx_stream_lua_request_t            *request;
+    ngx_stream_lua_handler_pt            resume_handler;
 
-    ngx_stream_lua_co_ctx_t   *cur_co_ctx; /* co ctx for the current coroutine */
+    ngx_stream_lua_co_ctx_t             *cur_co_ctx;
+                                    /* co ctx for the current coroutine */
 
     /* FIXME: we should use rbtree here to prevent O(n) lookup overhead */
     ngx_list_t              *user_co_ctx; /* coroutine contexts for user
@@ -422,32 +400,26 @@ typedef struct ngx_stream_lua_ctx_s {
     ngx_chain_t             *busy_bufs;
     ngx_chain_t             *free_recv_bufs;
 
-
-    ngx_stream_lua_cleanup_pt     *cleanup;
-
-    ngx_stream_lua_cleanup_t      *free_cleanup; /* free list of cleanup records */
-
-
-
+    ngx_stream_lua_cleanup_pt  *cleanup;
+    ngx_stream_lua_cleanup_t   *free_cleanup; /* free list of cleanup records */
 
 
 
     ngx_int_t                exit_code;
 
-    void                    *downstream;  /* can be either
-                                             ngx_stream_lua_socket_tcp_upstream_t
-                                             or ngx_stream_lua_co_ctx_t */
+    void                    *downstream;
+                                    /* can be either
+                                     * ngx_stream_lua_socket_tcp_upstream_t
+                                     * or ngx_stream_lua_co_ctx_t */
 
 
-
-    ngx_stream_lua_posted_thread_t   *posted_threads;
+    ngx_stream_lua_posted_thread_t         *posted_threads;
 
     int                      uthreads; /* number of active user threads */
 
     uint16_t                 context;   /* the current running directive context
                                            (or running phase) for the current
                                            Lua chunk */
-
 
 
     unsigned                 waiting_more_body:1;   /* 1: waiting for more
@@ -473,7 +445,6 @@ typedef struct ngx_stream_lua_ctx_s {
 
     unsigned         headers_set:1; /* whether the user has set custom
                                        response headers */
-
 
     unsigned         entered_preread_phase:1;
 
@@ -503,9 +474,7 @@ typedef struct ngx_stream_lua_ctx_s {
 
 
 
-
 extern ngx_module_t ngx_stream_lua_module;
-
 
 
 

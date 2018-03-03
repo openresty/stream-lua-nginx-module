@@ -18,7 +18,6 @@
 
 
 
-
 static int ngx_stream_lua_ngx_exit(lua_State *L);
 static int ngx_stream_lua_on_abort(lua_State *L);
 
@@ -26,7 +25,6 @@ static int ngx_stream_lua_on_abort(lua_State *L);
 void
 ngx_stream_lua_inject_control_api(ngx_log_t *log, lua_State *L)
 {
-
 
     /* ngx.exit */
 
@@ -42,13 +40,12 @@ ngx_stream_lua_inject_control_api(ngx_log_t *log, lua_State *L)
 
 
 
-
 static int
 ngx_stream_lua_ngx_exit(lua_State *L)
 {
     ngx_int_t                    rc;
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t    *r;
+    ngx_stream_lua_ctx_t        *ctx;
 
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "expecting one argument");
@@ -65,13 +62,12 @@ ngx_stream_lua_ngx_exit(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_BALANCER
-                               | NGX_STREAM_LUA_CONTEXT_PREREAD
-        );
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_BALANCER
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 );
 
     rc = (ngx_int_t) luaL_checkinteger(L, 1);
-
 
 
     dd("setting exit code: %d", (int) rc);
@@ -94,10 +90,10 @@ ngx_stream_lua_ngx_exit(lua_State *L)
 static int
 ngx_stream_lua_on_abort(lua_State *L)
 {
-    ngx_stream_lua_request_t           *r;
-    ngx_stream_lua_ctx_t           *ctx;
-    ngx_stream_lua_co_ctx_t        *coctx = NULL;
-    ngx_stream_lua_loc_conf_t      *llcf;
+    ngx_stream_lua_request_t             *r;
+    ngx_stream_lua_ctx_t                 *ctx;
+    ngx_stream_lua_co_ctx_t              *coctx = NULL;
+    ngx_stream_lua_loc_conf_t            *llcf;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -153,7 +149,7 @@ int
 ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
     size_t *errlen)
 {
-    ngx_stream_lua_ctx_t       *ctx;
+    ngx_stream_lua_ctx_t             *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -162,15 +158,15 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
     }
 
     if (ngx_stream_lua_ffi_check_context(ctx, NGX_STREAM_LUA_CONTEXT_REWRITE
-                                       | NGX_STREAM_LUA_CONTEXT_ACCESS
-                                       | NGX_STREAM_LUA_CONTEXT_CONTENT
-                                       | NGX_STREAM_LUA_CONTEXT_TIMER
-                                       | NGX_STREAM_LUA_CONTEXT_HEADER_FILTER
-                                       | NGX_STREAM_LUA_CONTEXT_BALANCER
-                                       | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                                       | NGX_STREAM_LUA_CONTEXT_SSL_SESS_STORE
-                                       | NGX_STREAM_LUA_CONTEXT_SSL_SESS_FETCH,
-                                       err, errlen)
+                                         | NGX_STREAM_LUA_CONTEXT_ACCESS
+                                         | NGX_STREAM_LUA_CONTEXT_CONTENT
+                                         | NGX_STREAM_LUA_CONTEXT_TIMER
+                                         | NGX_STREAM_LUA_CONTEXT_HEADER_FILTER
+                                         | NGX_STREAM_LUA_CONTEXT_BALANCER
+                                         | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+                                         | NGX_STREAM_LUA_CONTEXT_SSL_SESS_STORE
+                                        | NGX_STREAM_LUA_CONTEXT_SSL_SESS_FETCH,
+                                         err, errlen)
         != NGX_OK)
     {
         return NGX_ERROR;
@@ -201,7 +197,6 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
 
 #endif
     }
-
 
 
     ctx->exit_code = status;

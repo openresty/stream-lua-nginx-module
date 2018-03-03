@@ -16,7 +16,6 @@ static int ngx_stream_lua_ngx_flush(lua_State *L);
 static int ngx_stream_lua_ngx_eof(lua_State *L);
 
 
-
 static int ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline);
 static void ngx_stream_lua_flush_cleanup(void *data);
 
@@ -40,8 +39,8 @@ ngx_stream_lua_ngx_say(lua_State *L)
 static int
 ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t    *r;
+    ngx_stream_lua_ctx_t        *ctx;
     const char                  *p;
     size_t                       len;
     size_t                       size;
@@ -66,7 +65,6 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD);
-
 
 
     if (ctx->eof) {
@@ -109,7 +107,7 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
             case LUA_TTABLE:
 
                 size += ngx_stream_lua_calc_strlen_in_table(L, i, i,
-                                                          0 /* strict */);
+                                                            0 /* strict */);
                 break;
 
             case LUA_TLIGHTUSERDATA:
@@ -139,7 +137,6 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
 
     if (size == 0) {
 
-
         lua_pushinteger(L, 1);
         return 1;
     }
@@ -147,7 +144,7 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
     ctx->seen_body_data = 1;
 
     cl = ngx_stream_lua_chain_get_free_buf(r->connection->log, r->pool,
-                                         &ctx->free_bufs, size);
+                                           &ctx->free_bufs, size);
 
     if (cl == NULL) {
         return luaL_error(L, "no memory");
@@ -218,9 +215,7 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
 
     rc = ngx_stream_lua_send_chain_link(r, ctx, cl);
 
-
     if (rc == NGX_ERROR) {
-
         lua_pushnil(L);
         lua_pushliteral(L, "nginx output filter error");
         return 2;
@@ -321,7 +316,8 @@ ngx_stream_lua_calc_strlen_in_table(lua_State *L, int index, int arg_i,
 
             case LUA_TTABLE:
 
-                size += ngx_stream_lua_calc_strlen_in_table(L, -1, arg_i, strict);
+                size += ngx_stream_lua_calc_strlen_in_table(L, -1, arg_i,
+                                                            strict);
                 break;
 
             case LUA_TLIGHTUSERDATA:
@@ -442,19 +438,17 @@ ngx_stream_lua_copy_str_in_table(lua_State *L, int index, u_char *dst)
 static int
 ngx_stream_lua_ngx_flush(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t    *r;
+    ngx_stream_lua_ctx_t        *ctx;
     ngx_chain_t                 *cl;
     ngx_int_t                    rc;
     int                          n;
     unsigned                     wait = 0;
     ngx_event_t                 *wev;
 
-
     ngx_stream_lua_srv_conf_t   *cllscf;
 
-
-    ngx_stream_lua_co_ctx_t       *coctx;
+    ngx_stream_lua_co_ctx_t             *coctx;
 
     n = lua_gettop(L);
     if (n > 1) {
@@ -464,9 +458,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     r = ngx_stream_lua_get_req(L);
 
-
     if (n == 1) {
-
         luaL_checktype(L, 1, LUA_TBOOLEAN);
         wait = lua_toboolean(L, 1);
     }
@@ -476,11 +468,8 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         return luaL_error(L, "no request ctx found");
     }
 
-
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD);
-
-
 
 
     coctx = ctx->cur_co_ctx;
@@ -489,13 +478,11 @@ ngx_stream_lua_ngx_flush(lua_State *L)
     }
 
 
-
     if (ctx->eof) {
         lua_pushnil(L);
         lua_pushliteral(L, "seen eof");
         return 2;
     }
-
 
 
     cl = ngx_stream_lua_get_flush_chain(r, ctx);
@@ -507,9 +494,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     dd("send chain: %d", (int) rc);
 
-
     if (rc == NGX_ERROR) {
-
         lua_pushnil(L);
         lua_pushliteral(L, "nginx output filter error");
         return 2;
@@ -520,9 +505,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 
     wev = r->connection->write;
 
-
     if (wait && (r->connection->buffered || wev->delayed))
-
     {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "lua flush requires waiting: buffered 0x%uxd, "
@@ -540,9 +523,7 @@ ngx_stream_lua_ngx_flush(lua_State *L)
             r->write_event_handler = ngx_stream_lua_core_run_phases;
         }
 
-
         cllscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
-
 
         if (!wev->delayed) {
             ngx_add_timer(wev, cllscf->send_timeout);
@@ -581,9 +562,9 @@ ngx_stream_lua_ngx_flush(lua_State *L)
 static int
 ngx_stream_lua_ngx_eof(lua_State *L)
 {
-    ngx_stream_lua_request_t      *r;
-    ngx_stream_lua_ctx_t      *ctx;
-    ngx_int_t                rc;
+    ngx_stream_lua_request_t    *r;
+    ngx_stream_lua_ctx_t        *ctx;
+    ngx_int_t                    rc;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -600,17 +581,14 @@ ngx_stream_lua_ngx_eof(lua_State *L)
     }
 
 
-
     if (ctx->eof) {
         lua_pushnil(L);
         lua_pushliteral(L, "seen eof");
         return 2;
     }
 
-
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD);
-
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua send eof");
@@ -619,9 +597,7 @@ ngx_stream_lua_ngx_eof(lua_State *L)
 
     dd("send chain: %d", (int) rc);
 
-
     if (rc == NGX_ERROR) {
-
         lua_pushnil(L);
         lua_pushliteral(L, "nginx output filter error");
         return 2;
@@ -635,7 +611,6 @@ ngx_stream_lua_ngx_eof(lua_State *L)
 void
 ngx_stream_lua_inject_output_api(lua_State *L)
 {
-
 
     lua_pushcfunction(L, ngx_stream_lua_ngx_print);
     lua_setfield(L, -2, "print");
@@ -653,9 +628,9 @@ ngx_stream_lua_inject_output_api(lua_State *L)
 
 
 
-
 ngx_int_t
-ngx_stream_lua_flush_resume_helper(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
+ngx_stream_lua_flush_resume_helper(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_ctx_t *ctx)
 {
     int                          n;
     lua_State                   *vm;
@@ -715,10 +690,10 @@ ngx_stream_lua_flush_resume_helper(ngx_stream_lua_request_t *r, ngx_stream_lua_c
 static void
 ngx_stream_lua_flush_cleanup(void *data)
 {
-    ngx_stream_lua_request_t                      *r;
-    ngx_event_t                             *wev;
-    ngx_stream_lua_ctx_t                      *ctx;
-    ngx_stream_lua_co_ctx_t                   *coctx = data;
+    ngx_stream_lua_request_t            *r;
+    ngx_event_t                         *wev;
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx = data;
 
     coctx->flushing = 0;
 

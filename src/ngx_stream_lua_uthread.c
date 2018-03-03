@@ -49,10 +49,10 @@ ngx_stream_lua_inject_uthread_api(ngx_log_t *log, lua_State *L)
 static int
 ngx_stream_lua_uthread_spawn(lua_State *L)
 {
-    int                           n;
-    ngx_stream_lua_request_t           *r;
-    ngx_stream_lua_ctx_t           *ctx;
-    ngx_stream_lua_co_ctx_t        *coctx = NULL;
+    int                              n;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
+    ngx_stream_lua_co_ctx_t         *coctx = NULL;
 
     n = lua_gettop(L);
 
@@ -109,9 +109,10 @@ ngx_stream_lua_uthread_wait(lua_State *L)
 {
     int                          i, nargs, nrets;
     lua_State                   *sub_co;
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx, *sub_coctx;
+    ngx_stream_lua_request_t    *r;
+
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx, *sub_coctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -207,9 +208,10 @@ static int
 ngx_stream_lua_uthread_kill(lua_State *L)
 {
     lua_State                   *sub_co;
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx, *sub_coctx;
+    ngx_stream_lua_request_t    *r;
+
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx, *sub_coctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -249,7 +251,6 @@ ngx_stream_lua_uthread_kill(lua_State *L)
         lua_pushliteral(L, "killer not parent");
         return 2;
     }
-
 
 
     switch (sub_coctx->co_status) {

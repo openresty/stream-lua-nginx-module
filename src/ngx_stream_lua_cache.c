@@ -259,9 +259,7 @@ ngx_stream_lua_cache_loadfile(ngx_log_t *log, lua_State *L,
             break;
 
         case LUA_ERRFILE:
-
             errcode = NGX_STREAM_INTERNAL_SERVER_ERROR;
-
             /* fall through */
 
         default:
