@@ -182,7 +182,7 @@ ngx_stream_lua_balancer_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
         lscf->balancer.src = value[1];
 
         p = ngx_palloc(cf->pool,
-                 sizeof("balancer_by_lua") + NGX_STREAM_LUA_INLINE_KEY_LEN + 1);
+                     sizeof("balancer_by_lua") + NGX_STREAM_LUA_INLINE_KEY_LEN);
         if (p == NULL) {
             return NGX_CONF_ERROR;
         }
