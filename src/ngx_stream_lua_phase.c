@@ -21,8 +21,8 @@ static int ngx_stream_lua_ngx_get_phase(lua_State *L);
 static int
 ngx_stream_lua_ngx_get_phase(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
 
     r = ngx_stream_lua_get_req(L);
 
@@ -74,5 +74,8 @@ ngx_stream_lua_inject_phase_api(lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_ngx_get_phase);
     lua_setfield(L, -2, "get_phase");
 }
+
+
+
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

@@ -19,7 +19,7 @@
 lua_State *
 ngx_stream_lua_get_global_state(ngx_conf_t *cf)
 {
-    ngx_stream_lua_main_conf_t *lmcf;
+    ngx_stream_lua_main_conf_t       *lmcf;
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
 
@@ -42,9 +42,10 @@ ngx_int_t
 ngx_stream_lua_add_package_preload(ngx_conf_t *cf, const char *package,
     lua_CFunction func)
 {
-    lua_State                     *L;
-    ngx_stream_lua_main_conf_t      *lmcf;
-    ngx_stream_lua_preload_hook_t   *hook;
+    lua_State       *L;
+
+    ngx_stream_lua_main_conf_t            *lmcf;
+    ngx_stream_lua_preload_hook_t         *hook;
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
 
@@ -87,10 +88,11 @@ ngx_shm_zone_t *
 ngx_stream_lua_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size,
     void *tag)
 {
-    ngx_stream_lua_main_conf_t     *lmcf;
+    ngx_stream_lua_main_conf_t           *lmcf;
+    ngx_stream_lua_shm_zone_ctx_t        *ctx;
+
     ngx_shm_zone_t              **zp;
     ngx_shm_zone_t               *zone;
-    ngx_stream_lua_shm_zone_ctx_t  *ctx;
     ngx_int_t                     n;
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_lua_module);
@@ -155,14 +157,14 @@ ngx_stream_lua_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size,
 static ngx_int_t
 ngx_stream_lua_shared_memory_init(ngx_shm_zone_t *shm_zone, void *data)
 {
-    ngx_stream_lua_shm_zone_ctx_t *octx = data;
+    ngx_stream_lua_shm_zone_ctx_t       *octx = data;
+    ngx_stream_lua_main_conf_t          *lmcf;
+    ngx_stream_lua_shm_zone_ctx_t       *ctx;
+
     ngx_shm_zone_t              *ozone;
     void                        *odata;
-
     ngx_int_t                    rc;
     volatile ngx_cycle_t        *saved_cycle;
-    ngx_stream_lua_main_conf_t    *lmcf;
-    ngx_stream_lua_shm_zone_ctx_t *ctx;
     ngx_shm_zone_t              *zone;
 
     ctx = (ngx_stream_lua_shm_zone_ctx_t *) shm_zone->data;

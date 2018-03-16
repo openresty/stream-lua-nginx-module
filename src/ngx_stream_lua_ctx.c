@@ -28,8 +28,8 @@ static void ngx_stream_lua_ngx_ctx_cleanup(void *data);
 int
 ngx_stream_lua_ngx_get_ctx(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -73,8 +73,8 @@ ngx_stream_lua_ngx_get_ctx(lua_State *L)
 int
 ngx_stream_lua_ngx_set_ctx(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -134,7 +134,7 @@ ngx_stream_lua_ngx_set_ctx_helper(lua_State *L, ngx_stream_lua_request_t *r,
 int
 ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_lua_request_t *r)
 {
-    ngx_stream_lua_ctx_t  *ctx;
+    ngx_stream_lua_ctx_t        *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -148,7 +148,7 @@ ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_lua_request_t *r)
 int
 ngx_stream_lua_ffi_set_ctx_ref(ngx_stream_lua_request_t *r, int ref)
 {
-    ngx_stream_lua_ctx_t  *ctx;
+    ngx_stream_lua_ctx_t        *ctx;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -171,9 +171,9 @@ ngx_stream_lua_ngx_ctx_add_cleanup(ngx_stream_lua_request_t *r, int ref)
 {
     lua_State                   *L;
     ngx_pool_cleanup_t          *cln;
-    ngx_stream_lua_ctx_t          *ctx;
 
-    ngx_stream_lua_ngx_ctx_cleanup_data_t    *data;
+    ngx_stream_lua_ctx_t                           *ctx;
+    ngx_stream_lua_ngx_ctx_cleanup_data_t          *data;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     L = ngx_stream_lua_get_lua_vm(r, ctx);
@@ -199,7 +199,7 @@ ngx_stream_lua_ngx_ctx_cleanup(void *data)
 {
     lua_State       *L;
 
-    ngx_stream_lua_ngx_ctx_cleanup_data_t    *clndata = data;
+    ngx_stream_lua_ngx_ctx_cleanup_data_t          *clndata = data;
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "lua release ngx.ctx at ref %d", clndata->ref);

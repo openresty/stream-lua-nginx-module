@@ -59,15 +59,15 @@
  * length(Instruction) = 4 or 8
  * little endian or big endian
 */
-#define    LUA_LITTLE_ENDIAN_4BYTES_CODE                                \
+#define    LUA_LITTLE_ENDIAN_4BYTES_CODE                                     \
     "\x24\x00\x00\x00\x1e\x00\x00\x01\x1e\x00\x80\x00"
-#define    LUA_LITTLE_ENDIAN_8BYTES_CODE                                \
-    "\x24\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x01"                  \
+#define    LUA_LITTLE_ENDIAN_8BYTES_CODE                                     \
+    "\x24\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x01"                       \
     "\x00\x00\x00\x00\x1e\x00\x80\x00\x00\x00\x00\x00"
-#define    LUA_BIG_ENDIAN_4BYTES_CODE                                   \
+#define    LUA_BIG_ENDIAN_4BYTES_CODE                                        \
     "\x00\x00\x00\x24\x01\x00\x00\x1e\x00\x08\x00\x1e"
-#define    LUA_BIG_ENDIAN_8BYTES_CODE                                   \
-    "\x00\x00\x00\x00\x00\x00\x00\x24\x00\x00\x00\x00"                  \
+#define    LUA_BIG_ENDIAN_8BYTES_CODE                                        \
+    "\x00\x00\x00\x00\x00\x00\x00\x24\x00\x00\x00\x00"                       \
     "\x01\x00\x00\x1e\x00\x00\x00\x00\x00\x08\x00\x1e"
 #define    LUA_LITTLE_ENDIAN_4BYTES_CODE_LEN        (4 + 4 + 4)
 #define    LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN        (8 + 8 + 8)
@@ -156,8 +156,8 @@
 #define    POS_MAX_STACK_SIZE      (POS_IS_VAR_ARG + sizeof(char))
 #define    POS_NUM_OF_INST         (POS_MAX_STACK_SIZE +sizeof(char))
 #define    POS_BYTECODE            (POS_NUM_OF_INST + sizeof(int))
-#define    MAX_BEGIN_CODE_SIZE                                              \
-    (POS_BYTECODE + LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN                       \
+#define    MAX_BEGIN_CODE_SIZE                                               \
+    (POS_BYTECODE + LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN                        \
     + sizeof(int) + sizeof(int))
 #define    MAX_END_CODE_SIZE       (sizeof(int) + sizeof(int) + sizeof(int))
 
@@ -225,24 +225,24 @@
 
 /* bytecode for luajit 2.0 */
 
-#define    LJ20_LITTLE_ENDIAN_CODE_STRIPPED                             \
-    "\x14\x03\x00\x01\x00\x01\x00\x03"                                  \
-    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                  \
+#define    LJ20_LITTLE_ENDIAN_CODE_STRIPPED                                  \
+    "\x14\x03\x00\x01\x00\x01\x00\x03"                                       \
+    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                       \
     "\x00\x00"
 
-#define    LJ20_BIG_ENDIAN_CODE_STRIPPED                                \
-    "\x14\x03\x00\x01\x00\x01\x00\x03"                                  \
-    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                  \
+#define    LJ20_BIG_ENDIAN_CODE_STRIPPED                                     \
+    "\x14\x03\x00\x01\x00\x01\x00\x03"                                       \
+    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                       \
     "\x00\x00"
 
-#define    LJ20_LITTLE_ENDIAN_CODE                                      \
-    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                              \
-    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                  \
+#define    LJ20_LITTLE_ENDIAN_CODE                                           \
+    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                                   \
+    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                       \
     "\x00\x00"
 
-#define    LJ20_BIG_ENDIAN_CODE                                         \
-    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                              \
-    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                  \
+#define    LJ20_BIG_ENDIAN_CODE                                              \
+    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                                   \
+    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                       \
     "\x00\x00"
 
 /* bytecode for luajit 2.1 */
@@ -290,7 +290,7 @@ enum {
 
 
 typedef struct {
-    ngx_stream_lua_clfactory_file_type_e file_type;
+    ngx_stream_lua_clfactory_file_type_e       file_type;
 
     int         sent_begin;
     int         sent_end;
@@ -365,12 +365,12 @@ ngx_stream_lua_clfactory_bytecode_prepare(lua_State *L,
 
 #if defined(DDEBUG) && (DDEBUG)
         {
-        dd("==LJ_BT_HEADER==");
-        size_t i;
-        for (i = 0; i < LJ_HEADERSIZE; i++) {
-            dd("%ld: 0x%02X", i, (unsigned)(u_char) lf->begin_code.str[i]);
-        }
-        dd("==LJ_BT_HEADER_END==");
+            dd("==LJ_BT_HEADER==");
+            size_t i;
+            for (i = 0; i < LJ_HEADERSIZE; i++) {
+                dd("%ld: 0x%02X", i, (unsigned)(u_char) lf->begin_code.str[i]);
+            }
+            dd("==LJ_BT_HEADER_END==");
         }
 #endif
 
@@ -601,7 +601,7 @@ ngx_stream_lua_clfactory_loadfile(lua_State *L, const char *filename)
     int                         c, status, readstatus;
     ngx_flag_t                  sharp;
 
-    ngx_stream_lua_clfactory_file_ctx_t        lf;
+    ngx_stream_lua_clfactory_file_ctx_t              lf;
 
     /* index of filename on the stack */
     int                         fname_index;
@@ -721,7 +721,7 @@ ngx_int_t
 ngx_stream_lua_clfactory_loadbuffer(lua_State *L, const char *buff,
     size_t size, const char *name)
 {
-    ngx_stream_lua_clfactory_buffer_ctx_t     ls;
+    ngx_stream_lua_clfactory_buffer_ctx_t           ls;
 
     ls.s = buff;
     ls.size = size;
@@ -738,7 +738,7 @@ ngx_stream_lua_clfactory_getF(lua_State *L, void *ud, size_t *size)
     char                        *buf;
     size_t                       num;
 
-    ngx_stream_lua_clfactory_file_ctx_t        *lf;
+    ngx_stream_lua_clfactory_file_ctx_t              *lf;
 
     lf = (ngx_stream_lua_clfactory_file_ctx_t *) ud;
 
@@ -807,7 +807,8 @@ ngx_stream_lua_clfactory_getF(lua_State *L, void *ud, size_t *size)
 
 
 static int
-ngx_stream_lua_clfactory_errfile(lua_State *L, const char *what, int fname_index)
+ngx_stream_lua_clfactory_errfile(lua_State *L, const char *what,
+    int fname_index)
 {
     const char      *serr;
     const char      *filename;
@@ -831,7 +832,7 @@ ngx_stream_lua_clfactory_errfile(lua_State *L, const char *what, int fname_index
 static const char *
 ngx_stream_lua_clfactory_getS(lua_State *L, void *ud, size_t *size)
 {
-    ngx_stream_lua_clfactory_buffer_ctx_t      *ls = ud;
+    ngx_stream_lua_clfactory_buffer_ctx_t            *ls = ud;
 
     if (ls->sent_begin == 0) {
         ls->sent_begin = 1;

@@ -16,15 +16,9 @@
 #include "ngx_stream_lua_probe.h"
 
 
-
-
-
-
-
 typedef struct {
     void        **main_conf;
     void        **srv_conf;
-
 
 
     lua_State    *co;
@@ -34,8 +28,8 @@ typedef struct {
     ngx_listening_t                   *listening;
     ngx_str_t                          client_addr_text;
 
-    ngx_stream_lua_main_conf_t          *lmcf;
-    ngx_stream_lua_vm_state_t           *vm_state;
+    ngx_stream_lua_main_conf_t                *lmcf;
+    ngx_stream_lua_vm_state_t                 *vm_state;
 
     int           co_ref;
     unsigned      delay:31;
@@ -48,7 +42,8 @@ static int ngx_stream_lua_ngx_timer_every(lua_State *L);
 static int ngx_stream_lua_ngx_timer_helper(lua_State *L, int every);
 static int ngx_stream_lua_ngx_timer_running_count(lua_State *L);
 static int ngx_stream_lua_ngx_timer_pending_count(lua_State *L);
-static ngx_int_t ngx_stream_lua_timer_copy(ngx_stream_lua_timer_ctx_t *old_tctx);
+static ngx_int_t ngx_stream_lua_timer_copy(
+    ngx_stream_lua_timer_ctx_t *old_tctx);
 static void ngx_stream_lua_timer_handler(ngx_event_t *ev);
 static u_char *ngx_stream_lua_log_timer_error(ngx_log_t *log, u_char *buf,
     size_t len);
@@ -79,8 +74,8 @@ ngx_stream_lua_inject_timer_api(lua_State *L)
 static int
 ngx_stream_lua_ngx_timer_running_count(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_request_t            *r;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -98,8 +93,8 @@ ngx_stream_lua_ngx_timer_running_count(lua_State *L)
 static int
 ngx_stream_lua_ngx_timer_pending_count(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_main_conf_t    *lmcf;
+    ngx_stream_lua_request_t            *r;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -135,21 +130,21 @@ ngx_stream_lua_ngx_timer_every(lua_State *L)
 static int
 ngx_stream_lua_ngx_timer_helper(lua_State *L, int every)
 {
-    int                      nargs, co_ref;
-    u_char                  *p;
-    lua_State               *vm;  /* the main thread */
-    lua_State               *co;
-    ngx_msec_t               delay;
-    ngx_event_t             *ev = NULL;
-    ngx_stream_lua_request_t      *r;
-    ngx_connection_t        *saved_c = NULL;
-    ngx_stream_lua_ctx_t      *ctx;
+    int                          nargs, co_ref;
+    u_char                      *p;
+    lua_State                   *vm;  /* the main thread */
+    lua_State                   *co;
+    ngx_msec_t                   delay;
+    ngx_event_t                 *ev = NULL;
+    ngx_stream_lua_request_t    *r;
+    ngx_connection_t            *saved_c = NULL;
+    ngx_stream_lua_ctx_t        *ctx;
 #if 0
     ngx_http_connection_t   *hc;
 #endif
 
-    ngx_stream_lua_timer_ctx_t      *tctx = NULL;
-    ngx_stream_lua_main_conf_t      *lmcf;
+    ngx_stream_lua_timer_ctx_t            *tctx = NULL;
+    ngx_stream_lua_main_conf_t            *lmcf;
 #if 0
     ngx_http_core_main_conf_t     *cmcf;
 #endif
@@ -304,10 +299,8 @@ ngx_stream_lua_ngx_timer_helper(lua_State *L, int every)
     tctx->co = co;
 
 
-
     tctx->main_conf = r->session->main_conf;
     tctx->srv_conf = r->session->srv_conf;
-
 
     tctx->lmcf = lmcf;
 
@@ -385,8 +378,9 @@ ngx_stream_lua_timer_copy(ngx_stream_lua_timer_ctx_t *old_tctx)
     lua_State                   *co;
     lua_State                   *L;
     ngx_event_t                 *ev = NULL;
-    ngx_stream_lua_timer_ctx_t    *tctx = NULL;
-    ngx_stream_lua_main_conf_t    *lmcf;
+
+    ngx_stream_lua_timer_ctx_t          *tctx = NULL;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     /* L stack: func [args] */
     L = old_tctx->co;
@@ -537,25 +531,20 @@ nomem:
 static void
 ngx_stream_lua_timer_handler(ngx_event_t *ev)
 {
-    int                      n;
-    lua_State               *L;
-    ngx_int_t                rc;
-    ngx_connection_t        *c = NULL;
-    ngx_stream_lua_request_t      *r = NULL;
-    ngx_stream_lua_ctx_t      *ctx;
-    ngx_stream_lua_cleanup_t      *cln;
-    ngx_pool_cleanup_t      *pcln;
+    int                              n;
+    lua_State                       *L;
+    ngx_int_t                        rc;
+    ngx_connection_t                *c = NULL;
+    ngx_stream_lua_request_t        *r = NULL;
+    ngx_stream_lua_ctx_t            *ctx;
+    ngx_stream_lua_cleanup_t        *cln;
+    ngx_pool_cleanup_t              *pcln;
 
-    ngx_stream_lua_timer_ctx_t         tctx;
-    ngx_stream_lua_main_conf_t        *lmcf;
-
+    ngx_stream_lua_timer_ctx_t               tctx;
+    ngx_stream_lua_main_conf_t              *lmcf;
 
     ngx_stream_core_srv_conf_t        *clcf;
-
-
-
-    ngx_stream_session_t    *s;
-
+    ngx_stream_session_t              *s;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua ngx.timer expired");
@@ -578,9 +567,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     if (lmcf->running_timers >= lmcf->max_running_timers) {
         ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-
                       "stream lua: %i lua_max_running_timers are not enough",
-
                       lmcf->max_running_timers);
         goto failed;
     }
@@ -596,14 +583,10 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
     c->listening = tctx.listening;
     c->addr_text = tctx.client_addr_text;
 
-
     s = ngx_stream_lua_create_fake_session(c);
     if (s == NULL) {
         goto failed;
     }
-
-
-
 
 
     s->main_conf = tctx.main_conf;
@@ -611,17 +594,13 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     clcf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
-
 #if defined(nginx_version) && nginx_version >= 1003014
 
 #   if nginx_version >= 1009000
 
-
     ngx_set_connection_log(s->connection, clcf->error_log);
 
-
 #   else
-
 
 
 #   endif
@@ -638,16 +617,12 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     dd("lmcf: %p", lmcf);
 
-
     ctx = ngx_stream_lua_create_ctx(s);
-
     if (ctx == NULL) {
         goto failed;
     }
 
-
     r = ctx->request;
-
 
     if (tctx.vm_state) {
         ctx->vm_state = tctx.vm_state;
@@ -786,8 +761,9 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
     ngx_event_t                **events;
     ngx_connection_t            *c, *saved_c = NULL;
     ngx_rbtree_node_t           *cur, *prev, *next, *sentinel, *temp;
-    ngx_stream_lua_timer_ctx_t    *tctx;
-    ngx_stream_lua_main_conf_t    *lmcf;
+
+    ngx_stream_lua_timer_ctx_t          *tctx;
+    ngx_stream_lua_main_conf_t          *lmcf;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "lua abort pending timers");
@@ -904,8 +880,8 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
     ngx_event_timer_rbtree.root->parent = temp;
 
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                   "stream lua found %i pending timers to be aborted prematurely",
-                   n);
+                   "stream lua found %i pending timers to be "
+                   "aborted prematurely", n);
 
     for (i = 0; i < n; i++) {
         ev = events[i];

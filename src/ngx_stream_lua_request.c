@@ -21,8 +21,8 @@ static void ngx_stream_lua_request_cleanup(void *data);
 ngx_stream_lua_cleanup_t *
 ngx_stream_lua_cleanup_add(ngx_stream_lua_request_t *r, size_t size)
 {
-    ngx_stream_lua_cleanup_t  *cln;
-    ngx_stream_lua_ctx_t  *ctx;
+    ngx_stream_lua_cleanup_t    *cln;
+    ngx_stream_lua_ctx_t        *ctx;
 
     if (size == 0) {
         ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
@@ -184,7 +184,8 @@ ngx_stream_lua_block_reading(ngx_stream_lua_request_t *r)
         && r->connection->read->active)
     {
         if (ngx_del_event(r->connection->read, NGX_READ_EVENT, 0) != NGX_OK) {
-            ngx_stream_lua_finalize_real_request(r, NGX_STREAM_INTERNAL_SERVER_ERROR);
+            ngx_stream_lua_finalize_real_request(r,
+                                              NGX_STREAM_INTERNAL_SERVER_ERROR);
         }
     }
 }

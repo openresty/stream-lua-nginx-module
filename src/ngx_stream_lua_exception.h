@@ -12,13 +12,13 @@
 #include "ngx_stream_lua_common.h"
 
 
-#define NGX_LUA_EXCEPTION_TRY                                               \
+#define NGX_LUA_EXCEPTION_TRY                                                \
     if (setjmp(ngx_stream_lua_exception) == 0)
 
-#define NGX_LUA_EXCEPTION_CATCH                                             \
+#define NGX_LUA_EXCEPTION_CATCH                                              \
     else
 
-#define NGX_LUA_EXCEPTION_THROW(x)                                          \
+#define NGX_LUA_EXCEPTION_THROW(x)                                           \
     longjmp(ngx_stream_lua_exception, (x))
 
 

@@ -45,8 +45,8 @@ static const ngx_str_t
 static int
 ngx_stream_lua_coroutine_create(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -63,20 +63,23 @@ ngx_stream_lua_coroutine_create(lua_State *L)
 
 
 int
-ngx_stream_lua_coroutine_create_helper(lua_State *L, ngx_stream_lua_request_t *r,
-    ngx_stream_lua_ctx_t *ctx, ngx_stream_lua_co_ctx_t **pcoctx)
+ngx_stream_lua_coroutine_create_helper(lua_State *L,
+    ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx,
+    ngx_stream_lua_co_ctx_t **pcoctx)
 {
     lua_State                     *vm;  /* the Lua VM */
     lua_State                     *co;  /* new coroutine to be created */
-    ngx_stream_lua_co_ctx_t         *coctx; /* co ctx for the new coroutine */
+
+    /* co ctx for the new coroutine */
+    ngx_stream_lua_co_ctx_t               *coctx;
 
     luaL_argcheck(L, lua_isfunction(L, 1) && !lua_iscfunction(L, 1), 1,
                   "Lua function expected");
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_PREREAD
-        );
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 );
 
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
 
@@ -128,11 +131,11 @@ ngx_stream_lua_coroutine_create_helper(lua_State *L, ngx_stream_lua_request_t *r
 static int
 ngx_stream_lua_coroutine_resume(lua_State *L)
 {
-    lua_State                   *co;
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx;
-    ngx_stream_lua_co_ctx_t       *p_coctx; /* parent co ctx */
+    lua_State                           *co;
+    ngx_stream_lua_request_t            *r;
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx;
+    ngx_stream_lua_co_ctx_t             *p_coctx; /* parent co ctx */
 
     co = lua_tothread(L, 1);
 
@@ -149,9 +152,9 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_PREREAD
-        );
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 );
 
     p_coctx = ctx->cur_co_ctx;
     if (p_coctx == NULL) {
@@ -193,9 +196,9 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
 static int
 ngx_stream_lua_coroutine_yield(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx;
+    ngx_stream_lua_request_t            *r;
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -208,9 +211,9 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_PREREAD
-        );
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 );
 
     coctx = ctx->cur_co_ctx;
 
@@ -222,7 +225,8 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
         dd("set coroutine to running");
         coctx->parent_co_ctx->co_status = NGX_STREAM_LUA_CO_RUNNING;
 
-        ngx_stream_lua_probe_user_coroutine_yield(r, coctx->parent_co_ctx->co, L);
+        ngx_stream_lua_probe_user_coroutine_yield(r,
+                                                  coctx->parent_co_ctx->co, L);
 
     } else {
         ngx_stream_lua_probe_user_coroutine_yield(r, NULL, L);
@@ -337,9 +341,9 @@ static int
 ngx_stream_lua_coroutine_status(lua_State *L)
 {
     lua_State                     *co;  /* new coroutine to be created */
-    ngx_stream_lua_request_t            *r;
-    ngx_stream_lua_ctx_t            *ctx;
-    ngx_stream_lua_co_ctx_t         *coctx; /* co ctx for the new coroutine */
+    ngx_stream_lua_request_t      *r;
+    ngx_stream_lua_ctx_t          *ctx;
+    ngx_stream_lua_co_ctx_t       *coctx; /* co ctx for the new coroutine */
 
     co = lua_tothread(L, 1);
 
@@ -356,15 +360,17 @@ ngx_stream_lua_coroutine_status(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER
-                               | NGX_STREAM_LUA_CONTEXT_PREREAD
-        );
+                                 | NGX_STREAM_LUA_CONTEXT_TIMER
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 );
 
     coctx = ngx_stream_lua_get_co_ctx(co, ctx);
     if (coctx == NULL) {
         lua_pushlstring(L, (const char *)
-                        ngx_stream_lua_co_status_names[NGX_STREAM_LUA_CO_DEAD].data,
-                        ngx_stream_lua_co_status_names[NGX_STREAM_LUA_CO_DEAD].len);
+                        ngx_stream_lua_co_status_names[NGX_STREAM_LUA_CO_DEAD]
+                        .data,
+                        ngx_stream_lua_co_status_names[NGX_STREAM_LUA_CO_DEAD]
+                        .len);
         return 1;
     }
 

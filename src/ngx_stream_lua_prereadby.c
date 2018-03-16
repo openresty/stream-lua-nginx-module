@@ -53,8 +53,8 @@ ngx_stream_lua_preread_handler(ngx_stream_session_t *s)
         if (cur_ph < last_ph) {
             tmp      = *cur_ph;
 
-            ngx_memmove(cur_ph, cur_ph + 1,
-                        (last_ph - cur_ph) * sizeof (ngx_stream_phase_handler_t));
+            ngx_memmove(cur_ph, cur_ph + 1, (last_ph - cur_ph)
+                        * sizeof (ngx_stream_phase_handler_t));
 
             *last_ph = tmp;
 
@@ -135,7 +135,8 @@ ngx_stream_lua_preread_handler_inline(ngx_stream_lua_request_t *r)
                                          lscf->preread_src.value.data,
                                          lscf->preread_src.value.len,
                                          lscf->preread_src_key,
-                                         (const char *) lscf->preread_chunkname);
+                                         (const char *)
+                                         lscf->preread_chunkname);
 
     if (rc != NGX_OK) {
         return NGX_STREAM_INTERNAL_SERVER_ERROR;
@@ -157,7 +158,9 @@ ngx_stream_lua_preread_handler_file(ngx_stream_lua_request_t *r)
     lscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
 
     /* Eval nginx variables in code path string first */
-    if (ngx_stream_complex_value(r->session, &lscf->preread_src, &eval_src) != NGX_OK) {
+    if (ngx_stream_complex_value(r->session, &lscf->preread_src, &eval_src)
+        != NGX_OK)
+    {
         return NGX_ERROR;
     }
 

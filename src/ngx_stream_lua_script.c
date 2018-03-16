@@ -19,26 +19,29 @@ static size_t ngx_stream_lua_script_copy_len_code(
 static void ngx_stream_lua_script_copy_code(ngx_stream_lua_script_engine_t *e);
 static ngx_int_t ngx_stream_lua_script_add_copy_code(
     ngx_stream_lua_script_compile_t *sc, ngx_str_t *value, ngx_uint_t last);
-static ngx_int_t ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc);
+static ngx_int_t ngx_stream_lua_script_compile(
+    ngx_stream_lua_script_compile_t *sc);
 static ngx_int_t ngx_stream_lua_script_add_capture_code(
     ngx_stream_lua_script_compile_t *sc, ngx_uint_t n);
 static size_t ngx_stream_lua_script_copy_capture_len_code(
     ngx_stream_lua_script_engine_t *e);
 static void ngx_stream_lua_script_copy_capture_code(
     ngx_stream_lua_script_engine_t *e);
-static ngx_int_t ngx_stream_lua_script_done(ngx_stream_lua_script_compile_t *sc);
+static ngx_int_t ngx_stream_lua_script_done(
+    ngx_stream_lua_script_compile_t *sc);
 static ngx_int_t ngx_stream_lua_script_init_arrays(
     ngx_stream_lua_script_compile_t *sc);
 
 
 ngx_int_t
-ngx_stream_lua_compile_complex_value(ngx_stream_lua_compile_complex_value_t *ccv)
+ngx_stream_lua_compile_complex_value(
+    ngx_stream_lua_compile_complex_value_t *ccv)
 {
     ngx_str_t                  *v;
     ngx_uint_t                  i, n, nv;
     ngx_array_t                 lengths, values, *pl, *pv;
 
-    ngx_stream_lua_script_compile_t   sc;
+    ngx_stream_lua_script_compile_t         sc;
 
     v = ccv->value;
 
@@ -109,9 +112,10 @@ ngx_stream_lua_complex_value(ngx_stream_lua_request_t *r, ngx_str_t *subj,
 {
     size_t                            len;
     u_char                           *p;
-    ngx_stream_lua_script_code_pt       code;
-    ngx_stream_lua_script_len_code_pt   lcode;
-    ngx_stream_lua_script_engine_t      e;
+
+    ngx_stream_lua_script_code_pt             code;
+    ngx_stream_lua_script_len_code_pt         lcode;
+    ngx_stream_lua_script_engine_t            e;
 
     if (val->lengths == NULL) {
         luaL_addlstring(luabuf, (char *) &subj->data[offset], cap[0] - offset);
@@ -187,7 +191,7 @@ ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc)
                 name.len++;
 
                 if (ngx_stream_lua_script_add_copy_code(sc, &name,
-                                                      (i == sc->source->len))
+                                                        i == sc->source->len)
                     != NGX_OK)
                 {
                     return NGX_ERROR;
@@ -295,7 +299,8 @@ ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc)
             name.len++;
         }
 
-        if (ngx_stream_lua_script_add_copy_code(sc, &name, (i == sc->source->len))
+        if (ngx_stream_lua_script_add_copy_code(sc, &name,
+                                                i == sc->source->len)
             != NGX_OK)
         {
             return NGX_ERROR;
@@ -318,13 +323,14 @@ static ngx_int_t
 ngx_stream_lua_script_add_copy_code(ngx_stream_lua_script_compile_t *sc,
     ngx_str_t *value, ngx_uint_t last)
 {
-    size_t                            size, len;
-    ngx_stream_lua_script_copy_code_t  *code;
+    size_t      size, len;
+
+    ngx_stream_lua_script_copy_code_t        *code;
 
     len = value->len;
 
     code = ngx_stream_lua_script_add_code(*sc->lengths,
-                                    sizeof(ngx_stream_lua_script_copy_code_t));
+                                     sizeof(ngx_stream_lua_script_copy_code_t));
     if (code == NULL) {
         return NGX_ERROR;
     }
@@ -354,7 +360,7 @@ ngx_stream_lua_script_add_copy_code(ngx_stream_lua_script_compile_t *sc,
 static size_t
 ngx_stream_lua_script_copy_len_code(ngx_stream_lua_script_engine_t *e)
 {
-    ngx_stream_lua_script_copy_code_t  *code;
+    ngx_stream_lua_script_copy_code_t        *code;
 
     code = (ngx_stream_lua_script_copy_code_t *) e->ip;
 
@@ -367,8 +373,9 @@ ngx_stream_lua_script_copy_len_code(ngx_stream_lua_script_engine_t *e)
 static void
 ngx_stream_lua_script_copy_code(ngx_stream_lua_script_engine_t *e)
 {
-    u_char                           *p;
-    ngx_stream_lua_script_copy_code_t  *code;
+    u_char          *p;
+
+    ngx_stream_lua_script_copy_code_t        *code;
 
     code = (ngx_stream_lua_script_copy_code_t *) e->ip;
 
@@ -391,7 +398,7 @@ static ngx_int_t
 ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
     ngx_uint_t n)
 {
-    ngx_stream_lua_script_capture_code_t  *code;
+    ngx_stream_lua_script_capture_code_t        *code;
 
     code = ngx_stream_lua_script_add_code(*sc->lengths,
                                   sizeof(ngx_stream_lua_script_capture_code_t));
@@ -419,9 +426,10 @@ ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
 static size_t
 ngx_stream_lua_script_copy_capture_len_code(ngx_stream_lua_script_engine_t *e)
 {
-    int                                  *cap;
-    ngx_uint_t                            n;
-    ngx_stream_lua_script_capture_code_t   *code;
+    int                         *cap;
+    ngx_uint_t                   n;
+
+    ngx_stream_lua_script_capture_code_t         *code;
 
     code = (ngx_stream_lua_script_capture_code_t *) e->ip;
 
@@ -444,7 +452,8 @@ ngx_stream_lua_script_copy_capture_code(ngx_stream_lua_script_engine_t *e)
     int                                  *cap;
     u_char                               *p, *pos;
     ngx_uint_t                            n;
-    ngx_stream_lua_script_capture_code_t   *code;
+
+    ngx_stream_lua_script_capture_code_t         *code;
 
     code = (ngx_stream_lua_script_capture_code_t *) e->ip;
 

@@ -19,11 +19,6 @@ static int ngx_stream_lua_var_get(lua_State *L);
 static int ngx_stream_lua_var_set(lua_State *L);
 
 
-
-    
-
-
-
 void
 ngx_stream_lua_inject_variable_api(lua_State *L)
 {
@@ -51,14 +46,13 @@ ngx_stream_lua_inject_variable_api(lua_State *L)
 static int
 ngx_stream_lua_var_get(lua_State *L)
 {
-    ngx_stream_lua_request_t          *r;
+    ngx_stream_lua_request_t    *r;
     u_char                      *p, *lowcase;
     size_t                       len;
     ngx_uint_t                   hash;
     ngx_str_t                    name;
-    ngx_stream_variable_value_t   *vv;
 
-
+    ngx_stream_variable_value_t         *vv;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -66,7 +60,6 @@ ngx_stream_lua_var_get(lua_State *L)
     }
 
     ngx_stream_lua_check_fake_request(L, r);
-
 
 
     if (lua_type(L, -1) != LUA_TSTRING) {
@@ -82,9 +75,7 @@ ngx_stream_lua_var_get(lua_State *L)
     name.len = len;
     name.data = lowcase;
 
-
     vv = ngx_stream_get_variable(r->session, &name, hash);
-
 
     if (vv == NULL || vv->not_found) {
         lua_pushnil(L);
@@ -106,16 +97,17 @@ ngx_stream_lua_var_get(lua_State *L)
 static int
 ngx_stream_lua_var_set(lua_State *L)
 {
-    ngx_stream_variable_t         *v;
-    ngx_stream_variable_value_t   *vv;
-    ngx_stream_core_main_conf_t   *cmcf;
     u_char                      *p, *lowcase, *val;
     size_t                       len;
     ngx_str_t                    name;
     ngx_uint_t                   hash;
-    ngx_stream_lua_request_t          *r;
+    ngx_stream_lua_request_t    *r;
     int                          value_type;
     const char                  *msg;
+
+    ngx_stream_variable_t               *v;
+    ngx_stream_variable_value_t         *vv;
+    ngx_stream_core_main_conf_t         *cmcf;
 
     r = ngx_stream_lua_get_req(L);
     if (r == NULL) {
@@ -188,7 +180,8 @@ ngx_stream_lua_var_set(lua_State *L)
 
             dd("set variables with set_handler");
 
-            vv = ngx_palloc(r->connection->pool, sizeof(ngx_stream_variable_value_t));
+            vv = ngx_palloc(r->connection->pool,
+                            sizeof(ngx_stream_variable_value_t));
             if (vv == NULL) {
                 return luaL_error(L, "no memory");
             }
@@ -209,17 +202,13 @@ ngx_stream_lua_var_set(lua_State *L)
                 vv->len = len;
             }
 
-
             v->set_handler(r->session, vv, v->data);
-
 
             return 0;
         }
 
         if (v->flags & NGX_STREAM_VAR_INDEXED) {
-
             vv = &r->session->variables[v->index];
-
 
             dd("set indexed variable");
 
@@ -265,13 +254,13 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
 {
     ngx_uint_t                   hash;
     ngx_str_t                    name;
-    ngx_stream_variable_value_t   *vv;
-
 #if (NGX_PCRE)
     u_char                      *p;
     ngx_uint_t                   n;
     int                         *cap;
 #endif
+
+    ngx_stream_variable_value_t         *vv;
 
     if (r == NULL) {
         *err = "no request object found";
@@ -321,9 +310,7 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
 
     dd("variable name: %.*s", (int) name_len, lowcase_buf);
 
-
     vv = ngx_stream_get_variable(r->session, &name, hash);
-
 
     if (vv == NULL || vv->not_found) {
         return NGX_DECLINED;
@@ -342,9 +329,10 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
 {
     u_char                      *p;
     ngx_uint_t                   hash;
-    ngx_stream_variable_t         *v;
-    ngx_stream_variable_value_t   *vv;
-    ngx_stream_core_main_conf_t   *cmcf;
+
+    ngx_stream_variable_t               *v;
+    ngx_stream_variable_value_t         *vv;
+    ngx_stream_core_main_conf_t         *cmcf;
 
     if (r == NULL) {
         *errlen = ngx_snprintf(errbuf, *errlen, "no request object found")
@@ -384,7 +372,8 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
             dd("set variables with set_handler");
 
             if (value != NULL && value_len) {
-                vv = ngx_palloc(r->connection->pool, sizeof(ngx_stream_variable_value_t)
+                vv = ngx_palloc(r->connection->pool,
+                                sizeof(ngx_stream_variable_value_t)
                                 + value_len);
                 if (vv == NULL) {
                     goto nomem;
@@ -395,7 +384,8 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
                 value = p;
 
             } else {
-                vv = ngx_palloc(r->connection->pool, sizeof(ngx_stream_variable_value_t));
+                vv = ngx_palloc(r->connection->pool,
+                                sizeof(ngx_stream_variable_value_t));
                 if (vv == NULL) {
                     goto nomem;
                 }

@@ -34,24 +34,24 @@ typedef struct {
 
 
 struct ngx_stream_lua_socket_udp_upstream_s {
-    ngx_stream_lua_socket_udp_retval_handler          prepare_retvals;
-    ngx_stream_lua_socket_udp_upstream_handler_pt     read_event_handler;
+    ngx_stream_lua_socket_udp_retval_handler                prepare_retvals;
+    ngx_stream_lua_socket_udp_upstream_handler_pt           read_event_handler;
 
-    ngx_stream_lua_loc_conf_t         *conf;
-    ngx_stream_lua_cleanup_pt             *cleanup;
-    ngx_stream_lua_request_t              *request;
-    ngx_stream_lua_udp_connection_t    udp_connection;
+    ngx_stream_lua_loc_conf_t               *conf;
+    ngx_stream_lua_cleanup_pt               *cleanup;
+    ngx_stream_lua_request_t                *request;
+    ngx_stream_lua_udp_connection_t          udp_connection;
 
     ngx_msec_t                       read_timeout;
 
-    ngx_stream_upstream_resolved_t    *resolved;
+    ngx_stream_upstream_resolved_t          *resolved;
 
     ngx_uint_t                       ft_type;
     ngx_err_t                        socket_errno;
     size_t                           received; /* for receive */
     size_t                           recv_buf_size;
 
-    ngx_stream_lua_co_ctx_t           *co_ctx;
+    ngx_stream_lua_co_ctx_t                 *co_ctx;
 
     unsigned                         waiting; /* :1 */
 };

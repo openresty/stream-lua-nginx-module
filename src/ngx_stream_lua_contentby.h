@@ -12,14 +12,13 @@
 #include "ngx_stream_lua_common.h"
 
 
-ngx_int_t ngx_stream_lua_content_by_chunk(lua_State *L, ngx_stream_lua_request_t *r);
+ngx_int_t ngx_stream_lua_content_by_chunk(lua_State *L,
+    ngx_stream_lua_request_t *r);
 void ngx_stream_lua_content_wev_handler(ngx_stream_lua_request_t *r);
 ngx_int_t ngx_stream_lua_content_handler_file(ngx_stream_lua_request_t *r);
 ngx_int_t ngx_stream_lua_content_handler_inline(ngx_stream_lua_request_t *r);
 
-
 void ngx_stream_lua_content_handler(ngx_stream_session_t *r);
-
 
 ngx_int_t ngx_stream_lua_content_run_posted_threads(lua_State *L,
     ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx, int n);

@@ -16,7 +16,6 @@
 
 
 
-
 static int ngx_stream_lua_print(lua_State *L);
 static int ngx_stream_lua_ngx_log(lua_State *L);
 static int log_wrapper(ngx_log_t *log, const char *ident,
@@ -35,7 +34,7 @@ int
 ngx_stream_lua_ngx_log(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_lua_request_t          *r;
+    ngx_stream_lua_request_t    *r;
     const char                  *msg;
     int                          level;
 
@@ -57,9 +56,7 @@ ngx_stream_lua_ngx_log(lua_State *L)
     /* remove log-level param from stack */
     lua_remove(L, 1);
 
-
     return log_wrapper(log, "stream [lua] ", (ngx_uint_t) level, L);
-
 }
 
 
@@ -74,7 +71,7 @@ int
 ngx_stream_lua_print(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_lua_request_t          *r;
+    ngx_stream_lua_request_t    *r;
 
     r = ngx_stream_lua_get_req(L);
 
@@ -85,9 +82,7 @@ ngx_stream_lua_print(lua_State *L)
         log = ngx_cycle->log;
     }
 
-
     return log_wrapper(log, "stream [lua] ", NGX_LOG_NOTICE, L);
-
 }
 
 
@@ -318,7 +313,6 @@ ngx_stream_lua_inject_log_consts(lua_State *L)
     lua_setfield(L, -2, "DEBUG");
     /* }}} */
 }
-
 
 
 
