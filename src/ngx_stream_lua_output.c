@@ -63,6 +63,10 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
         return luaL_error(L, "no request ctx found");
     }
 
+    if (r->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "API disabled in the current context");
+    }
+
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD);
 
@@ -468,6 +472,10 @@ ngx_stream_lua_ngx_flush(lua_State *L)
         return luaL_error(L, "no request ctx found");
     }
 
+    if (r->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "API disabled in the current context");
+    }
+
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD);
 
@@ -585,6 +593,10 @@ ngx_stream_lua_ngx_eof(lua_State *L)
         lua_pushnil(L);
         lua_pushliteral(L, "seen eof");
         return 2;
+    }
+
+    if (r->connection->type == SOCK_DGRAM) {
+        return luaL_error(L, "API disabled in the current context");
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
