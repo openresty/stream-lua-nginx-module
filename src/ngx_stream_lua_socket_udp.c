@@ -27,8 +27,6 @@
 #define UDP_MAX_DATAGRAM_SIZE 8192
 
 
-
-
 static int ngx_stream_lua_socket_udp(lua_State *L);
 static int ngx_stream_lua_socket_udp_setpeername(lua_State *L);
 static int ngx_stream_lua_socket_udp_send(lua_State *L);
