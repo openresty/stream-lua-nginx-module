@@ -301,12 +301,11 @@ is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_m
 you can still call output API functions like `ngx.say`, `ngx.print`, and `ngx.flush`
 after acquiring the raw request socket via this function.
 
-When stream server is in UDP mode, the downstream socket returned by the `ngx.req.socket`
-call will only contain the content of a single packet. That is, repeated `receive` call
-will consume data from a single UDP datagram received by the server. Therefore
+When stream server is in UDP mode, reading from the downstream socket returned by the
+`ngx.req.socket` call will only return the content of a single packet. Therefore
 the reading call will never block and will return `nil, "no more data"` when all the
-data from the datagram has been consumed. However, you may send multiple UDP packet back to the
-client using the downstream socket.
+data from the datagram has been consumed. However, you may choose to send multiple UDP
+packets back to the client using the downstream socket.
 
 Raw TCP request socket returned by this module will contain the following extra method:
 
