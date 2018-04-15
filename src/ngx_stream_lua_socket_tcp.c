@@ -101,7 +101,6 @@ static int ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L);
 static ngx_int_t ngx_stream_lua_socket_compile_pattern(u_char *data, size_t len,
     ngx_stream_lua_socket_compiled_pattern_t *cp, ngx_log_t *log);
 static int ngx_stream_lua_socket_cleanup_compiled_pattern(lua_State *L);
-static int ngx_stream_lua_req_socket(lua_State *L);
 static void ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r);
 static int ngx_stream_lua_socket_tcp_getreusedtimes(lua_State *L);
 static int ngx_stream_lua_socket_tcp_setkeepalive(lua_State *L);
@@ -365,14 +364,6 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     /* }}} */
 
 #endif
-}
-
-
-void
-ngx_stream_lua_inject_req_socket_api(lua_State *L)
-{
-    lua_pushcfunction(L, ngx_stream_lua_req_socket);
-    lua_setfield(L, -2, "socket");
 }
 
 
@@ -4255,8 +4246,8 @@ ngx_stream_lua_socket_cleanup_compiled_pattern(lua_State *L)
 }
 
 
-static int
-ngx_stream_lua_req_socket(lua_State *L)
+int
+ngx_stream_lua_req_socket_tcp(lua_State *L)
 {
     int                              n, raw;
     ngx_peer_connection_t           *pc;

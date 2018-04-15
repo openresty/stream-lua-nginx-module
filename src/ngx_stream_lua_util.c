@@ -95,6 +95,7 @@ static ngx_int_t
 static lua_State *ngx_stream_lua_new_state(lua_State *parent_vm,
     ngx_cycle_t *cycle, ngx_stream_lua_main_conf_t *lmcf, ngx_log_t *log);
 static int ngx_stream_lua_get_raw_phase_context(lua_State *L);
+static int ngx_stream_lua_req_socket(lua_State *L);
 
 
 #ifndef LUA_PATH_SEP
@@ -1824,6 +1825,39 @@ done:
 }
 
 
+static int
+ngx_stream_lua_req_socket(lua_State *L)
+{
+    ngx_stream_lua_request_t   *r;
+    ngx_stream_lua_ctx_t       *ctx;
+
+    r = ngx_stream_lua_get_req(L);
+
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        return luaL_error(L, "no ctx found");
+    }
+
+    ngx_stream_lua_check_fake_request2(L, r, ctx);
+
+    switch (r->connection->type) {
+    case SOCK_STREAM:
+        return ngx_stream_lua_req_socket_tcp(L);
+
+    case SOCK_DGRAM:
+        return ngx_stream_lua_req_socket_udp(L);
+    }
+
+    /* shouldn't happen */
+    ngx_log_error(NGX_LOG_EMERG, r->connection->log, 0,
+                  "unexpected connection type: %d", r->connection->type);
+
+    ngx_stream_lua_assert(0);
+
+    return luaL_error(L, "unexpected connection type");
+}
+
+
 void
 ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
 {
@@ -1831,7 +1865,8 @@ ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
 
     lua_createtable(L, 0 /* narr */, 24 /* nrec */);    /* .req */
 
-    ngx_stream_lua_inject_req_socket_api(L);
+    lua_pushcfunction(L, ngx_stream_lua_req_socket);
+    lua_setfield(L, -2, "socket");
 
 
     lua_setfield(L, -2, "req");

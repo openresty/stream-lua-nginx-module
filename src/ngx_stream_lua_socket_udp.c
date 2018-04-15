@@ -73,6 +73,8 @@ enum {
 
 static char ngx_stream_lua_socket_udp_metatable_key;
 static char ngx_stream_lua_udp_udata_metatable_key;
+static char ngx_stream_lua_socket_udp_raw_req_socket_metatable_key;
+static char ngx_stream_lua_socket_udp_downstream_udata_metatable_key;
 static u_char ngx_stream_lua_socket_udp_buffer[UDP_MAX_DATAGRAM_SIZE];
 
 
@@ -84,7 +86,7 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_socket_udp);
     lua_setfield(L, -2, "udp"); /* ngx socket */
 
-    /* udp socket object metatable */
+    /* udp upstream socket object metatable */
     lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_metatable_key);
     lua_createtable(L, 0 /* narr */, 6 /* nrec */);
 
@@ -108,9 +110,36 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
 
-    /* udp socket object metatable */
+    /* udp downstream socket object metatable */
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_raw_req_socket_metatable_key);
+    lua_createtable(L, 0 /* narr */, 4 /* nrec */);
+
+    lua_pushcfunction(L, ngx_stream_lua_socket_udp_send);
+    lua_setfield(L, -2, "send");
+
+    lua_pushcfunction(L, ngx_stream_lua_socket_udp_receive);
+    lua_setfield(L, -2, "receive");
+
+    lua_pushcfunction(L, ngx_stream_lua_socket_udp_settimeout);
+    lua_setfield(L, -2, "settimeout"); /* ngx socket mt */
+
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");
+    lua_rawset(L, LUA_REGISTRYINDEX);
+    /* }}} */
+
+    /* udp upstream socket object metatable */
     lua_pushlightuserdata(L, &ngx_stream_lua_udp_udata_metatable_key);
     lua_createtable(L, 0 /* narr */, 1 /* nrec */); /* metatable */
+    lua_pushcfunction(L, ngx_stream_lua_socket_udp_upstream_destroy);
+    lua_setfield(L, -2, "__gc");
+    lua_rawset(L, LUA_REGISTRYINDEX);
+    /* }}} */
+
+    /* udp downstream socket object metatable */
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_downstream_udata_metatable_key);
+    lua_createtable(L, 0 /* narr */, 1 /* nrec */); /* metatable */
+    /* share the same destructor as upstream */
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_upstream_destroy);
     lua_setfield(L, -2, "__gc");
     lua_rawset(L, LUA_REGISTRYINDEX);
@@ -890,7 +919,7 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
 
     dd("sending query %.*s", (int) query.len, query.data);
 
-    n = ngx_send(u->udp_connection.connection, query.data, query.len);
+    n = ngx_udp_send(u->udp_connection.connection, query.data, query.len);
 
     dd("ngx_send returns %d (query len %d)", (int) n, (int) query.len);
 
@@ -988,7 +1017,28 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua udp socket receive buffer size: %uz", u->recv_buf_size);
 
-    rc = ngx_stream_lua_socket_udp_read(r, u);
+    if (u->raw_downstream) {
+        if (ngx_buf_size(r->connection->buffer) > 0) {
+            /* we still have unread data */
+            u->received = ngx_min((size_t) ngx_buf_size(r->connection->buffer),
+                                  u->recv_buf_size);
+            ngx_memcpy(ngx_stream_lua_socket_udp_buffer,
+                       r->connection->buffer->pos, u->received);
+            r->connection->buffer->pos += u->received;
+
+            ngx_stream_lua_socket_udp_handle_success(r, u);
+
+            rc = NGX_OK;
+
+        } else {
+            lua_pushnil(L);
+            lua_pushliteral(L, "no more data");
+            return 2;
+        }
+
+    } else {
+        rc = ngx_stream_lua_socket_udp_read(r, u);
+    }
 
     if (rc == NGX_ERROR) {
         dd("read failed: %d", (int) u->ft_type);
@@ -1104,7 +1154,11 @@ ngx_stream_lua_socket_udp_finalize(ngx_stream_lua_request_t *r,
         u->resolved->ctx = NULL;
     }
 
-    if (u->udp_connection.connection) {
+    /*
+     * do not close if it is a downstream connection as that will
+     * be handled by stream subsystem itself
+     */
+    if (u->udp_connection.connection && !u->raw_downstream) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "lua close socket connection");
 
@@ -1616,5 +1670,114 @@ ngx_stream_lua_udp_socket_cleanup(void *data)
 
     ngx_stream_lua_socket_udp_finalize(u->request, u);
 }
+
+
+int
+ngx_stream_lua_req_socket_udp(lua_State *L)
+{
+    ngx_stream_lua_udp_connection_t                *pc;
+    ngx_stream_lua_srv_conf_t                      *lscf;
+    ngx_connection_t                               *c;
+    ngx_stream_lua_request_t                       *r;
+    ngx_stream_lua_ctx_t                           *ctx;
+
+    ngx_stream_lua_cleanup_t                       *cln;
+    ngx_stream_lua_co_ctx_t                        *coctx;
+
+    ngx_stream_lua_socket_udp_upstream_t           *u;
+
+    r = ngx_stream_lua_get_req(L);
+
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        return luaL_error(L, "no ctx found");
+    }
+
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
+                                 |NGX_STREAM_LUA_CONTEXT_PREREAD);
+
+    c = r->connection;
+
+    if (c->buffered) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "pending data to write");
+        return 2;
+    }
+
+    dd("ctx acquired raw req socket: %d", ctx->acquired_raw_req_socket);
+
+    if (ctx->acquired_raw_req_socket) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "duplicate call");
+        return 2;
+    }
+
+    ctx->acquired_raw_req_socket = 1;
+
+    lua_createtable(L, 3 /* narr */, 1 /* nrec */); /* the object */
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_raw_req_socket_metatable_key);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    lua_setmetatable(L, -2);
+
+    u = lua_newuserdata(L, sizeof(ngx_stream_lua_socket_udp_upstream_t));
+    if (u == NULL) {
+        return luaL_error(L, "no memory");
+    }
+
+#if 1
+    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_downstream_udata_metatable_key);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    lua_setmetatable(L, -2);
+#endif
+
+    lua_rawseti(L, 1, SOCKET_CTX_INDEX);
+
+    ngx_memzero(u, sizeof(ngx_stream_lua_socket_udp_upstream_t));
+
+    u->raw_downstream = 1;
+
+    coctx = ctx->cur_co_ctx;
+
+    u->request = r;
+
+    lscf = ngx_stream_lua_get_module_srv_conf(r, ngx_stream_lua_module);
+
+    u->conf = lscf;
+
+    u->read_timeout = u->conf->read_timeout;
+
+    cln = ngx_stream_lua_cleanup_add(r, 0);
+    if (cln == NULL) {
+        u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_ERROR;
+        lua_pushnil(L);
+        lua_pushliteral(L, "no memory");
+        return 2;
+    }
+
+    cln->handler = ngx_stream_lua_socket_udp_cleanup;
+    cln->data = u;
+    u->cleanup = &cln->handler;
+
+    pc = &u->udp_connection;
+    pc->log = *c->log;
+    pc->connection = c;
+
+    dd("setting data to %p", u);
+
+    coctx->data = u;
+    ctx->downstream = u;
+
+    if (c->read->timer_set) {
+        ngx_del_timer(c->read);
+    }
+
+    if (c->write->timer_set) {
+        ngx_del_timer(c->write);
+    }
+
+    lua_settop(L, 1);
+    return 1;
+}
+
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
