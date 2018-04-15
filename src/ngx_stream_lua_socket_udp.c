@@ -1040,7 +1040,6 @@ ngx_stream_lua_socket_udp_receive(lua_State *L)
         rc = ngx_stream_lua_socket_udp_read(r, u);
     }
 
-
     if (rc == NGX_ERROR) {
         dd("read failed: %d", (int) u->ft_type);
         rc = ngx_stream_lua_socket_udp_receive_retval_handler(r, u, L);
