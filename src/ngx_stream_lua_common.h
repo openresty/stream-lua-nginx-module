@@ -43,8 +43,8 @@
 #endif
 
 
-#if !defined(nginx_version) || (nginx_version < 1006000)
-#error at least nginx 1.6.0 is required but found an older version
+#if !defined(nginx_version) || (nginx_version < 1013006)
+#error at least nginx 1.13.6 is required but found an older version
 #endif
 
 

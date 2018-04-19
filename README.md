@@ -440,9 +440,9 @@ Nginx Compatibility
 
 The latest version of this module is compatible with the following versions of Nginx:
 
-* 1.13.x >= 1.13.3 (last tested: 1.13.6)
+* 1.13.x >= 1.13.6
 
-Nginx cores older than 1.13.3 (exclusive) are *not* tested and may or may not work. Use at your own risk!
+Nginx cores older than 1.13.6 (exclusive) are *not* tested and may or may not work. Use at your own risk!
 
 [Back to TOC](#table-of-contents)
 
@@ -458,9 +458,9 @@ This module can be manually compiled into Nginx or OpenResty:
 Build the source of NGINX or OpenResty with this module, like below:
 
 ```bash
-wget 'http://nginx.org/download/nginx-1.13.3.tar.gz'
-tar -xzvf nginx-1.13.3.tar.gz
-cd nginx-1.13.3/
+wget 'http://nginx.org/download/nginx-1.13.6.tar.gz'
+tar -xzvf nginx-1.13.6.tar.gz
+cd nginx-1.13.6/
 
 # tell nginx's build system where to find LuaJIT 2.1:
 export LUAJIT_LIB=/path/to/luajit/lib
@@ -535,7 +535,7 @@ Copyright and License
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2009-2017, by Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, OpenResty Inc.
+Copyright (C) 2009-2018, by Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, OpenResty Inc.
 
 Copyright (C) 2009-2016, by Xiaozhe Wang (chaoslawful) <chaoslawful@gmail.com>.
 
