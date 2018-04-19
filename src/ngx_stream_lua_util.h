@@ -89,7 +89,6 @@ extern char ngx_stream_lua_headers_metatable_key;
     }
 
 
-#ifndef NGX_LUA_NO_FFI_API
 static ngx_inline ngx_int_t
 ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx,
     unsigned flags, u_char *err, size_t *errlen)
@@ -105,7 +104,6 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx,
 
     return NGX_OK;
 }
-#endif
 
 
 #define ngx_stream_lua_check_fake_request(L, r)                              \

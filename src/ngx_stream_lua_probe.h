@@ -46,7 +46,8 @@
     NGINX_LUA_HTTP_LUA_SOCKET_TCP_RECEIVE_DONE(r, u, data, len)
 
 #define ngx_stream_lua_probe_socket_tcp_setkeepalive_buf_unread(r, u,        \
-                                                                 data, len)  \
+                                                                data,        \
+                                                                len)         \
     NGINX_LUA_HTTP_LUA_SOCKET_TCP_SETKEEPALIVE_BUF_UNREAD(r, u, data, len)
 
 #define ngx_stream_lua_probe_user_thread_spawn(r, creator, newthread)        \

@@ -19,6 +19,7 @@
 #include "ngx_stream_lua_probe.h"
 #include "ngx_stream_lua_balancer.h"
 #include "ngx_stream_lua_logby.h"
+#include "ngx_stream_lua_semaphore.h"
 
 
 #include "ngx_stream_lua_prereadby.h"
@@ -431,6 +432,7 @@ ngx_stream_lua_init(ngx_conf_t *cf)
     ngx_stream_handler_pt              *h;
     ngx_stream_core_main_conf_t        *cmcf;
 
+    ngx_pool_cleanup_t         *cln;
 
     lmcf = ngx_stream_conf_get_module_main_conf(cf,
                                                 ngx_stream_lua_module);
@@ -476,7 +478,6 @@ ngx_stream_lua_init(ngx_conf_t *cf)
     }
 
 
-#ifndef NGX_LUA_NO_FFI_API
     /* add the cleanup of semaphores after the lua_close */
     cln = ngx_pool_cleanup_add(cf->pool, 0);
     if (cln == NULL) {
@@ -485,7 +486,6 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 
     cln->data = lmcf;
     cln->handler = ngx_stream_lua_sema_mm_cleanup;
-#endif
 
 
     if (lmcf->lua == NULL) {
@@ -553,9 +553,7 @@ ngx_stream_lua_lowat_check(ngx_conf_t *cf, void *post, void *data)
 static void *
 ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
 {
-#ifndef NGX_LUA_NO_FFI_API
     ngx_int_t       rc;
-#endif
 
     ngx_stream_lua_main_conf_t          *lmcf;
 
@@ -602,14 +600,12 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
     lmcf->malloc_trim_cycle = NGX_CONF_UNSET_UINT;
 #endif
 
-#ifndef NGX_LUA_NO_FFI_API
     rc = ngx_stream_lua_sema_mm_init(cf, lmcf);
     if (rc != NGX_OK) {
         return NULL;
     }
 
     dd("nginx Lua module main config structure initialized!");
-#endif
 
     return lmcf;
 }
@@ -777,18 +773,18 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #if (NGX_STREAM_SSL)
 
 static ngx_int_t
-ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lxcf)
+ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
 {
     ngx_pool_cleanup_t  *cln;
 
-    lxcf->ssl = ngx_pcalloc(cf->pool, sizeof(ngx_ssl_t));
-    if (lxcf->ssl == NULL) {
+    lscf->ssl = ngx_pcalloc(cf->pool, sizeof(ngx_ssl_t));
+    if (lscf->ssl == NULL) {
         return NGX_ERROR;
     }
 
-    lxcf->ssl->log = cf->log;
+    lscf->ssl->log = cf->log;
 
-    if (ngx_ssl_create(lxcf->ssl, lxcf->ssl_protocols, NULL) != NGX_OK) {
+    if (ngx_ssl_create(lscf->ssl, lscf->ssl_protocols, NULL) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -798,25 +794,25 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lxcf)
     }
 
     cln->handler = ngx_ssl_cleanup_ctx;
-    cln->data = lxcf->ssl;
+    cln->data = lscf->ssl;
 
-    if (SSL_CTX_set_cipher_list(lxcf->ssl->ctx,
-                                (const char *) lxcf->ssl_ciphers.data)
+    if (SSL_CTX_set_cipher_list(lscf->ssl->ctx,
+                                (const char *) lscf->ssl_ciphers.data)
         == 0)
     {
         ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
                       "SSL_CTX_set_cipher_list(\"%V\") failed",
-                      &lxcf->ssl_ciphers);
+                      &lscf->ssl_ciphers);
         return NGX_ERROR;
     }
 
-    if (lxcf->ssl_trusted_certificate.len) {
+    if (lscf->ssl_trusted_certificate.len) {
 
 #if defined(nginx_version) && nginx_version >= 1003007
 
-        if (ngx_ssl_trusted_certificate(cf, lxcf->ssl,
-                                        &lxcf->ssl_trusted_certificate,
-                                        lxcf->ssl_verify_depth)
+        if (ngx_ssl_trusted_certificate(cf, lscf->ssl,
+                                        &lscf->ssl_trusted_certificate,
+                                        lscf->ssl_verify_depth)
             != NGX_OK)
         {
             return NGX_ERROR;
@@ -832,9 +828,9 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lxcf)
 #endif
     }
 
-    dd("ssl crl: %.*s", (int) lxcf->ssl_crl.len, lxcf->ssl_crl.data);
+    dd("ssl crl: %.*s", (int) lscf->ssl_crl.len, lscf->ssl_crl.data);
 
-    if (ngx_ssl_crl(cf, lxcf->ssl, &lxcf->ssl_crl) != NGX_OK) {
+    if (ngx_ssl_crl(cf, lscf->ssl, &lscf->ssl_crl) != NGX_OK) {
         return NGX_ERROR;
     }
 
