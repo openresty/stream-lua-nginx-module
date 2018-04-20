@@ -53,9 +53,14 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     /* lmcf != NULL && lmcf->lua != NULL */
 
-#if defined(HAVE_PRIVILEGED_PROCESS_PATCH) && !NGX_WIN32
+#if !(NGX_WIN32)
     /* disable init_worker_by_lua* and destroy lua VM in cache processes */
-    if (ngx_process == NGX_PROCESS_HELPER && !ngx_is_privileged_agent) {
+    if (ngx_process == NGX_PROCESS_HELPER
+#   ifdef HAVE_PRIVILEGED_PROCESS_PATCH
+        && !ngx_is_privileged_agent
+#   endif
+        )
+    {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                        "lua close the global Lua VM %p in the "
                        "cache helper process %P", lmcf->lua, ngx_pid);
@@ -65,7 +70,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
         return NGX_OK;
     }
-#endif
+#endif  /* NGX_WIN32 */
 
     if (lmcf->init_worker_handler == NULL) {
         return NGX_OK;
