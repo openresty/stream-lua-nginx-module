@@ -88,3 +88,58 @@ bar
 [error]
 --- error_log
 access log: bar
+
+
+
+=== TEST 5: sanity
+--- stream_config
+    lua_add_variable $foo "foo";
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say(ngx.var.foo)
+        ngx.var.foo = "bar"
+        ngx.say(ngx.var.foo)
+    }
+--- stream_response
+foo
+bar
+--- no_error_log
+[warn]
+[error]
+
+
+
+=== TEST 6: works with C code
+--- stream_config
+    lua_add_variable $foo "foo";
+--- stream_server_config
+    preread_by_lua_block {
+        ngx.var.foo = "bar"
+    }
+
+    return $foo\n;
+--- stream_response
+bar
+--- no_error_log
+[warn]
+[error]
+
+
+
+=== TEST 7: multiple add with same name works
+--- stream_config
+    lua_add_variable $foo "bar";
+    lua_add_variable $foo "foo";
+--- stream_server_config
+    preread_by_lua_block {
+        ngx.say(ngx.var.foo)
+        ngx.var.foo = "bar"
+    }
+
+    return $foo\n;
+--- stream_response
+foo
+bar
+--- no_error_log
+[warn]
+[error]

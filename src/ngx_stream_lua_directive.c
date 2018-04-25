@@ -1209,12 +1209,29 @@ ngx_stream_lua_undefined_var(ngx_stream_session_t *s,
 }
 
 
+static ngx_int_t
+ngx_stream_lua_var(ngx_stream_session_t *s,
+    ngx_stream_variable_value_t *v, uintptr_t data)
+{
+    ngx_str_t *str = (ngx_str_t *) data;
+
+    v->not_found = 0;
+    v->valid = 1;
+    v->no_cacheable = 0;
+    v->not_found = 0;
+    v->len = str->len;
+    v->data = str->data;
+
+    return NGX_OK;
+}
+
+
 char *
 ngx_stream_lua_add_variable(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf)
 {
     ngx_stream_variable_t           *var;
-    ngx_str_t                       *value;
+    ngx_str_t                       *value, *data;
     ngx_int_t                        ret;
 
     value = cf->args->elts;
@@ -1234,8 +1251,32 @@ ngx_stream_lua_add_variable(ngx_conf_t *cf, ngx_command_t *cmd,
         return NGX_CONF_ERROR;
     }
 
-    if (var->get_handler == NULL) {
-        var->get_handler = ngx_stream_lua_undefined_var;
+    if (cf->args->nelts == 2) {
+        if (var->get_handler == NULL) {
+            var->get_handler = ngx_stream_lua_undefined_var;
+        }
+    } else {
+        if (var->get_handler == NULL) {
+            var->get_handler = ngx_stream_lua_var;
+        }
+
+        if (var->data) {
+            data = (ngx_str_t *) var->data;
+        } else {
+            data = ngx_pnalloc(cf->pool, sizeof(ngx_str_t));
+            if (data == NULL) {
+                return NGX_CONF_ERROR;
+            }
+        }
+        data->len = value[2].len;
+
+        data->data = ngx_pnalloc(cf->pool, value[2].len);
+        if (data->data == NULL) {
+            return NGX_CONF_ERROR;
+        }
+        ngx_memcpy(data->data, value[2].data, value[2].len);
+
+        var->data = (uintptr_t) data;
     }
 
     ret = ngx_stream_get_variable_index(cf, value + 1);
