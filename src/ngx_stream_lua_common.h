@@ -60,8 +60,6 @@
 #endif
 
 
-
-
 #ifndef NGX_HAVE_SHA1
 #   if (nginx_version >= 1011002)
 #       define NGX_HAVE_SHA1  1
