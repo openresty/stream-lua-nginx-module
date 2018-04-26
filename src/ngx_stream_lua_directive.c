@@ -1210,12 +1210,11 @@ ngx_stream_lua_undefined_var(ngx_stream_session_t *s,
 
 
 static ngx_int_t
-ngx_stream_lua_var(ngx_stream_session_t *s,
+ngx_stream_lua_var_default_value(ngx_stream_session_t *s,
     ngx_stream_variable_value_t *v, uintptr_t data)
 {
     ngx_str_t *str = (ngx_str_t *) data;
 
-    v->not_found = 0;
     v->valid = 1;
     v->no_cacheable = 0;
     v->not_found = 0;
@@ -1255,26 +1254,24 @@ ngx_stream_lua_add_variable(ngx_conf_t *cf, ngx_command_t *cmd,
         if (var->get_handler == NULL) {
             var->get_handler = ngx_stream_lua_undefined_var;
         }
+
     } else {
         if (var->get_handler == NULL) {
-            var->get_handler = ngx_stream_lua_var;
+            var->get_handler = ngx_stream_lua_var_default_value;
         }
 
         if (var->data) {
             data = (ngx_str_t *) var->data;
+
         } else {
-            data = ngx_pnalloc(cf->pool, sizeof(ngx_str_t));
+            data = ngx_palloc(cf->pool, sizeof(ngx_str_t));
             if (data == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-        data->len = value[2].len;
 
-        data->data = ngx_pnalloc(cf->pool, value[2].len);
-        if (data->data == NULL) {
-            return NGX_CONF_ERROR;
-        }
-        ngx_memcpy(data->data, value[2].data, value[2].len);
+        data->len = value[2].len;
+        data->data = value[2].data;
 
         var->data = (uintptr_t) data;
     }
