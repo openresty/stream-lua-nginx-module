@@ -106,13 +106,13 @@ static void ngx_stream_lua_re_collect_named_captures(lua_State *L,
 
 
 #define ngx_stream_lua_regex_exec(re, e, s, start, captures, size,           \
-                                        opts)                                \
+                                  opts)                                      \
     pcre_exec(re, e, (const char *) (s)->data, (s)->len, start, opts,        \
               captures, size)
 
 
 #define ngx_stream_lua_regex_dfa_exec(re, e, s, start, captures, size,       \
-                                            ws, wscount, opts)               \
+                                      ws, wscount, opts)                     \
     pcre_dfa_exec(re, e, (const char *) (s)->data, (s)->len, start, opts,    \
                   captures, size, ws, wscount)
 

@@ -32,7 +32,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     ngx_open_file_t                 *file, *ofile;
     ngx_list_part_t                 *part;
     ngx_connection_t                *c = NULL;
-    ngx_conf_file_t                 *conf_file;
     ngx_stream_module_t             *module;
     ngx_stream_lua_request_t        *r = NULL;
     ngx_stream_lua_ctx_t            *ctx;
@@ -40,6 +39,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     ngx_stream_lua_main_conf_t          *lmcf;
 
+    ngx_conf_file_t         *conf_file;
     ngx_stream_session_t    *s;
 
     ngx_stream_core_srv_conf_t    *clcf, *top_clcf;
@@ -177,12 +177,12 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     conf_file->file.name.data = (u_char *) "dummy";
     conf_file->file.name.len = sizeof("dummy") - 1;
     conf_file->line = 1;
+    conf.conf_file = conf_file;
 
     conf.ctx = &stream_ctx;
     conf.cycle = fake_cycle;
     conf.pool = fake_cycle->pool;
     conf.log = cycle->log;
-    conf.conf_file = conf_file;
 
 
     stream_ctx.srv_conf = ngx_pcalloc(conf.pool,
