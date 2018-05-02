@@ -294,7 +294,6 @@ other stream modules.
 * [print](https://github.com/openresty/lua-nginx-module#print)
 * [ngx.ctx](https://github.com/openresty/lua-nginx-module#ngxctx)
 * [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
-* [ngx.balancer](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md)
 
 Only raw request sockets are supported, for obvious reasons. The `raw` argument value
 is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_module`,
@@ -357,6 +356,7 @@ until (not data and not partial) or ngx.time() >= deadline
 
 [Back to TOC](#directives)
 
+* [ngx.balancer](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md)
 * [ngx.print](https://github.com/openresty/lua-nginx-module#ngxprint)
 * [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
 * [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
