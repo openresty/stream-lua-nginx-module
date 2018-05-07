@@ -30,7 +30,7 @@ Table of Contents
 Status
 ======
 
-Producty ready.
+Production ready.
 
 The API is still in flux and may change without notice.
 
