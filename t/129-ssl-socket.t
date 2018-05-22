@@ -28,7 +28,7 @@ sub read_file {
 }
 
 our $DSTRootCertificate = read_file("t/cert/dst-ca.crt");
-our $EquifaxRootCertificate = read_file("t/cert/equifax.crt");
+our $GoogleRootCertificate = read_file("t/cert/google.crt");
 our $TestCertificate = read_file("t/cert/test.crt");
 our $TestCertificateKey = read_file("t/cert/test.key");
 our $TestCRL = read_file("t/cert/test.crl");
@@ -890,7 +890,7 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::EquifaxRootCertificate"
+$::GoogleRootCertificate"
 
 --- stream_response_like chop
 \Aconnected: 1
@@ -1052,7 +1052,6 @@ SSL reused session
 
 --- user_files eval
 ">>> trusted.crt
-$::EquifaxRootCertificate
 $::DSTRootCertificate"
 
 --- stream_response
