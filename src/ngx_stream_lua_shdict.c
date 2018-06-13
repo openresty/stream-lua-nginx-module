@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_shdict.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -2230,11 +2238,10 @@ ngx_stream_lua_find_zone(u_char *name_data, size_t name_len)
 }
 
 
-#ifndef NGX_LUA_NO_FFI_API
 int
 ngx_stream_lua_ffi_shdict_store(ngx_shm_zone_t *zone, int op, u_char *key,
     size_t key_len, int value_type, u_char *str_value_buf,
-    size_t str_value_len, double num_value, int exptime, int user_flags,
+    size_t str_value_len, double num_value, long exptime, int user_flags,
     char **errmsg, int *forcible)
 {
     int                          i, n;
@@ -2252,7 +2259,7 @@ ngx_stream_lua_ffi_shdict_store(ngx_shm_zone_t *zone, int op, u_char *key,
         return NGX_ERROR;
     }
 
-    dd("exptime: %d", exptime);
+    dd("exptime: %ld", exptime);
 
     ctx = zone->data;
 
@@ -2930,7 +2937,7 @@ ngx_stream_lua_shdict_peek(ngx_shm_zone_t *shm_zone, ngx_uint_t hash,
 }
 
 
-int
+long
 ngx_stream_lua_ffi_shdict_get_ttl(ngx_shm_zone_t *zone, u_char *key,
     size_t key_len)
 {
@@ -2979,7 +2986,7 @@ ngx_stream_lua_ffi_shdict_get_ttl(ngx_shm_zone_t *zone, u_char *key,
 
 int
 ngx_stream_lua_ffi_shdict_set_expire(ngx_shm_zone_t *zone, u_char *key,
-    size_t key_len, int exptime)
+    size_t key_len, long exptime)
 {
     uint32_t                     hash;
     ngx_int_t                    rc;
@@ -3049,9 +3056,6 @@ ngx_stream_lua_ffi_shdict_free_space(ngx_shm_zone_t *zone)
     return bytes;
 }
 #    endif /* nginx_version >= 1011007 */
-
-
-#endif /* NGX_LUA_NO_FFI_API */
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
