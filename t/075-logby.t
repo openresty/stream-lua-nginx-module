@@ -155,7 +155,7 @@ failed to run log_by_lua*: unknown reason
 
 
 
-=== TEST 11: globals get cleared for every single request
+=== TEST 11: globals shared
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -165,14 +165,15 @@ failed to run log_by_lua*: unknown reason
             if not foo then
                 foo = 1
             else
+                ngx.log(ngx.INFO, "old foo: ", foo)
                 foo = foo + 1
             end
-            ngx.log(ngx.WARN, "foo = ", foo)
     }
 --- stream_response
 ok
---- error_log
-foo = 1
+--- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log_out eval
+["", "old foo: 1\n"]
 
 
 

@@ -30,7 +30,7 @@
 #include <setjmp.h>
 #include <stdint.h>
 
-#include <lua.h>
+#include <luajit.h>
 #include <lualib.h>
 #include <lauxlib.h>
 
@@ -131,6 +131,15 @@
 #ifndef NGX_LUA_NO_FFI_API
 #define NGX_STREAM_LUA_FFI_NO_REQ_CTX         -100
 #define NGX_STREAM_LUA_FFI_BAD_CONTEXT        -101
+#endif
+
+
+#if defined(__aarch64__) || defined(NGX_LUA_DEBUG_ARM64)
+#define ngx_stream_lua_lightudata_mask(ludata)                               \
+    ((void *) ((uintptr_t) (&ngx_stream_lua_##ludata) & ((1UL << 47) - 1)))
+
+#else
+#define ngx_stream_lua_lightudata_mask(ludata)    (&ngx_stream_lua_##ludata)
 #endif
 
 
