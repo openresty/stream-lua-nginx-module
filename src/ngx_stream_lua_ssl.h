@@ -41,6 +41,8 @@ ngx_int_t ngx_stream_lua_ssl_init(ngx_log_t *log);
 extern int ngx_stream_lua_ssl_ctx_index;
 
 
+int ngx_stream_lua_req_starttls(lua_State *L);
+
 #endif
 
 
