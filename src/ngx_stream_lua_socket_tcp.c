@@ -30,6 +30,9 @@ static int ngx_stream_lua_socket_tcp_shutdown(lua_State *L);
 static int ngx_stream_lua_socket_tcp_setoption(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeout(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeouts(lua_State *L);
+#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+static int ngx_stream_lua_socket_tcp_getpeercred(lua_State *L);
+#endif
 static void ngx_stream_lua_socket_tcp_handler(ngx_event_t *ev);
 static ngx_int_t ngx_stream_lua_socket_tcp_get_peer(ngx_peer_connection_t *pc,
     void *data);
@@ -265,6 +268,11 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_shutdown);
     lua_setfield(L, -2, "shutdown");
+
+#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+    lua_pushcfunction(L, ngx_stream_lua_socket_tcp_getpeercred);
+    lua_setfield(L, -2, "getpeercred");
+#endif
 
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
@@ -4451,6 +4459,94 @@ ngx_stream_lua_socket_tcp_getreusedtimes(lua_State *L)
     lua_pushinteger(L, u->reused);
     return 1;
 }
+
+
+#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+static int
+ngx_stream_lua_socket_tcp_getpeercred(lua_State *L)
+{
+    ngx_stream_lua_request_t            *r;
+    ngx_connection_t                    *c;
+    struct ucred                        ucred;
+    socklen_t                           len;
+
+    ngx_stream_lua_loc_conf_t                   *llcf;
+    ngx_stream_lua_socket_tcp_upstream_t        *u;
+
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "expecting 1 arguments (the object), "
+                             "but got %d", lua_gettop(L));
+    }
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
+    }
+
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    lua_rawgeti(L, 1, SOCKET_CTX_INDEX);
+    u = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (u == NULL || u->peer.connection == NULL || u->write_closed) {
+        llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
+
+        if (llcf->log_socket_errors) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "attempt to get peercred on a closed socket: u:%p, "
+                          "c:%p, ft:%d eof:%d",
+                          u, u ? u->peer.connection : NULL,
+                          u ? (int) u->ft_type : 0, u ? (int) u->eof : 0);
+        }
+
+        lua_pushnil(L);
+        lua_pushliteral(L, "closed");
+        return 2;
+    }
+
+    c = u->peer.connection;
+
+    if (c->sockaddr->sa_family != AF_UNIX) {
+        llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
+
+        if (llcf->log_socket_errors) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "peercred available for unix sockets only: u:%p, "
+                          "c:%p, ft:%d eof:%d",
+                          u, u ? u->peer.connection : NULL,
+                          u ? (int) u->ft_type : 0, u ? (int) u->eof : 0);
+        }
+
+        lua_pushnil(L);
+        lua_pushliteral(L, "invalid");
+        return 2;
+    }
+
+    len = sizeof(struct ucred);
+    if (getsockopt(c->fd, SOL_SOCKET, SO_PEERCRED, &ucred, &len) == -1) {
+        llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
+
+        if (llcf->log_socket_errors) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "attempt to get peercred failed: u:%p, "
+                          "c:%p, ft:%d eof:%d",
+                          u, u ? u->peer.connection : NULL,
+                          u ? (int) u->ft_type : 0, u ? (int) u->eof : 0);
+        }
+
+        lua_pushnil(L);
+        lua_pushliteral(L, "failed");
+        return 2;
+    }
+
+    lua_pushnumber(L, ucred.uid);
+    lua_pushnumber(L, ucred.gid);
+    lua_pushnumber(L, ucred.pid);
+
+    return 3;
+}
+#endif
 
 
 static int
