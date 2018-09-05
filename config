@@ -437,3 +437,14 @@ ngx_feature_test='setsockopt(1, SOL_SOCKET, SO_PASSCRED, NULL, 0);'
 
 #CFLAGS=$"$CFLAGS -DLUA_DEFAULT_PATH='\"/usr/local/openresty/lualib/?.lua\"'"
 #CFLAGS=$"$CFLAGS -DLUA_DEFAULT_CPATH='\"/usr/local/openresty/lualib/?.so\"'"
+
+ngx_feature="SO_PEERCRED"
+ngx_feature_libs=
+ngx_feature_name="NGX_STREAM_LUA_HAVE_SO_PEERCRED"
+ngx_feature_run=no
+ngx_feature_incs="#include <sys/types.h>
+#include <sys/socket.h>"
+ngx_feature_path=
+ngx_feature_test='getsockopt(1, SOL_SOCKET, SO_PEERCRED, NULL, 0);'
+
+. auto/feature

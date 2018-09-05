@@ -30,7 +30,7 @@ static int ngx_stream_lua_socket_tcp_shutdown(lua_State *L);
 static int ngx_stream_lua_socket_tcp_setoption(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeout(lua_State *L);
 static int ngx_stream_lua_socket_tcp_settimeouts(lua_State *L);
-#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+#if (NGX_STREAM_LUA_HAVE_SO_PEERCRED)
 static int ngx_stream_lua_socket_tcp_getpeercred(lua_State *L);
 #endif
 static void ngx_stream_lua_socket_tcp_handler(ngx_event_t *ev);
@@ -269,7 +269,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_shutdown);
     lua_setfield(L, -2, "shutdown");
 
-#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+#if (NGX_STREAM_LUA_HAVE_SO_PEERCRED)
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_getpeercred);
     lua_setfield(L, -2, "getpeercred");
 #endif
@@ -4461,7 +4461,7 @@ ngx_stream_lua_socket_tcp_getreusedtimes(lua_State *L)
 }
 
 
-#if (NGX_LINUX) && (NGX_HAVE_UNIX_DOMAIN)
+#if (NGX_STREAM_LUA_HAVE_SO_PEERCRED)
 static int
 ngx_stream_lua_socket_tcp_getpeercred(lua_State *L)
 {
