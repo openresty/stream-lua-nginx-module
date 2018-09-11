@@ -314,6 +314,53 @@ ngx_stream_lua_inject_log_consts(lua_State *L)
     /* }}} */
 }
 
+#ifndef NGX_LUA_NO_FFI_API
+
+int
+ngx_stream_lua_ffi_errlog_get_sys_filter_level(ngx_stream_lua_request_t *r)
+{
+    ngx_log_t                   *log;
+    int                          log_level;
+
+    if (r->session && r->session->connection && r->session->connection->log) {
+        log = r->session->connection->log;
+
+    } else {
+        log = ngx_cycle->log;
+    }
+
+    log_level = log->log_level;
+    if (log_level == NGX_LOG_DEBUG_ALL) {
+        log_level = NGX_LOG_DEBUG;
+    }
+
+    return log_level;
+}
+
+
+int
+ngx_stream_lua_ffi_raw_log(ngx_stream_lua_request_t *r, int level, u_char *s,
+    size_t s_len)
+{
+    ngx_log_t           *log;
+
+    if (level > NGX_LOG_DEBUG || level < NGX_LOG_STDERR) {
+        return NGX_ERROR;
+    }
+
+    if (r->session && r->session->connection && r->session->connection->log) {
+        log = r->session->connection->log;
+
+    } else {
+        log = ngx_cycle->log;
+    }
+
+    ngx_log_error((unsigned) level, log, 0, "%*s", s_len, s);
+
+    return NGX_OK;
+}
+
+#endif
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
