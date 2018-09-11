@@ -1868,6 +1868,7 @@ ngx_stream_lua_inject_req_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_req_socket);
     lua_setfield(L, -2, "socket");
 
+    ngx_stream_lua_inject_req_time_api(L);
 
     lua_setfield(L, -2, "req");
 }
