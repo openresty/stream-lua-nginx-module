@@ -254,11 +254,6 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
 {
     ngx_uint_t                   hash;
     ngx_str_t                    name;
-#if (NGX_PCRE)
-    u_char                      *p;
-    ngx_uint_t                   n;
-    int                         *cap;
-#endif
 
     ngx_stream_variable_value_t         *vv;
 
@@ -271,37 +266,6 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
         *err = "API disabled in the current context";
         return NGX_ERROR;
     }
-
-#if (NGX_PCRE)
-    if (name_data == 0) {
-        if (capture_id <= 0) {
-            return NGX_DECLINED;
-        }
-
-        /* it is a regex capturing variable */
-
-        n = (ngx_uint_t) capture_id * 2;
-
-        dd("n = %d, ncaptures = %d", (int) n, (int) r->ncaptures);
-
-        if (r->captures == NULL
-            || r->captures_data == NULL
-            || n >= r->ncaptures)
-        {
-            return NGX_DECLINED;
-        }
-
-        /* n >= 0 && n < r->ncaptures */
-
-        cap = r->captures;
-        p = r->captures_data;
-
-        *value = &p[cap[n]];
-        *value_len = (size_t) (cap[n + 1] - cap[n]);
-
-        return NGX_OK;
-    }
-#endif
 
     hash = ngx_hash_strlow(lowcase_buf, name_data, name_len);
 
@@ -407,12 +371,12 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
                 vv->len = value_len;
             }
 
-            v->set_handler(r, vv, v->data);
+            v->set_handler(r->session, vv, v->data);
             return NGX_OK;
         }
 
         if (v->flags & NGX_STREAM_VAR_INDEXED) {
-            vv = &r->variables[v->index];
+            vv = &r->session->variables[v->index];
 
             dd("set indexed variable");
 

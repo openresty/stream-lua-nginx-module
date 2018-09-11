@@ -118,6 +118,7 @@
 #define NGX_STREAM_LUA_CONTEXT_INIT_WORKER                          0x0008
 #define NGX_STREAM_LUA_CONTEXT_BALANCER                             0x0010
 #define NGX_STREAM_LUA_CONTEXT_PREREAD                              0x0020
+#define NGX_STREAM_LUA_CONTEXT_SSL_CERT                             0x0040
 
 
 #ifndef NGX_LUA_NO_FFI_API

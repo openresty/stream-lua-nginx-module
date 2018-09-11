@@ -157,24 +157,18 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
         return NGX_ERROR;
     }
 
-    if (ngx_stream_lua_ffi_check_context(ctx, NGX_STREAM_LUA_CONTEXT_REWRITE
-                                         | NGX_STREAM_LUA_CONTEXT_ACCESS
+    if (ngx_stream_lua_ffi_check_context(ctx, NGX_STREAM_LUA_CONTEXT_PREREAD
                                          | NGX_STREAM_LUA_CONTEXT_CONTENT
                                          | NGX_STREAM_LUA_CONTEXT_TIMER
-                                         | NGX_STREAM_LUA_CONTEXT_HEADER_FILTER
                                          | NGX_STREAM_LUA_CONTEXT_BALANCER
                                          | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                                         | NGX_STREAM_LUA_CONTEXT_SSL_SESS_STORE
-                                        | NGX_STREAM_LUA_CONTEXT_SSL_SESS_FETCH,
-                                         err, errlen)
+                                         , err, errlen)
         != NGX_OK)
     {
         return NGX_ERROR;
     }
 
-    if (ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                        | NGX_STREAM_LUA_CONTEXT_SSL_SESS_STORE
-                        | NGX_STREAM_LUA_CONTEXT_SSL_SESS_FETCH))
+    if (ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT))
     {
 
 #if (NGX_STREAM_SSL)
@@ -185,9 +179,6 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
         ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "lua exit with code %d", status);
 
-        if (ctx->context == NGX_STREAM_LUA_CONTEXT_SSL_SESS_STORE) {
-            return NGX_DONE;
-        }
 
         return NGX_OK;
 
@@ -205,8 +196,7 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
     ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua exit with code %i", ctx->exit_code);
 
-    if (ctx->context & (NGX_STREAM_LUA_CONTEXT_HEADER_FILTER
-                        | NGX_STREAM_LUA_CONTEXT_BALANCER))
+    if (ctx->context & (NGX_STREAM_LUA_CONTEXT_BALANCER))
     {
         return NGX_DONE;
     }
