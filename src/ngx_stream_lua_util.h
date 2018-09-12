@@ -123,6 +123,10 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx,
 #define ngx_stream_lua_ssl_get_ctx(ssl_conn)                                 \
     SSL_get_ex_data(ssl_conn, ngx_stream_lua_ssl_ctx_index)
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100001L)
+#define SSL_CTX_up_ref(ctx)                                                  \
+    CRYPTO_add(&(ctx)->references, 1, CRYPTO_LOCK_SSL_CTX)
+#endif
 
 lua_State *ngx_stream_lua_init_vm(lua_State *parent_vm, ngx_cycle_t *cycle,
     ngx_pool_t *pool, ngx_stream_lua_main_conf_t *lmcf, ngx_log_t *log,
