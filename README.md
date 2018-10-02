@@ -526,7 +526,7 @@ Please submit bug reports, wishlists, or patches by
 Acknowledgments
 ===============
 
-* We appreciate [Mashape, Inc.](https://www.mashape.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
+* We appreciate [Kong Inc.](https://konghq.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
 this module compatible with Nginx core 1.13.3. In addition, they sponsored the work on making code sharing between this module and
 [lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua_*, preread_by_lua_* and log_by_lua_* support possible.
 
