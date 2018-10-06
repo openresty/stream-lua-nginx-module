@@ -148,6 +148,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
 * [lua_add_variable](#lua_add_variable)
+* [lua_capture_error_log](https://github.com/openresty/lua-nginx-module#lua_capture_error_log)
 * [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)
 
 The [send_timeout](http://nginx.org/r/send_timeout) directive in the Nginx "http" subsystem is missing in the "stream" subsystem.
