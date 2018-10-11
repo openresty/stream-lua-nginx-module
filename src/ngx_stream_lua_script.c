@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_script.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -335,7 +343,7 @@ ngx_stream_lua_script_add_copy_code(ngx_stream_lua_script_compile_t *sc,
         return NGX_ERROR;
     }
 
-    code->code = (ngx_stream_lua_script_code_pt)
+    code->code = (ngx_stream_lua_script_code_pt) (void *)
                  ngx_stream_lua_script_copy_len_code;
     code->len = len;
 
@@ -406,7 +414,7 @@ ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
         return NGX_ERROR;
     }
 
-    code->code = (ngx_stream_lua_script_code_pt)
+    code->code = (ngx_stream_lua_script_code_pt) (void *)
                  ngx_stream_lua_script_copy_capture_len_code;
     code->n = 2 * n;
 
