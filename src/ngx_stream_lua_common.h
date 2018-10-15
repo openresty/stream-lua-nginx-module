@@ -134,13 +134,8 @@
 #endif
 
 
-#if defined(__aarch64__) || defined(NGX_LUA_DEBUG_ARM64)
 #define ngx_stream_lua_lightudata_mask(ludata)                               \
     ((void *) ((uintptr_t) (&ngx_stream_lua_##ludata) & ((1UL << 47) - 1)))
-
-#else
-#define ngx_stream_lua_lightudata_mask(ludata)    (&ngx_stream_lua_##ludata)
-#endif
 
 
 typedef struct ngx_stream_lua_main_conf_s  ngx_stream_lua_main_conf_t;

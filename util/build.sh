@@ -12,7 +12,7 @@ home=~
 
             #--add-module=$root/../stream-echo-nginx-module \
 ngx-build $force $version \
-            --with-cc-opt="-DNGX_LUA_DEBUG_ARM64 -DNGX_LUA_USE_ASSERT -I$PCRE_INC -I$OPENSSL_INC" \
+            --with-cc-opt="-DNGX_LUA_USE_ASSERT -I$PCRE_INC -I$OPENSSL_INC" \
             --with-ld-opt="-L$PCRE_LIB -L$OPENSSL_LIB -Wl,-rpath,$PCRE_LIB:$LIBDRIZZLE_LIB:$OPENSSL_LIB" \
             --with-http_stub_status_module \
             --with-http_image_filter_module \
