@@ -93,9 +93,9 @@ qr/^(2|3)$/
     }
 --- stream_response_like eval
 qr/[12]/
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 
 
 
@@ -112,9 +112,9 @@ qr/[12]/
     }
 --- stream_response_like eval
 qr/[12]/
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 
 
 
@@ -133,9 +133,9 @@ qr/[12]/
     }
 --- stream_response_like eval
 qr/^(nil|1)$/
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 
 
 
@@ -160,9 +160,9 @@ qr/^(nil|1)$/
     }
 --- stream_response_like eval
 qr/^(1|2)$/
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 
 
 
@@ -187,9 +187,9 @@ qr/^(1|2)$/
     }
 --- stream_response_like eval
 qr/^(1|2)$/
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 
 
 
@@ -208,9 +208,9 @@ qr/^(1|2)$/
     }
 --- stream_server_config
         proxy_pass backend;
---- grep_error_log eval: qr/old foo: \d+/
+--- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
 --- grep_error_log_out eval
-["", "old foo: 1\n"]
+["setting global variable, key: foo,\n", "old foo: 1\n"]
 --- error_log
 connect() to 0.0.0.1:1234 failed
 
