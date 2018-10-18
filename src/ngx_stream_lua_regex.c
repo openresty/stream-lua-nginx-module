@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_regex.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -15,7 +23,6 @@
 #include "ngx_stream_lua_regex.h"
 #include "ngx_stream_lua_pcrefix.h"
 #include "ngx_stream_lua_script.h"
-#include "ngx_stream_lua_pcrefix.h"
 #include "ngx_stream_lua_util.h"
 
 

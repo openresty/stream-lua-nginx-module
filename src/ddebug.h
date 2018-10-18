@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ddebug.h.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 

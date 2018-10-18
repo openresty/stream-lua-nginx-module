@@ -1,3 +1,11 @@
+
+/*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_phase.h.tt2
+ */
+
 #ifndef _NGX_STREAM_LUA_PHASE_H_INCLUDED_
 #define _NGX_STREAM_LUA_PHASE_H_INCLUDED_
 

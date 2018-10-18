@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_initworkerby.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -53,13 +61,12 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     /* lmcf != NULL && lmcf->lua != NULL */
 
-#if !(NGX_WIN32)
     /* disable init_worker_by_lua* and destroy lua VM in cache processes */
     if (ngx_process == NGX_PROCESS_HELPER
-#   ifdef HAVE_PRIVILEGED_PROCESS_PATCH
+#if defined(HAVE_PRIVILEGED_PROCESS_PATCH) && !NGX_WIN32
         && !ngx_is_privileged_agent
-#   endif
-        )
+#endif
+       )
     {
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                        "lua close the global Lua VM %p in the "
@@ -70,7 +77,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
         return NGX_OK;
     }
-#endif  /* NGX_WIN32 */
 
     if (lmcf->init_worker_handler == NULL) {
         return NGX_OK;
