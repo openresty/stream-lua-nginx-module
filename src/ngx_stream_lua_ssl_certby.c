@@ -275,13 +275,13 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
 
 #   else
 
-#   error "stream ssl_cery_by_lua only supports nginx >= 1.13.0"
+#   error "stream ssl_cert_by_lua only supports nginx >= 1.13.0"
 
 #   endif
 
 #else
 
-#   error "stream ssl_cery_by_lua only supports nginx >= 1.13.0"
+#   error "stream ssl_cert_by_lua only supports nginx >= 1.13.0"
 
 #endif
 
