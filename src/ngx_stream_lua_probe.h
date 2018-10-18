@@ -1,3 +1,11 @@
+
+/*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_probe.h.tt2
+ */
+
 /*
  * automatically generated from the file dtrace/ngx_lua_provider.d by the
  *  gen-dtrace-probe-header tool in the nginx-devel-utils project:

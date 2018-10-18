@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_semaphore.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  * Copyright (C) cuiweixie
  * I hereby assign copyright in this code to the lua-nginx-module project,
