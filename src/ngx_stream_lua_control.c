@@ -72,10 +72,32 @@ ngx_stream_lua_ngx_exit(lua_State *L)
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_TIMER
                                  | NGX_STREAM_LUA_CONTEXT_BALANCER
+                                 | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
                                  );
 
     rc = (ngx_int_t) luaL_checkinteger(L, 1);
+
+    if (ctx->context & NGX_STREAM_LUA_CONTEXT_SSL_CERT)
+    {
+
+#if (NGX_STREAM_SSL)
+
+        ctx->exit_code = rc;
+        ctx->exited = 1;
+
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua exit with code %i", rc);
+
+
+        return lua_yield(L, 0);
+
+#else
+
+        return luaL_error(L, "no SSL support");
+
+#endif
+    }
 
 
     dd("setting exit code: %d", (int) rc);

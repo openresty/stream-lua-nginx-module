@@ -405,6 +405,7 @@ ngx_stream_lua_socket_tcp(lua_State *L)
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     lua_createtable(L, 5 /* narr */, 1 /* nrec */);
@@ -466,6 +467,7 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
 
                                | NGX_STREAM_LUA_CONTEXT_PREREAD
 
+                               | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     luaL_checktype(L, 1, LUA_TTABLE);
