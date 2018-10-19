@@ -205,10 +205,11 @@ struct ngx_stream_lua_main_conf_s {
     ngx_str_t                                    init_worker_src;
 
     ngx_stream_lua_balancer_peer_data_t          *balancer_peer_data;
-    /* balancer_by_lua does not support yielding and
-     * there cannot be any conflicts among concurrent requests,
-     * thus it is safe to store the peer data in the main conf.
-     */
+                    /* neither yielding nor recursion is possible in
+                     * balancer_by_lua*, so there cannot be any races among
+                     * concurrent requests and it is safe to store the peer
+                     * data pointer in the main conf.
+                     */
 
     ngx_uint_t                      shm_zones_inited;
 

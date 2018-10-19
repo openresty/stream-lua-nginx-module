@@ -91,11 +91,13 @@ qr/^(2|3)$/
     }
     content_by_lua_block {
     }
---- stream_response_like eval
-qr/[12]/
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- stream_response_like chomp
+\A[12]\n\z
+--- grep_error_log eval
+qr/(old foo: \d+|\[\w+\].*?stream lua attempting to write to the lua global variable '[^'\s]+'|\w+_by_lua\(.*?\):\d+: in main chunk)/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+[qr/\A\[warn\] .*?stream lua attempting to write to the lua global variable 'foo'
+preread_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 
 
 
@@ -110,11 +112,13 @@ qr/[12]/
         end
         ngx.say(foo)
     }
---- stream_response_like eval
-qr/[12]/
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- stream_response_like chomp
+\A[12]\n\z
+--- grep_error_log eval
+qr/(old foo: \d+|\[\w+\].*?stream lua attempting to write to the lua global variable '[^'\s]+'|\w+_by_lua\(.*?\):\d+: in main chunk, )/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+[qr/\A\[warn\] .*?stream lua attempting to write to the lua global variable 'foo'
+content_by_lua\(nginx\.conf:\d+\):3: in main chunk, \n\z/, "old foo: 1\n"]
 
 
 
@@ -131,11 +135,13 @@ qr/[12]/
             foo = foo + 1
         end
     }
---- stream_response_like eval
-qr/^(nil|1)$/
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- stream_response_like chomp
+\A(?:nil|1)\n\z
+--- grep_error_log eval
+qr/(old foo: \d+|\[\w+\].*?stream lua attempting to write to the lua global variable '[^'\s]+'|\w+_by_lua\(.*?\):\d+: in main chunk)/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+[qr/\A\[warn\] .*?stream lua attempting to write to the lua global variable 'foo'
+log_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 
 
 
@@ -158,11 +164,13 @@ qr/^(nil|1)$/
         ngx.sleep(0.01)
         ngx.say(foo)
     }
---- stream_response_like eval
-qr/^(1|2)$/
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- stream_response_like chomp
+\A[12]\n\z
+--- grep_error_log eval
+qr/(old foo: \d+|\[\w+\].*?stream lua attempting to write to the lua global variable '[^'\s]+'|\w+_by_lua\(.*?\):\d+: in\b)/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+[qr/\A\[warn\] .*?stream lua attempting to write to the lua global variable 'foo'
+content_by_lua\(nginx\.conf:\d+\):4: in\n\z/, "old foo: 1\n"]
 
 
 
@@ -185,11 +193,12 @@ qr/^(1|2)$/
         ngx.sleep(0.01)
         ngx.say(foo)
     }
---- stream_response_like eval
-qr/^(1|2)$/
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- stream_response_like chomp
+\A[12]\n\z
+--- grep_error_log eval
+qr/(old foo: \d+|write to the lua global variable '\w+')/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+["write to the lua global variable 'foo'\n", "old foo: 1\n"]
 
 
 
@@ -208,9 +217,9 @@ qr/^(1|2)$/
     }
 --- stream_server_config
         proxy_pass backend;
---- grep_error_log eval: qr/(old foo: \d+|setting global variable, key[\w: ]+,)/
+--- grep_error_log eval: qr/(old foo: \d+|write to the lua global variable '\w+')/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n", "old foo: 1\n"]
+["write to the lua global variable 'foo'\n", "old foo: 1\n"]
 --- error_log
 connect() to 0.0.0.1:1234 failed
 
@@ -230,10 +239,9 @@ connect() to 0.0.0.1:1234 failed
         }
 --- stream_response
 0
---- grep_error_log eval: qr/setting global variable, key[\w: ]+,/
+--- grep_error_log eval: qr/write to the lua global variable '\w+'/
 --- grep_error_log_out eval
-["setting global variable, key: foo,\n",
-"setting global variable, key type: number,\n"]
+["write to the lua global variable 'foo'\n", "write to the lua global variable '1'\n"]
 
 
 
