@@ -160,6 +160,3 @@ received: OK
 --- error_log eval
 ["lua tcp socket get keepalive peer: using connection",
 "lua tcp socket keepalive: free connection pool for "]
-
-
-

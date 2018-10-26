@@ -102,7 +102,7 @@ qr/\[crit\] .* connect\(\) .*? failed/,
 
 
 
-=== TEST 8: simple logging (by_lua_file)
+=== TEST 5: simple logging (by_lua_file)
 --- stream_config
     upstream backend {
         server 0.0.0.1:1234;
@@ -123,7 +123,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
 
 
 
-=== TEST 9: cosockets are disabled
+=== TEST 6: cosockets are disabled
 --- stream_config
     upstream backend {
         server 0.0.0.1:1234;
@@ -138,7 +138,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 
 
 
-=== TEST 10: ngx.sleep is disabled
+=== TEST 7: ngx.sleep is disabled
 --- stream_config
     upstream backend {
         server 0.0.0.1:1234;
@@ -153,7 +153,7 @@ qr/\[error\] .*? failed to run balancer_by_lua\*: balancer_by_lua:2: API disable
 
 
 
-=== TEST 11: get_phase
+=== TEST 8: get_phase
 --- stream_config
     upstream backend {
         server 0.0.0.1:1234;
@@ -173,7 +173,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
 
 
 
-=== TEST 14: ngx.log(ngx.ERR, ...) github #816
+=== TEST 9: ngx.log(ngx.ERR, ...) github #816
 --- stream_config
     upstream backend {
         server 0.0.0.1:1234;
@@ -193,7 +193,7 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
 
 
 
-=== TEST 15: test if execeed proxy_next_upstream_limit
+=== TEST 10: test if execeed proxy_next_upstream_limit
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
@@ -240,7 +240,7 @@ set more tries: reduced tries due to limit
 
 
 
-=== TEST 16: set_more_tries bugfix
+=== TEST 11: set_more_tries bugfix
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 	proxy_next_upstream_tries 0;

@@ -77,7 +77,7 @@ recv() failed (104: Connection reset by peer
 
 
 
-=== TEST 3: no resolver defined
+=== TEST 2: no resolver defined
 --- stream_server_config
     preread_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -111,7 +111,7 @@ attempt to send data on a closed socket:
 
 
 
-=== TEST 4: with resolver
+=== TEST 3: with resolver
 --- timeout: 10
 --- stream_server_config
     resolver $TEST_NGINX_RESOLVER ipv6=off;
@@ -166,7 +166,7 @@ second line received: Server: openresty
 
 
 
-=== TEST 5: connection refused (tcp)
+=== TEST 4: connection refused (tcp)
 --- stream_server_config
     preread_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -196,7 +196,7 @@ qr/connect\(\) failed \(\d+: Connection refused\)/
 
 
 
-=== TEST 6: connection timeout (tcp)
+=== TEST 5: connection timeout (tcp)
 --- stream_server_config
     resolver $TEST_NGINX_RESOLVER ipv6=off;
     lua_socket_connect_timeout 100ms;
@@ -232,7 +232,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
 
 
 
-=== TEST 7: not closed manually
+=== TEST 6: not closed manually
 --- stream_server_config
     preread_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -254,7 +254,7 @@ connected: 1
 
 
 
-=== TEST 8: resolver error (host not found)
+=== TEST 7: resolver error (host not found)
 --- stream_server_config
     resolver $TEST_NGINX_RESOLVER ipv6=off;
     resolver_timeout 3s;
@@ -292,7 +292,7 @@ attempt to send data on a closed socket
 
 
 
-=== TEST 9: resolver error (timeout)
+=== TEST 8: resolver error (timeout)
 --- stream_server_config
     resolver $TEST_NGINX_RESOLVER ipv6=off;
     resolver_timeout 1ms;
@@ -326,6 +326,3 @@ connected: nil
 failed to send request: closed$
 --- error_log
 attempt to send data on a closed socket
-
-
-

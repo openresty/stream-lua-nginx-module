@@ -160,7 +160,6 @@ finalize stream request: 500
 
 
 
-
 === TEST 6: lua_socket_read_timeout only
 --- stream_server_config
     lua_socket_read_timeout 100ms;

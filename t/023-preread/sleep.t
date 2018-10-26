@@ -53,7 +53,7 @@ bad argument #1 to 'sleep'
 
 
 
-=== TEST 5: sleep 0.5 - multi-times
+=== TEST 3: sleep 0.5 - multi-times
 --- stream_server_config
     preread_by_lua_block {
         ngx.update_time()
@@ -76,7 +76,7 @@ stream lua sleep timer expired
 
 
 
-=== TEST 6: sleep 0.5 - interleaved by ngx.say() - ended by ngx.sleep
+=== TEST 4: sleep 0.5 - interleaved by ngx.say() - ended by ngx.sleep
 --- stream_server_config
     preread_by_lua_block {
         ngx.sleep(1)
@@ -96,7 +96,7 @@ stream lua sleep timer expired
 
 
 
-=== TEST 7: sleep 0.5 - interleaved by ngx.say() - not ended by ngx.sleep
+=== TEST 5: sleep 0.5 - interleaved by ngx.say() - not ended by ngx.sleep
 --- stream_server_config
     preread_by_lua_block {
         ngx.sleep(0.3)
@@ -115,6 +115,3 @@ lua ready to sleep for
 stream lua sleep timer expired
 --- no_error_log
 [error]
-
-
-

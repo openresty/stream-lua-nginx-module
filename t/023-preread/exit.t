@@ -37,7 +37,7 @@ finalize stream request: 500
 
 
 
-=== TEST 10: throw 0
+=== TEST 2: throw 0
 --- stream_server_config
     preread_by_lua_block { ngx.say('Hi'); ngx.eof(); ngx.exit(0);ngx.say('world') }
     content_by_lua_block { ngx.exit(ngx.OK) }

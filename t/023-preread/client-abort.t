@@ -110,7 +110,7 @@ lua req cleanup
 
 
 
-=== TEST 10: ngx.req.socket + receive() + sleep + stop
+=== TEST 4: ngx.req.socket + receive() + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -137,7 +137,7 @@ client prematurely closed connection
 
 
 
-=== TEST 11: ngx.req.socket + receive(N) + sleep + stop
+=== TEST 5: ngx.req.socket + receive(N) + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -166,7 +166,7 @@ client prematurely closed connection
 
 
 
-=== TEST 12: ngx.req.socket + receive(n) + sleep + stop
+=== TEST 6: ngx.req.socket + receive(n) + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -197,7 +197,7 @@ delete thread 1)$
 
 
 
-=== TEST 13: ngx.req.socket + m * receive(n) + sleep + stop
+=== TEST 7: ngx.req.socket + m * receive(n) + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
     lua_socket_log_errors off;
@@ -228,7 +228,7 @@ client prematurely closed connection
 
 
 
-=== TEST 14: ngx.req.socket + receiveuntil + sleep + stop
+=== TEST 8: ngx.req.socket + receiveuntil + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
     preread_by_lua_block {
@@ -256,7 +256,7 @@ client prematurely closed connection
 
 
 
-=== TEST 15: ngx.req.socket + receiveuntil + it(n) + sleep + stop
+=== TEST 9: ngx.req.socket + receiveuntil + it(n) + sleep + stop
 --- stream_server_config
     lua_check_client_abort on;
     preread_by_lua_block {
@@ -285,7 +285,7 @@ client prematurely closed connection
 
 
 
-=== TEST 16: cosocket + stop
+=== TEST 10: cosocket + stop
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -337,7 +337,7 @@ client prematurely closed connection
 
 
 
-=== TEST 17: ngx.req.socket + receive n < content-length + stop
+=== TEST 11: ngx.req.socket + receive n < content-length + stop
 --- stream_server_config
     lua_check_client_abort on;
 
@@ -377,7 +377,7 @@ failed to receive: client aborted
 
 
 
-=== TEST 18: ngx.req.socket + receive n == content-length + stop
+=== TEST 12: ngx.req.socket + receive n == content-length + stop
 --- stream_server_config
     lua_check_client_abort on;
     preread_by_lua_block {
@@ -414,7 +414,7 @@ delete thread 1
 
 
 
-=== TEST 19: ngx.req.socket + receive n == content-length + ignore
+=== TEST 13: ngx.req.socket + receive n == content-length + ignore
 --- stream_server_config
     preread_by_lua_block {
         local sock = ngx.req.socket()
@@ -448,6 +448,3 @@ lua req cleanup
 --- no_error_log
 [error]
 [alert]
-
-
-

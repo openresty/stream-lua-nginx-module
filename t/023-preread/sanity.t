@@ -73,7 +73,7 @@ remote_addr: 127.0.0.1
 
 
 
-=== TEST 11: nil is "nil"
+=== TEST 6: nil is "nil"
 --- stream_server_config
     preread_by_lua_block { ngx.say(nil) }
 
@@ -83,7 +83,7 @@ nil
 
 
 
-=== TEST 12: write boolean
+=== TEST 7: write boolean
 --- stream_server_config
     preread_by_lua_block { ngx.say(true, " ", false) }
 
@@ -93,7 +93,7 @@ true false
 
 
 
-=== TEST 17: nginx quote sql string 1
+=== TEST 8: nginx quote sql string 1
 --- stream_server_config
     preread_by_lua_block { ngx.say(ngx.quote_sql_str('hello\n\r\'"\\')) }
     content_by_lua_block { ngx.exit(ngx.OK) }
@@ -102,7 +102,7 @@ true false
 
 
 
-=== TEST 18: nginx quote sql string 2
+=== TEST 9: nginx quote sql string 2
 --- stream_server_config
     preread_by_lua_block { ngx.say(ngx.quote_sql_str("hello\n\r'\"\\")) }
     content_by_lua_block { ngx.exit(ngx.OK) }
@@ -111,7 +111,7 @@ true false
 
 
 
-=== TEST 19: use dollar
+=== TEST 10: use dollar
 --- stream_server_config
     preread_by_lua_block {
         local s = "hello 112";
@@ -124,7 +124,7 @@ true false
 
 
 
-=== TEST 30: short circuit
+=== TEST 11: short circuit
 --- stream_server_config
     preread_by_lua_block {
         ngx.say("Hi")
@@ -141,7 +141,7 @@ Hi
 
 
 
-=== TEST 31: nginx vars in script path
+=== TEST 12: nginx vars in script path
 --- stream_server_config
     preread_by_lua_file html/$remote_addr.lua;
 
@@ -159,7 +159,7 @@ Hi
 
 
 
-=== TEST 32: phase postponing works
+=== TEST 13: phase postponing works
 --- stream_server_config
     ssl_preread on;
     preread_by_lua_block {
@@ -199,7 +199,7 @@ $ssl_preread_server_name = my.sni.server.name while prereading client data
 
 
 
-=== TEST 39: Lua file does not exist
+=== TEST 14: Lua file does not exist
 --- stream_server_config
     preread_by_lua_file html/test2.lua;
     return here;
@@ -209,6 +209,3 @@ v = ngx.var["remote_addr"]
 ngx.print("remote_addr: ", v, "\n")
 --- error_log eval
 qr/failed to load external Lua file ".*?\btest2\.lua": cannot open .*? No such file or directory/
-
-
-
