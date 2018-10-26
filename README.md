@@ -526,9 +526,12 @@ Please submit bug reports, wishlists, or patches by
 Acknowledgments
 ===============
 
-* We appreciate [Kong Inc.](https://konghq.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) to make
-this module compatible with Nginx core 1.13.3. In addition, they sponsored the work on making code sharing between this module and
-[lua-nginx-module](https://github.com/openresty/lua-nginx-module), as well as balancer_by_lua_*, preread_by_lua_* and log_by_lua_* support possible.
+We appreciate [Kong Inc.](https://konghq.com/) for kindly sponsoring [OpenResty Inc.](https://openresty.com/) on the following
+work:
+* Compatibility with Nginx core 1.13.3.
+* Development of [meta-lua-nginx-module](https://github.com/openresty/meta-lua-nginx-module)
+to make code sharing between this module and [lua-nginx-module](https://github.com/openresty/lua-nginx-module) possible.
+* `balancer_by_lua_*`, `preread_by_lua_*`, `log_by_lua_*` and `ssl_certby_lua*` phases support.
 
 Copyright and License
 =====================

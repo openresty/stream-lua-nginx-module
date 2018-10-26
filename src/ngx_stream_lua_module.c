@@ -28,6 +28,7 @@
 #include "ngx_stream_lua_balancer.h"
 #include "ngx_stream_lua_logby.h"
 #include "ngx_stream_lua_semaphore.h"
+#include "ngx_stream_lua_ssl_certby.h"
 
 
 #include "ngx_stream_lua_prereadby.h"
@@ -358,6 +359,20 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, ssl_ciphers),
       NULL },
+
+    { ngx_string("ssl_certificate_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_ssl_cert_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_ssl_cert_handler_inline },
+
+    { ngx_string("ssl_certificate_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_ssl_cert_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_ssl_cert_handler_file },
 
 
     { ngx_string("lua_ssl_verify_depth"),
@@ -712,6 +727,51 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
     ngx_stream_lua_srv_conf_t       *prev = parent;
     ngx_stream_lua_srv_conf_t       *conf = child;
+#if (NGX_STREAM_SSL)
+    ngx_stream_ssl_conf_t           *sscf;
+
+    dd("merge srv conf");
+
+    if (conf->srv.ssl_cert_src.len == 0) {
+        conf->srv.ssl_cert_src = prev->srv.ssl_cert_src;
+        conf->srv.ssl_cert_src_key = prev->srv.ssl_cert_src_key;
+        conf->srv.ssl_cert_handler = prev->srv.ssl_cert_handler;
+    }
+
+    if (conf->srv.ssl_cert_src.len) {
+        sscf = ngx_stream_conf_get_module_srv_conf(cf, ngx_stream_ssl_module);
+        if (sscf == NULL || sscf->ssl.ctx == NULL) {
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                          "no ssl configured for the server");
+
+            return NGX_CONF_ERROR;
+        }
+
+#ifdef LIBRESSL_VERSION_NUMBER
+
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      "LibreSSL is not supported by ssl_certificate_by_lua*");
+        return NGX_CONF_ERROR;
+
+#else
+
+#   if OPENSSL_VERSION_NUMBER >= 0x1000205fL
+
+        SSL_CTX_set_cert_cb(sscf->ssl.ctx, ngx_stream_lua_ssl_cert_handler, NULL);
+
+#   else
+
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      "OpenSSL too old to support ssl_certificate_by_lua*");
+        return NGX_CONF_ERROR;
+
+#   endif
+
+#endif
+    }
+
+
+#endif  /* NGX_STREAM_SSL */
 
 #if (NGX_STREAM_SSL)
 
