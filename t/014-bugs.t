@@ -85,45 +85,7 @@ Hi"
 
 
 
-=== TEST 4: unexpected globals sharing by using _G
---- stream_server_config
-    content_by_lua_block {
-        if _G.t then
-            _G.t = _G.t + 1
-        else
-            _G.t = 0
-        end
-        ngx.say(t)
-    }
---- stream_server_config2
-    content_by_lua_block {
-        if _G.t then
-            _G.t = _G.t + 1
-        else
-            _G.t = 0
-        end
-        ngx.say(t)
-    }
---- stream_server_config3
-    content_by_lua_block {
-        if _G.t then
-            _G.t = _G.t + 1
-        else
-            _G.t = 0
-        end
-        ngx.say(t)
-    }
-
---- stream_response
-0
-0
-0
---- no_error_log
-[error]
-
-
-
-=== TEST 5: lua_code_cache off + setkeepalive
+=== TEST 4: lua_code_cache off + setkeepalive
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -182,7 +144,7 @@ done
 
 
 
-=== TEST 6: .lua file of exactly N*1024 bytes (github issue #385)
+=== TEST 5: .lua file of exactly N*1024 bytes (github issue #385)
 --- stream_server_config
     content_by_lua_file html/a.lua;
 

@@ -45,12 +45,10 @@
 
 
 typedef struct {
-#ifndef NGX_LUA_NO_FFI_API
     ngx_pool_t                   *pool;
     u_char                       *name_table;
     int                           name_count;
     int                           name_entry_size;
-#endif
 
     int                           ncaptures;
     int                          *captures;
@@ -60,10 +58,8 @@ typedef struct {
 
     ngx_stream_lua_complex_value_t          *replace;
 
-#ifndef NGX_LUA_NO_FFI_API
     /* only for (stap) debugging, and may be an invalid pointer */
     const u_char                 *pattern;
-#endif
 } ngx_stream_lua_regex_t;
 
 
@@ -259,7 +255,8 @@ ngx_stream_lua_ngx_re_match_helper(lua_State *L, int wantcaps)
 
         dd("server pool %p", lmcf->pool);
 
-        lua_pushlightuserdata(L, &ngx_stream_lua_regex_cache_key);
+        lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                              regex_cache_key));
         lua_rawget(L, LUA_REGISTRYINDEX); /* table */
 
         lua_pushliteral(L, "m");
@@ -730,7 +727,8 @@ ngx_stream_lua_ngx_re_gmatch(lua_State *L)
 
         dd("server pool %p", lmcf->pool);
 
-        lua_pushlightuserdata(L, &ngx_stream_lua_regex_cache_key);
+        lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                              regex_cache_key));
         lua_rawget(L, LUA_REGISTRYINDEX); /* table */
 
         lua_pushliteral(L, "m");
@@ -1399,7 +1397,8 @@ ngx_stream_lua_ngx_re_sub_helper(lua_State *L, unsigned global)
 
         dd("server pool %p", lmcf->pool);
 
-        lua_pushlightuserdata(L, &ngx_stream_lua_regex_cache_key);
+        lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                              regex_cache_key));
         lua_rawget(L, LUA_REGISTRYINDEX); /* table */
 
         lua_pushliteral(L, "s");
@@ -2188,7 +2187,6 @@ ngx_stream_lua_re_collect_named_captures(lua_State *L, int res_tb_idx,
 }
 
 
-#ifndef NGX_LUA_NO_FFI_API
 ngx_stream_lua_regex_t *
 ngx_stream_lua_ffi_compile_regex(const unsigned char *pat, size_t pat_len,
     int flags, int pcre_opts, u_char *errstr,
@@ -2553,7 +2551,6 @@ ngx_stream_lua_ffi_max_regex_cache_size(void)
     }
     return (uint32_t) lmcf->regex_cache_max_entries;
 }
-#endif /* NGX_LUA_NO_FFI_API */
 
 
 #endif /* NGX_PCRE */

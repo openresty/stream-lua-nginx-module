@@ -1,5 +1,6 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use Test::Nginx::Socket::Lua::Stream;use t::StapThread;
+use Test::Nginx::Socket::Lua::Stream;
+use t::StapThread;
 
 our $GCScript = $t::StapThread::GCScript;
 our $StapScript = $t::StapThread::StapScript;
@@ -98,7 +99,7 @@ F(ngx_stream_lua_timer_handler) {
 
 --- stream_response
 registered timer
-foo = nil
+foo = 3
 
 --- wait: 0.1
 --- no_error_log

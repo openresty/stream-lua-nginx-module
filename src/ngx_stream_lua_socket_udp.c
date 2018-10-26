@@ -95,7 +95,8 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     lua_setfield(L, -2, "udp"); /* ngx socket */
 
     /* udp upstream socket object metatable */
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_metatable_key));
     lua_createtable(L, 0 /* narr */, 6 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_setpeername);
@@ -119,7 +120,8 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     /* }}} */
 
     /* udp downstream socket object metatable */
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_raw_req_socket_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_raw_req_socket_metatable_key));
     lua_createtable(L, 0 /* narr */, 4 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_send);
@@ -137,7 +139,8 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     /* }}} */
 
     /* udp upstream socket object metatable */
-    lua_pushlightuserdata(L, &ngx_stream_lua_udp_udata_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          udp_udata_metatable_key));
     lua_createtable(L, 0 /* narr */, 1 /* nrec */); /* metatable */
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_upstream_destroy);
     lua_setfield(L, -2, "__gc");
@@ -145,7 +148,8 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     /* }}} */
 
     /* udp downstream socket object metatable */
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_downstream_udata_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_downstream_udata_metatable_key));
     lua_createtable(L, 0 /* narr */, 1 /* nrec */); /* metatable */
     /* share the same destructor as upstream */
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_upstream_destroy);
@@ -184,7 +188,8 @@ ngx_stream_lua_socket_udp(lua_State *L)
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */);
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_metatable_key));
     lua_rawget(L, LUA_REGISTRYINDEX);
     lua_setmetatable(L, -2);
 
@@ -303,7 +308,8 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         }
 
 #if 1
-        lua_pushlightuserdata(L, &ngx_stream_lua_udp_udata_metatable_key);
+        lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                              udp_udata_metatable_key));
         lua_rawget(L, LUA_REGISTRYINDEX);
         lua_setmetatable(L, -2);
 #endif
@@ -1723,7 +1729,8 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
     ctx->acquired_raw_req_socket = 1;
 
     lua_createtable(L, 3 /* narr */, 1 /* nrec */); /* the object */
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_raw_req_socket_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_raw_req_socket_metatable_key));
     lua_rawget(L, LUA_REGISTRYINDEX);
     lua_setmetatable(L, -2);
 
@@ -1733,7 +1740,8 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
     }
 
 #if 1
-    lua_pushlightuserdata(L, &ngx_stream_lua_socket_udp_downstream_udata_metatable_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_downstream_udata_metatable_key));
     lua_rawget(L, LUA_REGISTRYINDEX);
     lua_setmetatable(L, -2);
 #endif
