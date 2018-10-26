@@ -8,7 +8,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 3 + 10);
+plan tests => repeat_each() * (blocks() * 3 + 11);
 
 #no_diff();
 no_long_string();
@@ -193,7 +193,21 @@ qr{\[crit\] .*? connect\(\) to 0\.0\.0\.1:1234 failed .*?, upstream: "0\.0\.0\.1
 
 
 
-=== TEST 10: test if execeed proxy_next_upstream_limit
+=== TEST 10: ngx.balancer is compatible with this version of ngx_stream_lua_module
+--- stream_config
+    lua_package_path "../lua-resty-core/lib/?.lua;;";
+--- stream_server_config
+        content_by_lua_block {
+            require "ngx.balancer"
+        }
+--- no_error_log
+[error]
+[crit]
+[alert]
+
+
+
+=== TEST 11: test if execeed proxy_next_upstream_limit
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
@@ -240,7 +254,7 @@ set more tries: reduced tries due to limit
 
 
 
-=== TEST 11: set_more_tries bugfix
+=== TEST 12: set_more_tries bugfix
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 	proxy_next_upstream_tries 0;
