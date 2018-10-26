@@ -127,7 +127,7 @@ qr{127.0.0.1200: [12]}
 
 
 
-=== TEST 9: lua error (string)
+=== TEST 7: lua error (string)
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -141,7 +141,7 @@ qr/failed to run log_by_lua\*: log_by_lua\(nginx\.conf:\d+\):1: Bad/
 
 
 
-=== TEST 10: lua error (nil)
+=== TEST 8: lua error (nil)
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -155,7 +155,7 @@ failed to run log_by_lua*: unknown reason
 
 
 
-=== TEST 11: globals shared
+=== TEST 9: globals shared
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -177,7 +177,7 @@ ok
 
 
 
-=== TEST 12: no ngx.print
+=== TEST 10: no ngx.print
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -191,7 +191,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 13: no ngx.say
+=== TEST 11: no ngx.say
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -205,7 +205,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 14: no ngx.flush
+=== TEST 12: no ngx.flush
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -219,7 +219,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 15: no ngx.eof
+=== TEST 13: no ngx.eof
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -233,7 +233,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 19: no ngx.exit
+=== TEST 14: no ngx.exit
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -247,7 +247,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 25: no ngx.req.socket()
+=== TEST 15: no ngx.req.socket()
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -261,7 +261,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 26: no ngx.socket.tcp()
+=== TEST 16: no ngx.socket.tcp()
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -275,7 +275,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 27: no ngx.socket.connect()
+=== TEST 17: no ngx.socket.connect()
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -289,7 +289,7 @@ API disabled in the context of log_by_lua*
 
 
 
-=== TEST 28: backtrace
+=== TEST 18: backtrace
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -317,7 +317,7 @@ in function 'foo'
 
 
 
-=== TEST 29: Lua file does not exist
+=== TEST 19: Lua file does not exist
 --- stream_server_config
     content_by_lua_block {
         ngx.say('ok')
@@ -335,7 +335,7 @@ qr/failed to load external Lua file ".*?test2\.lua": cannot open .*? No such fil
 
 
 
-=== TEST 30: log_by_lua runs before access logging (github issue #254)
+=== TEST 20: log_by_lua runs before access logging (github issue #254)
 --- stream_config
     log_format basic '$remote_addr [$time_local] '
                      '$protocol $status $bytes_sent $bytes_received '

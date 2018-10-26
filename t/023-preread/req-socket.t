@@ -57,7 +57,7 @@ received: d
 
 
 
-=== TEST 4: attempt to use the req socket across request boundary
+=== TEST 2: attempt to use the req socket across request boundary
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- stream_server_config
@@ -101,7 +101,7 @@ end
 
 
 
-=== TEST 5: receive until on request_body - receiveuntil(1) on the last byte of the body
+=== TEST 3: receive until on request_body - receiveuntil(1) on the last byte of the body
 See https://groups.google.com/group/openresty/browse_thread/thread/43cf01da3c681aba for details
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
@@ -162,7 +162,7 @@ done
 
 
 
-=== TEST 6: read from preread buffer
+=== TEST 4: read from preread buffer
 --- stream_server_config
     ssl_preread on;
 
@@ -206,7 +206,7 @@ received: d
 
 
 
-=== TEST 7: small preread buffer
+=== TEST 5: small preread buffer
 --- stream_server_config
     ssl_preread on;
     preread_buffer_size 5;

@@ -51,7 +51,7 @@ received: hello world! my
 
 
 
-=== TEST 3: pipelined POST requests
+=== TEST 2: pipelined POST requests
 --- dgram_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- dgram_server_config
@@ -100,7 +100,7 @@ received: , wo
 
 
 
-=== TEST 4: pipelined requests, big buffer, small steps
+=== TEST 3: pipelined requests, big buffer, small steps
 --- dgram_server_config
     lua_socket_buffer_size 5;
     content_by_lua_block {
@@ -151,7 +151,7 @@ received: be
 
 
 
-=== TEST 5: failing reread after reading timeout happens
+=== TEST 4: failing reread after reading timeout happens
 --- dgram_server_config
     content_by_lua_block {
         local sock, err = ngx.req.socket()
@@ -188,7 +188,7 @@ data: nil, err: no more data, partial: nil
 
 
 
-=== TEST 6: req socket GC'd
+=== TEST 5: req socket GC'd
 --- dgram_server_config
     content_by_lua_block {
         do
