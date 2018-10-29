@@ -131,6 +131,8 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [balancer_by_lua_file](https://github.com/openresty/lua-nginx-module#balancer_by_lua_file)
 * [log_by_lua_block](#log_by_lua_block)
 * [log_by_lua_file](#log_by_lua_file)
+* [ssl_certificate_by_lua_block](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_block)
+* [ssl_certificate_by_lua_file](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
