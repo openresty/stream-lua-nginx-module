@@ -163,9 +163,13 @@ Hi
 --- stream_server_config
     ssl_preread on;
     preread_by_lua_block {
-        ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. ngx.var.ssl_preread_server_name)
+        local n = ngx.var.ssl_preread_server_name
 
-        if ngx.var.ssl_preread_server_name == "my.sni.server.name" then
+        if n then
+            ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. n)
+        end
+
+        if n == "my.sni.server.name" then
             ngx.exit(200)
         end
 
@@ -191,7 +195,6 @@ hello world
 --- stream_response chop
 done
 --- error_log
-$ssl_preread_server_name =  while prereading client data
 $ssl_preread_server_name = my.sni.server.name while prereading client data
 --- no_error_log
 [crit]
