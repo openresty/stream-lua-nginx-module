@@ -191,7 +191,7 @@ Hi
 
     return done;
 --- stream_request
-hello world
+hello
 --- stream_response chop
 done
 --- error_log
