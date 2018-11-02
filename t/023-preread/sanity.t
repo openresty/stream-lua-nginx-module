@@ -7,7 +7,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 2 + 4);
+plan tests => repeat_each() * (blocks() * 2 + 3);
 
 #no_diff();
 #no_long_string();
@@ -163,9 +163,13 @@ Hi
 --- stream_server_config
     ssl_preread on;
     preread_by_lua_block {
-        ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. ngx.var.ssl_preread_server_name)
+        local n = ngx.var.ssl_preread_server_name
 
-        if ngx.var.ssl_preread_server_name == "my.sni.server.name" then
+        if n then
+            ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. n)
+        end
+
+        if n == "my.sni.server.name" then
             ngx.exit(200)
         end
 
@@ -187,11 +191,10 @@ Hi
 
     return done;
 --- stream_request
-hello world
+hello
 --- stream_response chop
 done
 --- error_log
-$ssl_preread_server_name =  while prereading client data
 $ssl_preread_server_name = my.sni.server.name while prereading client data
 --- no_error_log
 [crit]

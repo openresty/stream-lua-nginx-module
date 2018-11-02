@@ -1066,12 +1066,13 @@ uthread: done
 === TEST 17: simple logging - use ssl_certificate_by_lua* on the http {} level
 GitHub openresty/lua-resty-core#42
 --- stream_config
-    ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
-    ssl_certificate ../../cert/test.crt;
-    ssl_certificate_key ../../cert/test.key;
-
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+
         return 'it works!\n';
     }
 --- stream_server_config
