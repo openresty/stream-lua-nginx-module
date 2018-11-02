@@ -67,7 +67,7 @@ _EOC_
 
     my $stream_config = $block->stream_config || '';
     $stream_config .= <<'_EOC_';
-lua_package_path "$prefix/html/?.lua;;";
+lua_package_path "$prefix/html/?.lua;../lua-resty-core/lib/?.lua;;";
 _EOC_
     $block->set_value("stream_config", $stream_config);
 });
@@ -89,7 +89,7 @@ __DATA__
 
             local errmsg = ffi.new("char *[1]")
 
-            local r = getfenv(0).__ngx_req
+            local r = require "resty.core.base" .get_request()
             if not r then
                 ngx.log(ngx.ERR, "no request found")
                 return
@@ -216,7 +216,7 @@ lua ssl server name: "test.com"
 
             local errmsg = ffi.new("char *[1]")
 
-            local r = getfenv(0).__ngx_req
+            local r = require "resty.core.base" .get_request()
             if not r then
                 ngx.log(ngx.ERR, "no request found")
                 return
@@ -343,7 +343,7 @@ lua ssl server name: "test.com"
 
             local errmsg = ffi.new("char *[1]")
 
-            local r = getfenv(0).__ngx_req
+            local r = require "resty.core.base" .get_request()
             if not r then
                 ngx.log(ngx.ERR, "no request found")
                 return
@@ -445,7 +445,7 @@ failed to parse PEM priv key: PEM_read_bio_PrivateKey() failed
 
             local errmsg = ffi.new("char *[1]")
 
-            local r = getfenv(0).__ngx_req
+            local r = require "resty.core.base" .get_request()
             if not r then
                 ngx.log(ngx.ERR, "no request found")
                 return
@@ -568,7 +568,7 @@ lua ssl server name: "test.com"
 
             local errmsg = ffi.new("char *[1]")
 
-            local r = getfenv(0).__ngx_req
+            local r = require "resty.core.base" .get_request()
             if not r then
                 ngx.log(ngx.ERR, "no request found")
                 return
