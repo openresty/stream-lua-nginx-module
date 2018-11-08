@@ -67,6 +67,25 @@
 #endif
 
 
+#if (NGX_STREAM_LUA_HAVE_SA_RESTART)
+#define NGX_STREAM_LUA_SA_RESTART_SIGS {                                     \
+    ngx_signal_value(NGX_RECONFIGURE_SIGNAL),                                \
+    ngx_signal_value(NGX_REOPEN_SIGNAL),                                     \
+    ngx_signal_value(NGX_NOACCEPT_SIGNAL),                                   \
+    ngx_signal_value(NGX_TERMINATE_SIGNAL),                                  \
+    ngx_signal_value(NGX_SHUTDOWN_SIGNAL),                                   \
+    ngx_signal_value(NGX_CHANGEBIN_SIGNAL),                                  \
+    SIGALRM,                                                                 \
+    SIGINT,                                                                  \
+    SIGIO,                                                                   \
+    SIGCHLD,                                                                 \
+    SIGSYS,                                                                  \
+    SIGPIPE,                                                                 \
+    0                                                                        \
+};
+#endif
+
+
 char ngx_stream_lua_code_cache_key;
 char ngx_stream_lua_regex_cache_key;
 char ngx_stream_lua_socket_pool_key;
@@ -3580,6 +3599,34 @@ ngx_stream_lua_cleanup_free(ngx_stream_lua_request_t *r,
         last = &(*last)->next;
     }
 }
+
+
+#if (NGX_STREAM_LUA_HAVE_SA_RESTART)
+void
+ngx_stream_lua_set_sa_restart(ngx_log_t *log)
+{
+    int                    *signo;
+    int                     sigs[] = NGX_STREAM_LUA_SA_RESTART_SIGS;
+    struct sigaction        act;
+
+    for (signo = sigs; *signo != 0; signo++) {
+        ngx_log_debug1(NGX_LOG_DEBUG_STREAM, log, 0,
+                       "setting SA_RESTART for signal %d", *signo);
+
+        if (sigaction(*signo, NULL, &act) != 0) {
+            ngx_log_error(NGX_LOG_WARN, log, ngx_errno, "failed to get "
+                          "sigaction for signal %d", *signo);
+        }
+
+        act.sa_flags |= SA_RESTART;
+
+        if (sigaction(*signo, &act, NULL) != 0) {
+            ngx_log_error(NGX_LOG_WARN, log, ngx_errno, "failed to set "
+                          "sigaction for signal %d", *signo);
+        }
+    }
+}
+#endif
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

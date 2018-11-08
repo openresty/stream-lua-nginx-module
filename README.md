@@ -147,6 +147,7 @@ documentation of `ngx_http_lua_module` for more details about their usage and be
 * [lua_check_client_abort](https://github.com/openresty/lua-nginx-module#lua_check_client_abort)
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
+* [lua_sa_restart](https://github.com/openresty/lua-nginx-module#lua_sa_restart)
 * [lua_add_variable](#lua_add_variable)
 * [lua_capture_error_log](https://github.com/openresty/lua-nginx-module#lua_capture_error_log)
 * [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)

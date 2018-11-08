@@ -108,6 +108,13 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       NULL },
 
+    { ngx_string("lua_sa_restart"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, set_sa_restart),
+      NULL },
+
 #if (NGX_PCRE)
     { ngx_string("lua_regex_cache_max_entries"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
@@ -638,6 +645,8 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
 
     lmcf->postponed_to_preread_phase_end = NGX_CONF_UNSET;
 
+    lmcf->set_sa_restart = NGX_CONF_UNSET;
+
 #if (NGX_STREAM_LUA_HAVE_MALLOC_TRIM)
     lmcf->malloc_trim_cycle = NGX_CONF_UNSET_UINT;
 #endif
@@ -675,6 +684,12 @@ ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
     if (lmcf->max_running_timers == NGX_CONF_UNSET) {
         lmcf->max_running_timers = 256;
     }
+
+#if (NGX_STREAM_LUA_HAVE_SA_RESTART)
+    if (lmcf->set_sa_restart == NGX_CONF_UNSET) {
+        lmcf->set_sa_restart = 1;
+    }
+#endif
 
 #if (NGX_STREAM_LUA_HAVE_MALLOC_TRIM)
     if (lmcf->malloc_trim_cycle == NGX_CONF_UNSET_UINT) {
