@@ -36,7 +36,10 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.13.6
+    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.0.2n OPENSSL_OPT=""
+    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.1.0h OPENSSL_OPT=""
+    # TODO: when adding an OpenSSL version >= 1.1.1, please add "enable-tls1_3"
+    # to $OPENSSL_OPT.
 
 services:
  - memcache
@@ -44,6 +47,7 @@ services:
 
 install:
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
+  - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -P download-cache https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz; fi
   - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
   - git clone https://github.com/openresty/openresty.git ../openresty
@@ -71,6 +75,12 @@ script:
   - cd ../test-nginx && sudo cpanm . && cd ..
   - cd lua-cjson/ && make -j$JOBS && sudo make install && cd ..
   - cd mockeagain/ && make CC=$CC -j$JOBS && cd ..
+  - tar zxf download-cache/openssl-$OPENSSL_VER.tar.gz
+  - cd openssl-$OPENSSL_VER/
+  - ./config no-threads shared enable-ssl3 enable-ssl3-method $OPENSSL_OPT -g --prefix=$OPENSSL_PREFIX -DPURIFY > build.log 2>&1 || (cat build.log && exit 1)
+  - make -j$JOBS > build.log 2>&1 || (cat build.log && exit 1)
+  - sudo make PATH=$PATH install_sw > build.log 2>&1 || (cat build.log && exit 1)
+  - cd ..
   - export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
   - export NGX_BUILD_CC=$CC
   - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
