@@ -250,6 +250,9 @@ int ngx_stream_lua_do_call(ngx_log_t *log, lua_State *L);
 void ngx_stream_lua_cleanup_free(ngx_stream_lua_request_t *r,
     ngx_stream_lua_cleanup_pt *cleanup);
 
+#if (NGX_STREAM_LUA_HAVE_SA_RESTART)
+void ngx_stream_lua_set_sa_restart(ngx_log_t *log);
+#endif
 
 #define ngx_stream_lua_check_if_abortable(L, ctx)                            \
     if ((ctx)->no_abort) {                                                   \

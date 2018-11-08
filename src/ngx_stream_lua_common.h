@@ -221,6 +221,8 @@ struct ngx_stream_lua_main_conf_s {
     ngx_uint_t           malloc_trim_req_count;
 
 
+    ngx_flag_t           set_sa_restart;
+
     unsigned             requires_preread:1;
 
     unsigned             requires_log:1;
