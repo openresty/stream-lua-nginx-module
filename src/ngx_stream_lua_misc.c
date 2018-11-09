@@ -123,8 +123,34 @@ ngx_stream_lua_ngx_set(lua_State *L)
 }
 
 
-#ifndef NGX_LUA_NO_FFI_API
-#endif /* NGX_LUA_NO_FFI_API */
+
+
+int
+ngx_stream_lua_ffi_get_conf_env(u_char *name, u_char **env_buf,
+    size_t *name_len)
+{
+    ngx_uint_t            i;
+    ngx_str_t            *var;
+    ngx_core_conf_t      *ccf;
+
+    ccf = (ngx_core_conf_t *) ngx_get_conf(ngx_cycle->conf_ctx,
+                                           ngx_core_module);
+
+    var = ccf->env.elts;
+
+    for (i = 0; i < ccf->env.nelts; i++) {
+        if (var[i].data[var[i].len] == '='
+            && ngx_strncmp(name, var[i].data, var[i].len) == 0)
+        {
+            *env_buf = var[i].data;
+            *name_len = var[i].len;
+
+            return NGX_OK;
+        }
+    }
+
+    return NGX_DECLINED;
+}
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
