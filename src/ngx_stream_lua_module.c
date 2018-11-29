@@ -101,18 +101,18 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       NULL },
 
-    { ngx_string("lua_capture_error_log"),
-      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
-      ngx_stream_lua_capture_error_log,
-      0,
-      0,
-      NULL },
-
     { ngx_string("lua_sa_restart"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_STREAM_MAIN_CONF_OFFSET,
       offsetof(ngx_stream_lua_main_conf_t, set_sa_restart),
+      NULL },
+
+    { ngx_string("lua_capture_error_log"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_capture_error_log,
+      0,
+      0,
       NULL },
 
 #if (NGX_PCRE)
