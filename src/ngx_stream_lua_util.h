@@ -17,6 +17,11 @@
 #define _NGX_STREAM_LUA_UTIL_H_INCLUDED_
 
 
+#ifdef DDEBUG
+#include "ddebug.h"
+#endif
+
+
 #include "ngx_stream_lua_common.h"
 #include "ngx_stream_lua_api.h"
 
@@ -302,7 +307,9 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
     if (!llcf->enable_code_cache && r->connection->fd != (ngx_socket_t) -1) {
         lmcf = ngx_stream_get_module_main_conf(r, ngx_stream_lua_module);
 
+#ifdef DDEBUG
         dd("lmcf: %p", lmcf);
+#endif
 
         /*
          * caveats: we need to move the vm cleanup hook to the list end
@@ -362,7 +369,11 @@ ngx_stream_lua_get_lua_vm(ngx_stream_lua_request_t *r,
     }
 
     lmcf = ngx_stream_lua_get_module_main_conf(r, ngx_stream_lua_module);
+
+#ifdef DDEBUG
     dd("lmcf->lua: %p", lmcf->lua);
+#endif
+
     return lmcf->lua;
 }
 
