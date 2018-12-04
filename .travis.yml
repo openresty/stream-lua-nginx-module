@@ -36,8 +36,8 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.0.2n OPENSSL_OPT=""
-    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.1.0h OPENSSL_OPT=""
+    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.0.2q OPENSSL_OPT=""
+    - NGINX_VERSION=1.13.6 OPENSSL_VER=1.1.0j OPENSSL_OPT=""
     # TODO: when adding an OpenSSL version >= 1.1.1, please add "enable-tls1_3"
     # to $OPENSSL_OPT.
 
