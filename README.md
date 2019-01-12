@@ -361,6 +361,63 @@ until (not data and not partial) or ngx.time() >= deadline
 
 [Back to TOC](#directives)
 
+reqsock:peek
+----------------
+**syntax:** *ok, err = reqsock:peek(size)*
+
+**context:** *preread_by_lua&#42;*
+
+Peeks into the [preread](https://nginx.org/en/docs/stream/stream_processing.html#preread_phase)
+buffer that contains downstream data sent by the client without consuming them.
+That is, data returned by this API will still be forwarded to upstream in later phases.
+
+This function takes a single required argument, `size`, which is the number of bytes to be peeked.
+Repeated calls to this function always returns data from the beginning of the preread buffer.
+
+Note that preread phase happens after TLS handshake. If the stream server was configured with
+TLS enabled, data returned will be in clear text.
+
+If preread buffer does not have the requested amount of data, then the current Lua thread will
+be yielded until more data is available, [`preread_buffer_size`](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size)
+has been exceeded, or [`preread_timeout`](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_timeout)
+has elapsed. Successful calls always return the requested amounts of data, that is, no partial
+data will be returned.
+
+When [`preread_buffer_size`](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size)
+has been exceeded, the current stream session will be terminated with the
+[session status code](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#var_status) `400`
+immediately by the stream core module, with error message `"preread buffer full"` that will be printed to the error log.
+
+When [`preread_timeout`](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_timeout) has been exceeded,
+the current stream session will be terminated with the
+[session status code](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#var_status) `200` immediately by the stream core module.
+
+In both cases, no further processing on the session is possible (except `log_by_lua*`). The connection will be closed by the
+stream core module automatically.
+
+Note that this API can not be used if consumption of client data has occurred. For example, after calling
+`reqsock:receive`. If such attempt was made, Lua error `"attempt to peek on a consumed socket"` will
+be thrown. Consuming client data after calling this API safe and allowed.
+
+Here is an example of using this API:
+
+```lua
+local sock = assert(ngx.req.socket())
+
+local data = assert(sock:peek(1)) -- peek the first 1 byte that contains the length
+data = string.byte(data)
+
+data = assert(sock:peek(data + 1)) -- peek the length + the size byte
+
+local payload = data:sub(2) -- trim the length byte to get actual payload
+
+ngx.log(ngx.INFO, "payload is: ", payload)
+```
+
+This API was first introduced in the `v0.0.6` release.
+
+[Back to TOC](#directives)
+
 * [ngx.print](https://github.com/openresty/lua-nginx-module#ngxprint)
 * [ngx.say](https://github.com/openresty/lua-nginx-module#ngxsay)
 * [ngx.log](https://github.com/openresty/lua-nginx-module#ngxlog)
@@ -536,6 +593,7 @@ work:
 * Development of [meta-lua-nginx-module](https://github.com/openresty/meta-lua-nginx-module)
 to make code sharing between this module and [lua-nginx-module](https://github.com/openresty/lua-nginx-module) possible.
 * `balancer_by_lua_*`, `preread_by_lua_*`, `log_by_lua_*` and `ssl_certby_lua*` phases support.
+* [`reqsock:peek`](#reqsockpeek) API support.
 
 Copyright and License
 =====================
