@@ -470,6 +470,10 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 
     ngx_pool_cleanup_t         *cln;
 
+    if (ngx_process == NGX_PROCESS_SIGNALLER || ngx_test_config) {
+        return NGX_OK;
+    }
+
     lmcf = ngx_stream_conf_get_module_main_conf(cf,
                                                 ngx_stream_lua_module);
 
