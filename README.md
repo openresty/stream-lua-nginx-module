@@ -362,7 +362,7 @@ until (not data and not partial) or ngx.time() >= deadline
 [Back to TOC](#directives)
 
 reqsock:peek
-----------------
+------------
 **syntax:** *ok, err = reqsock:peek(size)*
 
 **context:** *preread_by_lua&#42;*
