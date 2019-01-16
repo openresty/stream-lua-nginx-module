@@ -97,6 +97,10 @@ ngx_stream_lua_preread_handler(ngx_stream_session_t *s)
             return NGX_DONE;
         }
 
+        if (rc == NGX_DONE && ctx->peek_needs_more_data) {
+            return NGX_AGAIN;
+        }
+
         if (rc == NGX_OK || rc == NGX_DONE) {
             return rc;
         }
@@ -279,7 +283,8 @@ ngx_stream_lua_preread_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
 
     rc = ngx_stream_lua_run_thread(L, r, ctx, 0);
 
-    dd("returned %d", (int) rc);
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "preread run thread returned %d", (int) rc);
 
     if (rc == NGX_ERROR || rc > NGX_OK) {
         return rc;
@@ -289,6 +294,10 @@ ngx_stream_lua_preread_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
 
     if (rc == NGX_AGAIN) {
         rc = ngx_stream_lua_run_posted_threads(c, L, r, ctx, 0);
+
+        if (rc == NGX_DONE && ctx->peek_needs_more_data) {
+            return NGX_AGAIN;
+        }
 
         if (rc == NGX_ERROR || rc == NGX_DONE || rc > NGX_OK) {
             return rc;

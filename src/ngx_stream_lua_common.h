@@ -497,6 +497,8 @@ typedef struct ngx_stream_lua_ctx_s {
     unsigned         acquired_raw_req_socket:1;  /* whether a raw req socket
                                                     is acquired */
     unsigned         seen_body_data:1;
+    unsigned         peek_needs_more_data:1; /* whether req socket is waiting
+                                               for more data in preread buf */
 } ngx_stream_lua_ctx_t;
 
 
