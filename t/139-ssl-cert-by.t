@@ -809,7 +809,7 @@ ssl-cert-by-lua: after sleeping
 
 
 
-=== TEST 14: simple logging (by_lua_file)
+=== TEST 13: simple logging (by_lua_file)
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -881,7 +881,7 @@ a.lua:1: ssl cert by lua is running!
 
 
 
-=== TEST 15: coroutine API
+=== TEST 14: coroutine API
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -973,7 +973,7 @@ lua ssl server name: "test.com"
 
 
 
-=== TEST 16: simple user thread wait with yielding
+=== TEST 15: simple user thread wait with yielding
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -1063,7 +1063,7 @@ uthread: done
 
 
 
-=== TEST 17: simple logging - use ssl_certificate_by_lua* on the http {} level
+=== TEST 16: simple logging - use ssl_certificate_by_lua* on the http {} level
 GitHub openresty/lua-resty-core#42
 --- stream_config
     server {
@@ -1132,7 +1132,7 @@ ssl_certificate_by_lua:1: ssl cert by lua is running!
 
 
 
-=== TEST 18: simple logging (syslog)
+=== TEST 17: simple logging (syslog)
 github issue #723
 --- stream_config
     server {
@@ -1204,7 +1204,7 @@ ssl_certificate_by_lua:1: ssl cert by lua is running!
 
 
 
-=== TEST 19: check the count of running timers
+=== TEST 18: check the count of running timers
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -1279,7 +1279,7 @@ close: 1 nil
 
 
 
-=== TEST 22: get raw_client_addr - IPv4
+=== TEST 19: get raw_client_addr - IPv4
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
@@ -1355,7 +1355,7 @@ client ip: 127.0.0.1
 
 
 
-=== TEST 23: get raw_client_addr - unix domain socket
+=== TEST 20: get raw_client_addr - unix domain socket
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
