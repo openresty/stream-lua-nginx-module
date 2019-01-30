@@ -523,9 +523,16 @@ attempt to peek on a consumed socket
             return
         end
 
-        ngx.log(ngx.INFO, "$ssl_preread_server_name = " .. ngx.var.ssl_preread_server_name)
+        local n = ngx.var.ssl_preread_server_name
+        if not n or n == '' then
+            ngx.log(ngx.INFO, "$ssl_preread_server_name is empty")
 
-        if ngx.var.ssl_preread_server_name == "my.sni.server.name" then
+        else
+            ngx.log(ngx.INFO, "$ssl_preread_server_name = ", n)
+        end
+
+
+        if n == "my.sni.server.name" then
             assert(string.byte(data:sub(1, 1)) == 0x16)
             assert(string.byte(data:sub(2, 2)) == 0x03)
             ngx.exit(200)
@@ -553,7 +560,7 @@ hello
 --- stream_response chop
 done
 --- error_log
-$ssl_preread_server_name =  while prereading client data
+$ssl_preread_server_name is empty while prereading client data
 $ssl_preread_server_name = my.sni.server.name while prereading client data
 --- no_error_log
 [crit]
