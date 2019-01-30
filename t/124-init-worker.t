@@ -509,6 +509,7 @@ second line received: Server: openresty
             else
                 say("connect: ", ok, " ", err)
             end
+            done = true
         end
 
         local ok, err = ngx.timer.at(0, handler)
@@ -555,6 +556,7 @@ qr/connect\(\) failed \(\d+: Connection refused\), context: ngx\.timer$/
             else
                 say("connect: ", ok, " ", err)
             end
+            done = true
         end
 
         local ok, err = ngx.timer.at(0, handler)
@@ -601,6 +603,7 @@ qr/connect\(\) failed \(\d+: Connection refused\)/
             else
                 say("connect: ", ok, " ", err)
             end
+            done = true
         end
 
         local ok, err = ngx.timer.at(0, handler)
