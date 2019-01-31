@@ -205,7 +205,7 @@ ngx_stream_lua_shared_memory_init(ngx_shm_zone_t *shm_zone, void *data)
     lmcf->shm_zones_inited++;
 
     if (lmcf->shm_zones_inited == lmcf->shm_zones->nelts
-        && lmcf->init_handler)
+        && lmcf->init_handler && !ngx_test_config)
     {
         saved_cycle = ngx_cycle;
         ngx_cycle = ctx->cycle;
