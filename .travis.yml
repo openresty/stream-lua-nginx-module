@@ -63,6 +63,9 @@ install:
   - git clone https://github.com/openresty/lua-resty-core.git ../lua-resty-core
 
 script:
+  - sudo iptables -I OUTPUT 1 -p udp --dport 10086 -j REJECT
+  - sudo iptables -A OUTPUT -p tcp --dst 127.0.0.2 --dport 12345 -j DROP
+  - sudo iptables -A OUTPUT -p udp --dst 127.0.0.2 --dport 12345 -j DROP
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
   - cd pcre-$PCRE_VER/
   - ./configure --prefix=$PCRE_PREFIX --enable-jit --enable-utf --enable-unicode-properties > build.log 2>&1 || (cat build.log && exit 1)

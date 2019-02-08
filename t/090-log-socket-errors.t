@@ -24,7 +24,7 @@ __DATA__
     lua_socket_log_errors off;
     content_by_lua_block {
             local sock = ngx.socket.tcp()
-            local ok, err = sock:connect("agentzh.org", 12345)
+            local ok, err = sock:connect("127.0.0.2", 12345)
             ngx.say(err)
     }
 
@@ -43,7 +43,7 @@ timeout
     lua_socket_log_errors on;
     content_by_lua_block {
             local sock = ngx.socket.tcp()
-            local ok, err = sock:connect("agentzh.org", 12345)
+            local ok, err = sock:connect("127.0.0.2", 12345)
             ngx.say(err)
     }
 
@@ -51,7 +51,7 @@ timeout
 --- stream_response
 timeout
 --- error_log
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 
 
 
@@ -62,7 +62,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
     lua_socket_read_timeout 1ms;
     content_by_lua_block {
             local sock = ngx.socket.udp()
-            local ok, err = sock:setpeername("agentzh.org", 12345)
+            local ok, err = sock:setpeername("127.0.0.2", 12345)
             ok, err = sock:receive()
             ngx.say(err)
     }
@@ -82,7 +82,7 @@ lua udp socket read timed out
     lua_socket_read_timeout 1ms;
     content_by_lua_block {
             local sock = ngx.socket.udp()
-            local ok, err = sock:setpeername("agentzh.org", 12345)
+            local ok, err = sock:setpeername("127.0.0.2", 12345)
             ok, err = sock:receive()
             ngx.say(err)
     }
