@@ -371,7 +371,7 @@ F(ngx_http_lua_socket_tcp_finalize_write_part) {
         end
 
         sock:settimeout(300)
-        local ok, err = sock:connect("172.105.207.225", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         ngx.say("connect: ", ok, " ", err)
 
         local ok, err = sock:close()
@@ -399,7 +399,7 @@ close: nil closed
 === TEST 6: concurrent operations while resolving
 --- stream_server_config
     lua_socket_log_errors off;
-    resolver agentzh.org:12345;
+    resolver 127.0.0.2:12345;
     resolver_timeout 300ms;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -432,7 +432,7 @@ close: nil closed
         end
 
         sock:settimeout(300)
-        local ok, err = sock:connect("some2.agentzh.org", 12345)
+        local ok, err = sock:connect("some2.agentzh.org", 80)
         ngx.say("connect: ", ok, " ", err)
 
         local ok, err = sock:close()

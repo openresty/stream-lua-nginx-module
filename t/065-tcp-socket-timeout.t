@@ -49,7 +49,7 @@ __DATA__
     resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -61,7 +61,7 @@ __DATA__
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 100
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 
@@ -74,7 +74,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(150)
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -86,7 +86,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 150
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 
@@ -98,7 +98,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(nil)
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -110,7 +110,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 102
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 
 
 
@@ -122,7 +122,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(0)
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -134,7 +134,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 102
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 
@@ -146,7 +146,7 @@ stream lua tcp socket connect timed out, when connecting to 172.105.207.225:1234
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         sock:settimeout(-1)
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("failed to connect: ", err)
             return
@@ -591,7 +591,7 @@ after
     resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         if not ok then
             ngx.say("1: failed to connect: ", err)
 
@@ -612,7 +612,7 @@ after
 2: connected: 1
 --- error_log
 lua tcp socket connect timeout: 100
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 

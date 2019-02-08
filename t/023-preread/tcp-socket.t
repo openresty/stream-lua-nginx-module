@@ -205,7 +205,7 @@ qr/connect\(\) failed \(\d+: Connection refused\)/
     resolver_timeout 3s;
     preread_by_lua_block {
         local sock = ngx.socket.tcp()
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         ngx.say("connect: ", ok, " ", err)
 
         local bytes
@@ -227,7 +227,7 @@ send: nil closed
 receive: nil closed
 close: nil closed
 --- error_log
-stream lua tcp socket connect timed out, when connecting to 172.105.207.225:12345
+stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 
