@@ -4,6 +4,8 @@ Name
 
 ngx_stream_lua_module - Embed the power of Lua into Nginx stream/TCP Servers.
 
+This module is a core component of OpenResty. If you are using this module, then you are essentially using OpenResty :)
+
 *This module is not distributed with the Nginx source.* See [the installation instructions](#installation).
 
 Table of Contents
@@ -31,8 +33,6 @@ Status
 ======
 
 Producty ready.
-
-The API is still in flux and may change without notice.
 
 Synopsis
 ========
@@ -101,6 +101,8 @@ stream {
 
 Description
 ===========
+
+This module is a core component of OpenResty. If you are using this module, then you are essentially using OpenResty :)
 
 This is a port of the [ngx_http_lua_module](https://github.com/openresty/lua-nginx-module#readme) to the NGINX "stream" subsystem so
 as to support generic stream/TCP clients in the downstream.
