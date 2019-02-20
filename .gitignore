@@ -48,7 +48,7 @@ src/args.[ch]
 echo
 reindex
 go
-t/servroot/
+t/servroot*
 *.plist
 Makefile
 t/*.t_

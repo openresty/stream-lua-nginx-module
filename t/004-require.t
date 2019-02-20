@@ -87,7 +87,7 @@ hello, foo
     content_by_lua_block {
         ngx.print(package.cpath);
     }
---- stream_response_like: ^[^;]+/servroot/html/\?.so$
+--- stream_response_like: ^[^;]+/servroot(_\d+)?/html/\?\.so$
 --- no_error_log
 [error]
 
@@ -100,7 +100,7 @@ hello, foo
     content_by_lua_block {
         ngx.print(package.path)
     }
---- stream_response_like: ^[^;]+/servroot/html/\?.lua;.+\.lua;$
+--- stream_response_like: ^[^;]+/servroot(_\d+)?/html/\?\.lua;(.+\.lua)?;*$
 --- no_error_log
 [error]
 
@@ -113,7 +113,7 @@ hello, foo
     content_by_lua_block {
         ngx.print(package.cpath)
     }
---- stream_response_like: ^[^;]+/servroot/html/\?.so;.+\.so;$
+--- stream_response_like: ^[^;]+/servroot(_\d+)?/html/\?\.so;(.+\.so)?;*$
 --- no_error_log
 [error]
 
@@ -126,7 +126,7 @@ hello, foo
     content_by_lua_block {
         ngx.print(package.path);
     }
---- stream_response_like: ^.+\.lua;[^;]+/servroot/html/\?.lua$
+--- stream_response_like: ^(.+\.lua)?;*?[^;]+/servroot(_\d+)?/html/\?\.lua$
 --- no_error_log
 [error]
 
@@ -139,7 +139,7 @@ hello, foo
     content_by_lua_block {
         ngx.print(package.cpath);
     }
---- stream_response_like: ^.+\.so;[^;]+/servroot/html/\?.so$
+--- stream_response_like: ^(.+\.so)?;*?[^;]+/servroot(_\d+)?/html/\?\.so$
 --- no_error_log
 [error]
 

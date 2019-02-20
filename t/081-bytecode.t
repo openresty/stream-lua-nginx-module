@@ -21,7 +21,7 @@ __DATA__
     content_by_lua_block {
         local f = assert(loadstring("local a = a and a + 1 or 1 ngx.say('a = ', a)", "=code"))
         local bc = string.dump(f)
-        local f = assert(io.open("t/servroot/html/a.luac", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/a.luac", "w"))
         f:write(bc)
         f:close()
     }
@@ -39,7 +39,7 @@ a = 1
     content_by_lua_block {
         local f = assert(loadstring("local a = a and a + 1 or 1 ngx.say('a = ', a)", "=code"))
         local bc = string.dump(f, true)
-        local f = assert(io.open("t/servroot/html/a.luac", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/a.luac", "w"))
         f:write(bc)
         f:close()
     }

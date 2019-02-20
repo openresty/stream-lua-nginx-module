@@ -44,7 +44,7 @@ __DATA__
 === TEST 1: single timer
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
@@ -94,7 +94,7 @@ timer prematurely expired: true
 === TEST 2: multiple timers
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
@@ -155,7 +155,7 @@ timer prematurely expired: true
 === TEST 3: trying to add new timer after HUP reload
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
@@ -208,7 +208,7 @@ failed to register a new timer after reload: process exiting, context: ngx.timer
 === TEST 4: trying to add new timer after HUP reload
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
@@ -270,7 +270,7 @@ g: exiting=true
 === TEST 5: HUP reload should abort pending timers
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
@@ -383,7 +383,7 @@ TODO
             end
             local ok, err = ngx.timer.at(1, background_thread)
 
-            local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+            local f, err = io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r")
             if not f then
                 ngx.say("failed to open nginx.pid: ", err)
                 return
@@ -434,7 +434,7 @@ lua found 1 pending timers
             end
 
             if kill then
-                local f, err = assert(io.open("t/servroot/logs/nginx.pid", "r"))
+                local f, err = assert(io.open("$TEST_NGINX_SERVER_ROOT/logs/nginx.pid", "r"))
                 local pid = f:read()
                 -- ngx.say("master pid: [", pid, "]")
                 f:close()
