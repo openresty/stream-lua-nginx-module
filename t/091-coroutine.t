@@ -173,7 +173,7 @@ cc3: 2
 
         local urls = {
             "agentzh.org",
-            "iscribblet.org",
+            "openresty.com",
             "openresty.org"
         }
 
@@ -198,7 +198,7 @@ cc3: 2
 --- config
 --- stream_response
 successfully connected to: agentzh.org
-successfully connected to: iscribblet.org
+successfully connected to: openresty.com
 successfully connected to: openresty.org
 *** All Done ***
 --- no_error_log
@@ -364,7 +364,7 @@ successfully connected to: openresty.org
 
         local urls = {
             "agentzh.org",
-            "iscribblet.org",
+            "openresty.com",
             "openresty.org"
         }
 
@@ -384,7 +384,7 @@ successfully connected to: openresty.org
 --- config
 --- stream_response
 successfully connected to: agentzh.org
-successfully connected to: iscribblet.org
+successfully connected to: openresty.com
 successfully connected to: openresty.org
 *** All Done ***
 --- no_error_log

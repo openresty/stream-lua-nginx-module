@@ -279,7 +279,7 @@ exiting the user thread
 
 === TEST 5: exit in user thread (entry thread is still pending on the DNS resolver for ngx.socket.tcp)
 --- stream_server_config
-    resolver agentzh.org;
+    resolver 127.0.0.2:12345;
     resolver_timeout 12s;
     content_by_lua_block {
         function f()
@@ -371,7 +371,7 @@ after
 
 === TEST 6: exit in user thread (entry thread is still pending on the DNS resolver for ngx.socket.udp)
 --- stream_server_config
-    resolver agentzh.org;
+    resolver 127.0.0.2:12345;
     resolver_timeout 12s;
     content_by_lua_block {
         function f()
