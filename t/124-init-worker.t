@@ -480,12 +480,12 @@ qr/warn\(\): time: \d+/
         end
         ngx.print(logs)
     }
---- stream_response
+--- stream_response_like
 timer created
 connected: 1
 request sent: 56
-first line received: HTTP/1.1 200 OK
-second line received: Server: openresty
+first line received: HTTP\/1\.1 200 OK
+second line received: (?:Date|Server): .*?
 --- no_error_log
 [error]
 --- timeout: 10
