@@ -640,7 +640,7 @@ probe syscall.socket.return, syscall.connect.return {
 
 === TEST 13: bad request tries to setpeer
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
 
     content_by_lua_block {
@@ -686,7 +686,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 14: bad request tries to send
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
 
     content_by_lua_block {
@@ -732,7 +732,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 15: bad request tries to receive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
 
     content_by_lua_block {
@@ -781,7 +781,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 === TEST 16: bad request tries to close
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -827,7 +827,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 === TEST 17: bad request tries to receive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -872,7 +872,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 18: the upper bound of port range should be 2^16 - 1
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.udp()

@@ -179,7 +179,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 6: code cache explicitly off (affects require) + content_by_lua
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
     lua_code_cache off;"
 
 --- stream_server_config
@@ -216,7 +216,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 7: code cache explicitly off (affects require) + content_by_lua_file
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
     lua_code_cache off;"
 
 --- stream_server_config
@@ -298,7 +298,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 10: no clear builtin libs (misc)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     lua_code_cache off;
@@ -334,7 +334,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 11: do not skip luarocks
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
      lua_code_cache off;"
 
 --- stream_server_config
@@ -385,7 +385,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 12: do not skip luarocks*
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
      lua_code_cache off;"
 --- stream_server_config
 
@@ -438,7 +438,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 13: clear _G table
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
@@ -780,7 +780,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 
 === TEST 22: cosocket connection pool timeout (after Lua VM destroys)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
@@ -843,7 +843,7 @@ qr/\blua tcp socket keepalive: free connection pool [0-9A-F]+ for "127.0.0.1:/,
 
 === TEST 23: cosocket connection pool timeout (before Lua VM destroys)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {

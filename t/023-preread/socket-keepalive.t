@@ -26,7 +26,7 @@ __DATA__
 
 === TEST 1: sanity
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     preread_by_lua_block {
         local test = require "test"
@@ -97,7 +97,7 @@ lua tcp socket get keepalive peer: using connection
 
 === TEST 2: free up the whole connection pool if no active connections
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     preread_by_lua_block {
         local test = require "test"

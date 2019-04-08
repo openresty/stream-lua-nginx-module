@@ -220,7 +220,7 @@ qr/received: Server: \S+/,
 
 === TEST 4: tcp cosocket in timer handler (keep-alive connections)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     content_by_lua_block {
@@ -487,7 +487,7 @@ qr/\[lua\] log_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
 TODO
 --- SKIP
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
         echo hello;

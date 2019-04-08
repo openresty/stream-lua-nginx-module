@@ -43,7 +43,7 @@ __DATA__
 
 === TEST 1: sanity
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         package.loaded.foo = nil;
@@ -87,7 +87,7 @@ Hi"
 
 === TEST 4: lua_code_cache off + setkeepalive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {

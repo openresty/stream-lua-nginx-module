@@ -53,7 +53,7 @@ received: hello world! my
 
 === TEST 2: pipelined POST requests
 --- dgram_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- dgram_server_config
     content_by_lua_block {
         local test = require "test"

@@ -947,7 +947,7 @@ close: 1 nil
 
 === TEST 19: cannot survive across request boundary (send)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -997,7 +997,7 @@ received: OK|failed to send request: closed)\$"
 
 === TEST 20: cannot survive across request boundary (receive)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -1063,7 +1063,7 @@ received: OK|failed to receive a line: closed \[nil\])$/
 
 === TEST 21: cannot survive across request boundary (close)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -1123,7 +1123,7 @@ received: OK|failed to close: closed)$/
 
 === TEST 22: cannot survive across request boundary (connect)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2247,7 +2247,7 @@ lua clean up the timer for pending ngx.sleep
 
 === TEST 41: bad request tries to connect
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2298,7 +2298,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):14: bad request/
 
 === TEST 42: bad request tries to receive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2344,7 +2344,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 === TEST 43: bad request tries to send
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2389,7 +2389,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 44: bad request tries to close
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2434,7 +2434,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 45: bad request tries to set keepalive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2479,7 +2479,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 46: bad request tries to receiveuntil
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"

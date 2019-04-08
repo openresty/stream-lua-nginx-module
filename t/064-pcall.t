@@ -22,7 +22,7 @@ __DATA__
 
 === TEST 1: pcall works
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         function f(a, b)
@@ -54,7 +54,7 @@ $/s
 
 === TEST 2: xpcall works
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         function f(a, b)

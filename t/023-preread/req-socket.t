@@ -59,7 +59,7 @@ received: d
 
 === TEST 2: attempt to use the req socket across request boundary
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     preread_by_lua_block {
         local test = require "test"
@@ -104,7 +104,7 @@ end
 === TEST 3: receive until on request_body - receiveuntil(1) on the last byte of the body
 See https://groups.google.com/group/openresty/browse_thread/thread/43cf01da3c681aba for details
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     preread_by_lua_block {
             local test = require "test"
