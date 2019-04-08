@@ -380,8 +380,9 @@ function go()
 end
 --- stream_response
 matched
---- error_log
-attempt to use ngx.re.gmatch iterator in a request that did not create it
+matched
+--- no_error_log
+[error]
 
 
 

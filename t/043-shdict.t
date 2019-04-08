@@ -1917,7 +1917,7 @@ bad "zone" argument
     }
 --- stream_response
 --- error_log
-bad user data for the ngx_shm_zone_t pointer
+bad "zone" argument
 
 
 

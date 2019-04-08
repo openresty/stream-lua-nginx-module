@@ -121,7 +121,7 @@ n = 8
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 18
+n = 22
 --- no_error_log
 [error]
 
