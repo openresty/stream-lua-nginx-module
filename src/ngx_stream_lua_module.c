@@ -80,6 +80,13 @@ static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
 
 static ngx_command_t ngx_stream_lua_cmds[] = {
 
+    { ngx_string("lua_load_resty_core"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, load_resty_core),
+      NULL },
+
     { ngx_string("lua_max_running_timers"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -640,6 +647,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
      */
 
     lmcf->pool = cf->pool;
+    lmcf->load_resty_core = NGX_CONF_UNSET;
     lmcf->max_pending_timers = NGX_CONF_UNSET;
     lmcf->max_running_timers = NGX_CONF_UNSET;
 #if (NGX_PCRE)
@@ -670,6 +678,10 @@ static char *
 ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 {
     ngx_stream_lua_main_conf_t       *lmcf = conf;
+
+    if (lmcf->load_resty_core == NGX_CONF_UNSET) {
+        lmcf->load_resty_core = 1;
+    }
 
 #if (NGX_PCRE)
     if (lmcf->regex_cache_max_entries == NGX_CONF_UNSET) {

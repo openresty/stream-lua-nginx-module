@@ -178,6 +178,8 @@ struct ngx_stream_lua_main_conf_s {
     ngx_cycle_t         *cycle;
     ngx_pool_t          *pool;
 
+    ngx_flag_t           load_resty_core;
+
     ngx_int_t            max_pending_timers;
     ngx_int_t            pending_timers;
 

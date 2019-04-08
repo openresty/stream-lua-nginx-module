@@ -117,6 +117,7 @@ Directives
 The following directives are ported directly from `ngx_http_lua_module`. Please check the
 documentation of `ngx_http_lua_module` for more details about their usage and behavior.
 
+* [lua_load_resty_core](https://github.com/openresty/lua-nginx-module#lua_load_resty_core)
 * [lua_code_cache](https://github.com/openresty/lua-nginx-module#lua_code_cache)
 * [lua_regex_cache_max_entries](https://github.com/openresty/lua-nginx-module#lua_regex_cache_max_entries)
 * [lua_package_path](https://github.com/openresty/lua-nginx-module#lua_package_path)
