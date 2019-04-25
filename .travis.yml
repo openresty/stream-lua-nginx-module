@@ -38,8 +38,7 @@ env:
   matrix:
     - NGINX_VERSION=1.15.8 OPENSSL_VER=1.0.2q OPENSSL_OPT=""
     - NGINX_VERSION=1.15.8 OPENSSL_VER=1.1.0j OPENSSL_OPT=""
-    # TODO: when adding an OpenSSL version >= 1.1.1, please add "enable-tls1_3"
-    # to $OPENSSL_OPT.
+    - NGINX_VERSION=1.15.8 OPENSSL_VER=1.1.1b OPENSSL_OPT="enable-tls1_3"
 
 services:
  - memcache
