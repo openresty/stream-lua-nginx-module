@@ -1142,7 +1142,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "openresty.org"',
-qr/SSL: TLSv1\.2, cipher: "ECDHE-RSA-AES(?:256|128)-GCM-SHA(?:384|256) TLSv1\.2/,
+qr/SSL: TLSv1\.2, cipher: "(?:ECDHE-RSA-AES(?:256|128)-GCM-SHA(?:384|256)|ECDHE-(?:RSA|ECDSA)-CHACHA20-POLY1305) TLSv1\.2/,
 ]
 --- no_error_log
 SSL reused session
