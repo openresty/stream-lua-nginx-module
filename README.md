@@ -492,7 +492,6 @@ TODO
 ====
 
 * Add new directives `access_by_lua_block` and `access_by_lua_file`.
-* Add new directives `ssl_certificate_by_lua_block` and `ssl_certificate_by_lua_file`.
 * Add `ngx.semaphore` API.
 * Add support for [lua-resty-core](https://github.com/openresty/lua-resty-core).
 * Add `lua_postpone_output` to emulate the [postpone_output](http://nginx.org/r/postpone_output) directive.
