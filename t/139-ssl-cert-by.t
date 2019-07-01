@@ -449,7 +449,7 @@ failed to do SSL handshake: handshake failed
 --- error_log eval
 [
 'lua_certificate_by_lua: handler return value: -1, cert cb exit code: 0',
-qr/\[crit\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
+qr/\[info\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
 'lua exit with code -1',
 ]
 
@@ -568,7 +568,7 @@ failed to do SSL handshake: handshake failed
 --- error_log eval
 [
 'lua_certificate_by_lua: cert cb exit code: 0',
-qr/\[crit\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
+qr/\[info\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
 'lua exit with code -1',
 ]
 
@@ -628,7 +628,7 @@ failed to do SSL handshake: handshake failed
 [
 'runtime error: ssl_certificate_by_lua:2: bad bad bad',
 'lua_certificate_by_lua: handler return value: 500, cert cb exit code: 0',
-qr/\[crit\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
+qr/\[info\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
 qr/context: ssl_certificate_by_lua\*, client: \d+\.\d+\.\d+\.\d+, server: \d+\.\d+\.\d+\.\d+:\d+/,
 ]
 
@@ -689,7 +689,7 @@ failed to do SSL handshake: handshake failed
 [
 'runtime error: ssl_certificate_by_lua:3: bad bad bad',
 'lua_certificate_by_lua: cert cb exit code: 0',
-qr/\[crit\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
+qr/\[info\] .*? SSL_do_handshake\(\) failed .*?cert cb error/,
 ]
 
 --- no_error_log
