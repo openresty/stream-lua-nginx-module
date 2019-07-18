@@ -32,7 +32,7 @@ Table of Contents
 Status
 ======
 
-Producty ready.
+Production ready.
 
 Synopsis
 ========
@@ -107,7 +107,7 @@ This module is a core component of OpenResty. If you are using this module, then
 This is a port of the [ngx_http_lua_module](https://github.com/openresty/lua-nginx-module#readme) to the NGINX "stream" subsystem so
 as to support generic stream/TCP clients in the downstream.
 
-Lua APIs and directive names rename the same as the `ngx_http_lua_module`.
+Lua APIs and directive names remain the same as the `ngx_http_lua_module`.
 
 [Back to TOC](#table-of-contents)
 
@@ -176,9 +176,9 @@ Acts as a `preread` phase handler and executes Lua code string specified in `lua
 (or packet in datagram mode).
 The Lua code may make [API calls](#nginx-api-for-lua) and is executed as a new spawned coroutine in an independent global environment (i.e. a sandbox).
 
-It is possible to acquire raw request socket using [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
+It is possible to acquire the raw request socket using [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
 and receive data from or send data to the client. However, keep in mind that calling the `receive()` method
-of the request socket will consume the data from the buffer and those data will not be seen by handlers
+of the request socket will consume the data from the buffer and such consumed data will not be seen by handlers
 further down the chain.
 
 The `preread_by_lua_block` code will always run at the end of the `preread` processing phase unless
@@ -189,7 +189,7 @@ This directive was first introduced in the `v0.0.3` release.
 [Back to TOC](#directives)
 
 preread_by_lua_file
---------------------
+-------------------
 
 **syntax:** *preread_by_lua_file &lt;path-to-lua-script-file&gt;*
 
@@ -202,16 +202,16 @@ or LuaJIT bytecode to be executed.
 
 Nginx variables can be used in the `<path-to-lua-script-file>` string to provide flexibility. This however carries some risks and is not ordinarily recommended.
 
-When a relative path like `foo/bar.lua` is given, they will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option while starting the Nginx server.
+When a relative path like `foo/bar.lua` is given, it will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option given when starting the Nginx server.
 
-When the Lua code cache is turned on (by default), the user code is loaded once at the first request and cached and the Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid reloading Nginx.
+When the Lua code cache is turned on (by default), the user code is loaded once at the first connection and cached. The Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid having to reload Nginx.
 
 This directive was first introduced in the `v0.0.3` release.
 
 [Back to TOC](#directives)
 
 log_by_lua_block
---------------------
+----------------
 
 **syntax:** *log_by_lua_block { lua-script }*
 
@@ -219,16 +219,16 @@ log_by_lua_block
 
 **phase:** *log*
 
-Runs the Lua source code inlined as the `<lua-script-str>` at the `log` request processing phase. This does not replace the current access logs, but runs before.
+Runs the Lua source code specified as `<lua-script>` during the `log` request processing phase. This does not replace the current access logs, but runs before.
 
-Yielding APIs in this phase, such as `ngx.req.socket`, `ngx.socket.*`, `ngx.sleep`, `ngx.say` are **not** available in this phase.
+Yielding APIs such as `ngx.req.socket`, `ngx.socket.*`, `ngx.sleep`, or `ngx.say` are **not** available in this phase.
 
 This directive was first introduced in the `v0.0.3` release.
 
 [Back to TOC](#directives)
 
 log_by_lua_file
---------------------
+---------------
 
 **syntax:** *log_by_lua_file &lt;path-to-lua-script-file&gt;*
 
@@ -241,9 +241,9 @@ or LuaJIT bytecode to be executed.
 
 Nginx variables can be used in the `<path-to-lua-script-file>` string to provide flexibility. This however carries some risks and is not ordinarily recommended.
 
-When a relative path like `foo/bar.lua` is given, they will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option while starting the Nginx server.
+When a relative path like `foo/bar.lua` is given, it will be turned into the absolute path relative to the `server prefix` path determined by the `-p PATH` command-line option given when starting the Nginx server.
 
-When the Lua code cache is turned on (by default), the user code is loaded once at the first request and cached and the Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid reloading Nginx.
+When the Lua code cache is turned on (by default), the user code is loaded once at the first connection and cached. The Nginx config must be reloaded each time the Lua source file is modified. The Lua code cache can be temporarily disabled during development by switching [lua_code_cache](#lua_code_cache) `off` in `nginx.conf` to avoid having to reload Nginx.
 
 This directive was first introduced in the `v0.0.3` release.
 
@@ -256,11 +256,11 @@ lua_add_variable
 
 **context:** *stream*
 
-Add variable `$var` to the stream subsystem and makes it changeable. If `$var` already exists,
+Add the variable `$var` to the stream subsystem and makes it changeable. If `$var` already exists,
 this directive will do nothing.
 
 By default, variables added using this directive are considered "not found" and reading them
-using `ngx.var` will return `nil`. However, they could be re-assigned using `ngx.var` code at any time.
+using `ngx.var` will return `nil`. However, they could be re-assigned via the `ngx.var.VARIABLE` API at any time.
 
 This directive was first introduced in the `v0.0.4` release.
 
@@ -308,16 +308,17 @@ is ignored and the raw request socket is always returned. Unlike `ngx_http_lua_m
 you can still call output API functions like `ngx.say`, `ngx.print`, and `ngx.flush`
 after acquiring the raw request socket via this function.
 
-When stream server is in UDP mode, reading from the downstream socket returned by the
+When the stream server is in UDP mode, reading from the downstream socket returned by the
 `ngx.req.socket` call will only return the content of a single packet. Therefore
 the reading call will never block and will return `nil, "no more data"` when all the
 data from the datagram has been consumed. However, you may choose to send multiple UDP
 packets back to the client using the downstream socket.
 
-Raw TCP request socket returned by this module will contain the following extra method:
+The raw TCP sockets returned by this module will contain the following extra method:
 
 tcpsock:shutdown
 ----------------
+
 **syntax:** *ok, err = tcpsock:shutdown("send")*
 
 **context:** *content_by_lua&#42;*
@@ -333,15 +334,15 @@ before calling this method, consider use `ngx.flush(true)` to make sure all busy
 flushed before shutting down the socket. If any busy buffers were detected, this method will return `nil`
 will error message `"socket busy writing"`.
 
-This feature is particularly useful for protocols that generates response before actually
-finishes consuming all incoming data. Normally Kernel will send out RST to the client when
+This feature is particularly useful for protocols that generate a response before actually
+finishing consuming all incoming data. Normally, the kernel will send RST to the client when
 [tcpsock:close](https://github.com/openresty/lua-nginx-module#tcpsockclose) is called without
 emptying the receiving buffer first. Calling this method will allow you to keep reading from
 the receiving buffer and prevents RST from being sent.
 
 You can also use this method to simulate lingering close similar to that
 [provided by the ngx_http_core_module](https://nginx.org/en/docs/http/ngx_http_core_module.html#lingering_close)
-for protocols that needs such behavior. Here is an example:
+for protocols in need of such behavior. Here is an example:
 
 ```lua
 local LINGERING_TIME = 30 -- 30 seconds
@@ -366,19 +367,20 @@ until (not data and not partial) or ngx.time() >= deadline
 
 reqsock:peek
 ------------
+
 **syntax:** *ok, err = reqsock:peek(size)*
 
 **context:** *preread_by_lua&#42;*
 
 Peeks into the [preread](https://nginx.org/en/docs/stream/stream_processing.html#preread_phase)
 buffer that contains downstream data sent by the client without consuming them.
-That is, data returned by this API will still be forwarded to upstream in later phases.
+That is, data returned by this API will still be forwarded upstream in later phases.
 
 This function takes a single required argument, `size`, which is the number of bytes to be peeked.
 Repeated calls to this function always returns data from the beginning of the preread buffer.
 
-Note that preread phase happens after TLS handshake. If the stream server was configured with
-TLS enabled, data returned will be in clear text.
+Note that preread phase happens after the TLS handshake. If the stream server was configured with
+TLS enabled, the returned data will be in clear text.
 
 If preread buffer does not have the requested amount of data, then the current Lua thread will
 be yielded until more data is available, [`preread_buffer_size`](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size)
@@ -398,9 +400,9 @@ the current stream session will be terminated with the
 In both cases, no further processing on the session is possible (except `log_by_lua*`). The connection will be closed by the
 stream core module automatically.
 
-Note that this API can not be used if consumption of client data has occurred. For example, after calling
-`reqsock:receive`. If such attempt was made, Lua error `"attempt to peek on a consumed socket"` will
-be thrown. Consuming client data after calling this API safe and allowed.
+Note that this API cannot be used if consumption of client data has occurred. For example, after calling
+`reqsock:receive`. If such an attempt was made, the Lua error `"attempt to peek on a consumed socket"` will
+be thrown. Consuming client data after calling this API is allowed and safe.
 
 Here is an example of using this API:
 
@@ -503,7 +505,9 @@ Nginx Compatibility
 
 The latest version of this module is compatible with the following versions of Nginx:
 
-* 1.13.x >= 1.13.6
+* 1.17.x (last tested: 1.17.1)
+* 1.15.x (last tested: 1.15.8)
+* 1.13.x (last tested: 1.13.6)
 
 Nginx cores older than 1.13.6 (exclusive) are *not* tested and may or may not work. Use at your own risk!
 
