@@ -10,6 +10,8 @@ version=$1
 force=$2
 home=~
 
+add_fake_merge_module="--add-module=$root/t/data/fake-merge-module"
+
             #--add-module=$root/../stream-echo-nginx-module \
 ngx-build $force $version \
             --with-cc-opt="-DNGX_LUA_USE_ASSERT -I$PCRE_INC -I$OPENSSL_INC" \
@@ -33,6 +35,7 @@ ngx-build $force $version \
             --add-module=$root/../echo-nginx-module \
             --add-module=$root/../memc-nginx-module \
             --add-module=$root/../headers-more-nginx-module \
+            $add_fake_merge_module \
             --add-module=$root $opts \
             --with-poll_module \
             --without-http_ssi_module \
