@@ -792,53 +792,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
         else
             ngx.say("peer set")
         end
-
         local function f()
-            local sock = test.get_sock()
-            sock:send("a")
-        end
-        ngx.timer.at(0, f)
-        ngx.sleep(0.001)
-    }
---- user_files
->>> test.lua
-module("test", package.seeall)
-
-local sock
-
-function new_sock()
-    sock = ngx.socket.udp()
-    return sock
-end
-
-function get_sock()
-    return sock
-end
---- stream_response
-peer set
-
---- error_log eval
-qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
-
---- no_error_log
-[alert]
-
-
-
-=== TEST 17: bad request tries to receive
---- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
---- stream_server_config
-    content_by_lua_block {
-        local test = require "test"
-        local sock = test.new_sock()
-        local ok, err = sock:setpeername("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
-        if not ok then
-            ngx.say("failed to set peer: ", err)
-        else
-            ngx.say("peer set")
-        end
-        function f()
             local sock = test.get_sock()
             sock:close()
         end
@@ -870,7 +824,7 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 
 
-=== TEST 18: the upper bound of port range should be 2^16 - 1
+=== TEST 17: the upper bound of port range should be 2^16 - 1
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
@@ -885,6 +839,49 @@ qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 failed to connect: bad port number: 65536
 --- no_error_log
 [error]
+
+
+
+=== TEST 18: send boolean and nil
+--- stream_server_config
+    content_by_lua_block {
+        local socket = ngx.socket
+        local udp = socket.udp()
+        local port = ngx.var.port
+        udp:settimeout(1000) -- 1 sec
+
+        local ok, err = udp:setpeername("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        local function send(data)
+            local bytes, err = udp:send(data)
+            if not bytes then
+                ngx.say("failed to send: ", err)
+                return
+            end
+            ngx.say("sent ok")
+        end
+
+        send(true)
+        send(false)
+        send(nil)
+    }
+--- stream_response
+sent ok
+sent ok
+sent ok
+--- no_error_log
+[error]
+--- grep_error_log eval
+qr/sendto: fd:\d+ \d+ of \d+/
+--- grep_error_log_out eval
+qr/sendto: fd:\d+ 4 of 4
+sendto: fd:\d+ 5 of 5
+sendto: fd:\d+ 3 of 3/
+--- log_level: debug
 
 
 

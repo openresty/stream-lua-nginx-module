@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 196;
+plan tests => repeat_each() * 199;
 
 our $HtmlDir = html_dir;
 
@@ -3148,7 +3148,63 @@ failed to connect: bad port number: 65536
 
 
 
-=== TEST 60: TCP socket GC'ed in preread phase without Lua content phase
+=== TEST 60: send boolean and nil
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        local function send(data)
+            local bytes, err = sock:send(data)
+            if not bytes then
+                ngx.say("failed to send request: ", err)
+                return
+            end
+        end
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\nTest: "
+        send(req)
+        send(true)
+        send(false)
+        send(nil)
+        send("\r\n\r\n")
+
+        while true do
+            local line, err, part = sock:receive()
+            if line then
+                ngx.say("received: ", line)
+            else
+                break
+            end
+        end
+
+        ok, err = sock:close()
+    }
+--- config
+    location /foo {
+        server_tokens off;
+        more_clear_headers Date;
+        echo $http_test;
+    }
+--- stream_response
+received: HTTP/1.1 200 OK
+received: Server: nginx
+received: Content-Type: text/plain
+received: Connection: close
+received: 
+received: truefalsenil
+--- no_error_log
+[error]
+
+
+
+=== TEST 61: TCP socket GC'ed in preread phase without Lua content phase
 --- stream_server_config
     lua_socket_connect_timeout 1s;
     resolver $TEST_NGINX_RESOLVER ipv6=off;
