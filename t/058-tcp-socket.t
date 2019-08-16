@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 191;
+plan tests => repeat_each() * 196;
 
 our $HtmlDir = html_dir;
 
@@ -3074,7 +3074,65 @@ failed to setkeepalive: closed
 
 
 
-=== TEST 57: TEST 62: the upper bound of port range should be 2^16 - 1
+=== TEST 57: options_table is nil
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port, nil)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+--- stream_response
+connected: 1
+close: 1 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 58: resolver send query failing immediately in connect()
+this case did not clear coctx->cleanup properly and would lead to memory invalid accesses.
+
+this test case requires the following iptables rule to work properly:
+
+sudo iptables -I OUTPUT 1 -p udp --dport 10086 -j REJECT
+
+--- stream_server_config
+    resolver 127.0.0.1:10086 ipv6=off;
+    resolver_timeout 10ms;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+
+        for i = 1, 3 do -- retry
+            local ok, err = sock:connect("www.google.com", 80)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+            end
+        end
+
+        ngx.say("hello!")
+    }
+--- stream_response_body_like
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+hello!
+--- error_log eval
+qr{\[alert\] .*? send\(\) failed \(\d+: Operation not permitted\) while resolving}
+
+
+
+=== TEST 59: the upper bound of port range should be 2^16 - 1
 --- stream_server_config
     content_by_lua_block {
         local sock, err = ngx.socket.connect("127.0.0.1", 65536)
@@ -3090,7 +3148,7 @@ failed to connect: bad port number: 65536
 
 
 
-=== TEST 58: TCP socket GC'ed in preread phase without Lua content phase
+=== TEST 60: TCP socket GC'ed in preread phase without Lua content phase
 --- stream_server_config
     lua_socket_connect_timeout 1s;
     resolver $TEST_NGINX_RESOLVER ipv6=off;
