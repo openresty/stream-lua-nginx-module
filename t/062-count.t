@@ -238,7 +238,24 @@ worker: 4
 
 
 
-=== TEST 13: entries under the metatable of udp sockets
+=== TEST 13: entries under the metatable of tcp sockets
+--- stream_server_config
+    content_by_lua_block {
+        local n = 0
+        local sock = ngx.socket.tcp()
+        for k, v in pairs(getmetatable(sock)) do
+            n = n + 1
+        end
+        ngx.say("n = ", n)
+    }
+--- stream_response
+n = 14
+--- no_error_log
+[error]
+
+
+
+=== TEST 14: entries under the metatable of udp sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -255,7 +272,7 @@ n = 6
 
 
 
-=== TEST 14: entries under the metatable of req raw sockets
+=== TEST 15: entries under the metatable of req raw sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
