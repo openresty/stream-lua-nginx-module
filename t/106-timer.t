@@ -12,7 +12,7 @@ our $StapScript = $t::StapThread::StapScript;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 8 + 49);
+plan tests => repeat_each() * (blocks() * 8 + 46);
 
 #no_diff();
 no_long_string();
@@ -1787,3 +1787,126 @@ ok
 --- error_log
 Bad bad bad
 --- skip_nginx: 4: < 1.7.1
+
+
+
+=== TEST 30: log function location when failed to run a timer
+--- stream_config
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local function g()
+            ngx.sleep(0.01)
+        end
+
+        local function f()
+            ngx.sleep(0.01)
+        end
+
+        local ok, err = ngx.timer.at(0, f)
+        if not ok then
+            ngx.say("failed to create timer f: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, g)
+        if not ok then
+            ngx.say("failed to create timer g: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at =content_by_lua\(nginx.conf:\d+\):2: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
+
+
+
+=== TEST 31: log function location when failed to run a timer (anonymous function)
+--- stream_config
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local function f()
+            ngx.sleep(0.01)
+        end
+
+        local ok, err = ngx.timer.at(0, f)
+        if not ok then
+            ngx.say("failed to set timer f: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, function()
+            ngx.sleep(0.01)
+        end)
+
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at =content_by_lua\(nginx.conf:\d+\):12: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
+
+
+
+=== TEST 32: log function location when failed to run a timer (lua file)
+--- user_files
+>>> test.lua
+local _M = {}
+
+function _M.run()
+    ngx.sleep(0.01)
+end
+
+return _M
+--- stream_config
+    lua_package_path '$TEST_NGINX_HTML_DIR/?.lua;./?.lua;;';
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local test = require "test"
+
+        local ok, err = ngx.timer.at(0, test.run)
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, test.run)
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at @.+\/test.lua:3: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
