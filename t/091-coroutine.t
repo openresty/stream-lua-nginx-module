@@ -449,22 +449,24 @@ done
 
 
 === TEST 10: thread traceback (multi-thread)
+Note: only coroutine.wrap propagates errors to the parent coroutine
+(and thus produces a traceback)
 --- stream_server_config
     content_by_lua_block {
         local f = function(cr) coroutine.resume(cr) end
         -- emit a error
         local g = function() unknown.unknown = 1 end
-        local l1 = coroutine.create(f)
-        local l2 = coroutine.create(g)
-        coroutine.resume(l1, l2)
+        local l1 = coroutine.wrap(f)
+        local l2 = coroutine.wrap(g)
+        local l3 = coroutine.wrap(function() l1(l2) end)
+        l3()
         ngx.say("hello")
     }
-
---- config
 --- stream_response
-hello
 --- error_log eval
 ["stack traceback:", "coroutine 0:", "coroutine 1:", "coroutine 2:"]
+--- no_error
+[crit]
 
 
 
@@ -779,8 +781,8 @@ qr/^child: resume: falsecontent_by_lua\(nginx\.conf:\d+\):4: bad
 child: status: dead
 parent: status: running
 $/s
---- error_log eval
-qr/lua coroutine: runtime error: content_by_lua\(nginx\.conf:\d+\):4: bad/
+--- no_error_log
+[error]
 
 
 

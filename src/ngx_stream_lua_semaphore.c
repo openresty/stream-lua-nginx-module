@@ -15,8 +15,6 @@
  */
 
 
-
-
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
@@ -92,6 +90,8 @@ ngx_stream_lua_alloc_sema(void)
 
     lmcf = ngx_stream_cycle_get_module_main_conf(ngx_cycle,
                                                  ngx_stream_lua_module);
+
+    ngx_stream_lua_assert(lmcf != NULL);
 
     mm = lmcf->sema_mm;
 
@@ -178,6 +178,8 @@ ngx_stream_lua_sema_mm_cleanup(void *data)
 
         sem = ngx_queue_data(q, ngx_stream_lua_sema_t, chain);
         block = sem->block;
+
+        ngx_stream_lua_assert(block != NULL);
 
         if (block->used == 0) {
             iter = (ngx_stream_lua_sema_t *) (block + 1);
@@ -372,7 +374,7 @@ ngx_stream_lua_ffi_sema_wait(ngx_stream_lua_request_t *r,
                    "stream lua semaphore wait: %p, timeout: %d, "
                    "resources: %d, event posted: %d",
                    sem, wait_ms, sem->resource_count,
-#if (nginx_version >= 1007005)
+#if defined(nginx_version) && nginx_version >= 1007005
                    (int) sem->sem_event.posted
 #else
                    sem->sem_event.prev ? 1 : 0
@@ -571,7 +573,6 @@ ngx_stream_lua_ffi_sema_gc(ngx_stream_lua_sema_t *sem)
 
     ngx_stream_lua_free_sema(sem);
 }
-
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

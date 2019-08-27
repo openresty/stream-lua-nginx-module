@@ -164,7 +164,8 @@ ngx_stream_lua_cache_loadbuffer(ngx_log_t *log, lua_State *L,
 
     n = lua_gettop(L);
 
-    dd("XXX cache key: [%s]", cache_key);
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, log, 0,
+                   "looking up Lua code cache with key '%s'", cache_key);
 
     rc = ngx_stream_lua_cache_load_code(log, L, (char *) cache_key);
     if (rc == NGX_OK) {
@@ -248,7 +249,8 @@ ngx_stream_lua_cache_loadfile(ngx_log_t *log, lua_State *L,
         dd("CACHE file key already pre-calculated");
     }
 
-    dd("XXX cache key for file: [%s]", cache_key);
+    ngx_log_debug1(NGX_LOG_DEBUG_STREAM, log, 0,
+                   "looking up Lua code cache with key '%s'", cache_key);
 
     rc = ngx_stream_lua_cache_load_code(log, L, (char *) cache_key);
     if (rc == NGX_OK) {

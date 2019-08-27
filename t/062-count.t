@@ -30,7 +30,7 @@ __DATA__
         ngx.say("ngx: ", n)
     }
 --- stream_response
-ngx: 56
+ngx: 53
 --- no_error_log
 [error]
 
@@ -193,7 +193,7 @@ probe process("$LIBLUA_PATH").function("rehashtab") {
 --- stap_out2
 3
 --- stream_response
-coroutine: 14
+coroutine: 16
 --- no_error_log
 [error]
 

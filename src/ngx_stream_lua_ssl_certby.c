@@ -267,22 +267,11 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
 
     cscf = ngx_stream_get_module_srv_conf(fs, ngx_stream_core_module);
 
-#if defined(nginx_version) && nginx_version >= 1003014
-
-#   if nginx_version >= 1009000
-
+#if defined(nginx_version) && nginx_version >= 1009000
     ngx_set_connection_log(fc, cscf->error_log);
 
-#   else
-
-#   error "stream ssl_cert_by_lua only supports nginx >= 1.13.0"
-
-#   endif
-
 #else
-
 #   error "stream ssl_cert_by_lua only supports nginx >= 1.13.0"
-
 #endif
 
     if (cctx == NULL) {
@@ -496,7 +485,7 @@ ngx_stream_lua_ssl_cert_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
 
     if (co == NULL) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "stream lua: failed to create new"
+                      "stream failed to create new"
                       " coroutine to handle request");
 
         rc = NGX_ERROR;
@@ -557,7 +546,6 @@ ngx_stream_lua_ssl_cert_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
     ngx_stream_lua_finalize_request(r, rc);
     return rc;
 }
-
 
 
 int

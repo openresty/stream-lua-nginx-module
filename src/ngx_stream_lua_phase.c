@@ -23,8 +23,6 @@
 #include "ngx_stream_lua_ctx.h"
 
 
-static int ngx_stream_lua_ngx_get_phase(lua_State *L);
-
 
 static int
 ngx_stream_lua_ngx_get_phase(lua_State *L)

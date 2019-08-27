@@ -178,6 +178,19 @@ ngx_stream_lua_code_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
 char *
+ngx_stream_lua_load_resty_core(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf)
+{
+    ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
+                       "lua_load_resty_core is deprecated (the lua-resty-core "
+                       "library is required since "
+                       "ngx_stream_lua v0.0.8)");
+
+    return NGX_CONF_OK;
+}
+
+
+char *
 ngx_stream_lua_package_cpath(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_stream_lua_main_conf_t       *lmcf = conf;
@@ -748,11 +761,12 @@ ngx_stream_lua_gen_chunk_name(ngx_conf_t *cf, const char *tag, size_t tag_len,
 
 found:
 
-    ngx_snprintf(out, len, "=%*s(%*s:%d)%Z",
-                 tag_len, tag, cf->conf_file->file.name.data
-                 + cf->conf_file->file.name.len - p,
-                 p, cf->conf_file->line);
-    *chunkname_len = len;
+    p = ngx_snprintf(out, len, "=%*s(%*s:%d)%Z",
+                     tag_len, tag, cf->conf_file->file.name.data
+                     + cf->conf_file->file.name.len - p,
+                     p, cf->conf_file->line);
+
+    *chunkname_len = p - out - 1;  /* exclude the trailing '\0' byte */
 
     return out;
 }
@@ -935,12 +949,12 @@ ngx_stream_lua_conf_read_lua_token(ngx_conf_t *cf,
     ngx_uint_t   start_line;
     ngx_str_t   *word;
     ngx_buf_t   *b;
-#if nginx_version >= 1009002
+#if defined(nginx_version) && nginx_version >= 1009002
     ngx_buf_t   *dump;
 #endif
 
     b = cf->conf_file->buffer;
-#if nginx_version >= 1009002
+#if defined(nginx_version) && nginx_version >= 1009002
     dump = cf->conf_file->dump;
 #endif
     start = b->pos;
@@ -1011,7 +1025,7 @@ ngx_stream_lua_conf_read_lua_token(ngx_conf_t *cf,
             b->last = b->start + len + n;
             start = b->start;
 
-#if nginx_version >= 1009002
+#if defined(nginx_version) && nginx_version >= 1009002
             if (dump) {
                 dump->last = ngx_cpymem(dump->last, b->start + len, size);
             }

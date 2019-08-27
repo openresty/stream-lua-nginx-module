@@ -104,10 +104,12 @@ ngx_stream_lua_parse_args(lua_State *L, u_char *buf, u_char *last, int max)
             }
 
             if (max > 0 && ++count == max) {
-                ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                               "lua hit query args limit %d", max);
+                lua_pushliteral(L, "truncated");
 
-                return 1;
+                ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                               "stream lua hit query args limit %d",
+                               max);
+                return 2;
             }
 
         } else {

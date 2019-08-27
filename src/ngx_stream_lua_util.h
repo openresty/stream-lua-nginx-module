@@ -31,19 +31,10 @@
 #endif
 
 
-#ifndef NGX_LUA_NO_FFI_API
-typedef struct {
-    int          len;
-    /* this padding hole on 64-bit systems is expected */
-    u_char      *data;
-} ngx_stream_lua_ffi_str_t;
-
-
 typedef struct {
     ngx_stream_lua_ffi_str_t         key;
     ngx_stream_lua_ffi_str_t         value;
 } ngx_stream_lua_ffi_table_elt_t;
-#endif /* NGX_LUA_NO_FFI_API */
 
 
 /* char whose address we use as the key in Lua vm registry for
@@ -56,7 +47,7 @@ extern char ngx_stream_lua_code_cache_key;
 
 
 /* char whose address we use as the key in Lua vm registry for
- * regex cache table  */
+ * regex cache table */
 extern char ngx_stream_lua_regex_cache_key;
 
 /* char whose address we use as the key in Lua vm registry for
@@ -76,13 +67,6 @@ extern char ngx_stream_lua_headers_metatable_key;
 #ifndef ngx_str_set
 #define ngx_str_set(str, text)                                               \
     (str)->len = sizeof(text) - 1; (str)->data = (u_char *) text
-#endif
-
-
-
-
-#if defined(nginx_version) && nginx_version < 1000000
-#define ngx_memmove(dst, src, n)   (void) memmove(dst, src, n)
 #endif
 
 
@@ -139,8 +123,9 @@ ngx_stream_lua_ffi_check_context(ngx_stream_lua_ctx_t *ctx,
     SSL_get_ex_data(ssl_conn, ngx_stream_lua_ssl_ctx_index)
 
 
-lua_State *ngx_stream_lua_init_vm(lua_State *parent_vm, ngx_cycle_t *cycle,
-    ngx_pool_t *pool, ngx_stream_lua_main_conf_t *lmcf, ngx_log_t *log,
+ngx_int_t ngx_stream_lua_init_vm(lua_State **new_vm, lua_State *parent_vm,
+    ngx_cycle_t *cycle, ngx_pool_t *pool,
+    ngx_stream_lua_main_conf_t *lmcf, ngx_log_t *log,
     ngx_pool_cleanup_t **pcln);
 
 lua_State *ngx_stream_lua_new_thread(ngx_stream_lua_request_t *r, lua_State *l,
@@ -279,7 +264,8 @@ ngx_stream_lua_init_ctx(ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx)
 static ngx_inline ngx_stream_lua_ctx_t *
 ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
 {
-    lua_State                           *L;
+    ngx_int_t                            rc;
+    lua_State                           *L = NULL;
     ngx_stream_lua_ctx_t                *ctx;
     ngx_pool_cleanup_t                  *cln;
     ngx_stream_lua_loc_conf_t           *llcf;
@@ -318,8 +304,8 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
          * the correct semantics.
          */
 
-        L = ngx_stream_lua_init_vm(lmcf->lua, lmcf->cycle, sreq->pool, lmcf,
-                                   r->connection->log, &cln);
+        rc = ngx_stream_lua_init_vm(&L, lmcf->lua, lmcf->cycle, sreq->pool,
+                                    lmcf, r->connection->log, &cln);
 
         while (cln->next != NULL) {
             cln = cln->next;
@@ -331,11 +317,30 @@ ngx_stream_lua_create_ctx(ngx_stream_session_t *r)
         sreq->pool->cleanup = cln->next;
         cln->next = NULL;
 
-        if (L == NULL) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "failed to initialize Lua VM");
-            return NULL;
-        }
+        if (rc != NGX_OK) {
+            if (rc == NGX_DECLINED) {
+                ngx_stream_lua_assert(L != NULL);
+
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                              "failed to load the 'resty.core' module "
+                              "(https://github.com/openresty/lua-resty"
+                              "-core); ensure you are using an OpenResty "
+                              "release from https://openresty.org/en/"
+                              "download.html (reason: %s)",
+                              lua_tostring(L, -1));
+
+            } else {
+                /* rc == NGX_ERROR */
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                              "failed to initialize Lua VM");
+            }
+
+             return NULL;
+         }
+
+        /* rc == NGX_OK */
+
+        ngx_stream_lua_assert(L != NULL);
 
         if (lmcf->init_handler) {
             if (lmcf->init_handler(r->connection->log, lmcf, L) != NGX_OK) {
@@ -474,7 +479,7 @@ ngx_stream_lua_get_flush_chain(ngx_stream_lua_request_t *r,
 }
 
 
-#if (nginx_version < 1011002)
+#if defined(nginx_version) && nginx_version < 1011002
 static ngx_inline in_port_t
 ngx_inet_get_port(struct sockaddr *sa)
 {

@@ -17,11 +17,6 @@
 #define _NGX_STREAM_LUA_COMMON_H_INCLUDED_
 
 
-#ifndef NGX_LUA_NO_FFI_API
-#define NGX_LUA_NO_FFI_API
-#endif
-
-
 #include <nginx.h>
 #include <ngx_core.h>
 #include <ngx_stream.h>
@@ -51,7 +46,7 @@
 #endif
 
 
-#if !defined(nginx_version) || (nginx_version < 1013006)
+#if !defined(nginx_version) || nginx_version < 1013006
 #error at least nginx 1.13.6 is required but found an older version
 #endif
 
@@ -63,13 +58,20 @@
 #endif
 
 
+#if !defined(LUAJIT_VERSION_NUM) || (LUAJIT_VERSION_NUM < 20000)
+#   error unsupported LuaJIT version
+#endif
+
+
 #if (!defined OPENSSL_NO_OCSP && defined SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB)
 #   define NGX_STREAM_LUA_USE_OCSP 1
 #endif
 
 
+
+
 #ifndef NGX_HAVE_SHA1
-#   if (nginx_version >= 1011002)
+#   if defined(nginx_version) && nginx_version >= 1011002
 #       define NGX_HAVE_SHA1  1
 #   endif
 #endif
@@ -129,10 +131,8 @@
 #define NGX_STREAM_LUA_CONTEXT_SSL_CERT                             0x0040
 
 
-#ifndef NGX_LUA_NO_FFI_API
 #define NGX_STREAM_LUA_FFI_NO_REQ_CTX         -100
 #define NGX_STREAM_LUA_FFI_BAD_CONTEXT        -101
-#endif
 
 
 #if (NGX_PTR_SIZE >= 8 && !defined(_WIN64))
@@ -177,8 +177,6 @@ struct ngx_stream_lua_main_conf_s {
 
     ngx_cycle_t         *cycle;
     ngx_pool_t          *pool;
-
-    ngx_flag_t           load_resty_core;
 
     ngx_int_t            max_pending_timers;
     ngx_int_t            pending_timers;
@@ -389,6 +387,13 @@ struct ngx_stream_lua_co_ctx_s {
                                                         the ngx.thread.spawn()
                                                         call */
     unsigned                 sem_resume_status:1;
+
+    unsigned                 is_wrap:1; /* set when creating coroutines via
+                                           coroutine.wrap */
+
+    unsigned                 propagate_error:1; /* set when propagating an error
+                                                   from a coroutine to its
+                                                   parent */
 };
 
 

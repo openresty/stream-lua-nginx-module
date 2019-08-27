@@ -59,7 +59,7 @@ static ngx_conf_post_t  ngx_stream_lua_lowat_post =
 
 
 
-#if (NGX_STREAM_SSL) && defined(nginx_version) && nginx_version >= 1001013
+#if (NGX_STREAM_SSL)
 
 static ngx_conf_bitmask_t  ngx_stream_lua_ssl_protocols[] = {
     { ngx_string("SSLv2"), NGX_SSL_SSLv2 },
@@ -82,9 +82,9 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
     { ngx_string("lua_load_resty_core"),
       NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
+      ngx_stream_lua_load_resty_core,
       NGX_STREAM_MAIN_CONF_OFFSET,
-      offsetof(ngx_stream_lua_main_conf_t, load_resty_core),
+      0,
       NULL },
 
     { ngx_string("lua_max_running_timers"),
@@ -362,16 +362,12 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
 #if (NGX_STREAM_SSL)
 
-#   if defined(nginx_version) && nginx_version >= 1001013
-
     { ngx_string("lua_ssl_protocols"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,
       ngx_conf_set_bitmask_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, ssl_protocols),
       &ngx_stream_lua_ssl_protocols },
-
-#   endif
 
     { ngx_string("lua_ssl_ciphers"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
@@ -437,7 +433,7 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
 
 
 ngx_stream_module_t ngx_stream_lua_module_ctx = {
-    NULL,                                        /*  preconfiguration */
+    NULL,                                     /*  preconfiguration */
     ngx_stream_lua_init,                /*  postconfiguration */
 
     ngx_stream_lua_create_main_conf,    /*  create main configuration */
@@ -453,14 +449,14 @@ ngx_module_t ngx_stream_lua_module = {
     NGX_MODULE_V1,
     &ngx_stream_lua_module_ctx,       /*  module context */
     ngx_stream_lua_cmds,              /*  module directives */
-    NGX_STREAM_MODULE,   /*  module type */
-    NULL,                                      /*  init master */
-    NULL,                                      /*  init module */
+    NGX_STREAM_MODULE,                /*  module type */
+    NULL,                                   /*  init master */
+    NULL,                                   /*  init module */
     ngx_stream_lua_init_worker,       /*  init process */
-    NULL,                                      /*  init thread */
-    NULL,                                      /*  exit thread */
-    NULL,                                      /*  exit process */
-    NULL,                                      /*  exit master */
+    NULL,                                   /*  init thread */
+    NULL,                                   /*  exit thread */
+    NULL,                                   /*  exit process */
+    NULL,                                   /*  exit master */
     NGX_MODULE_V1_PADDING
 };
 
@@ -470,12 +466,13 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 {
     ngx_int_t                           rc;
     volatile ngx_cycle_t               *saved_cycle;
-    ngx_stream_lua_main_conf_t         *lmcf;
     ngx_array_t                        *arr;
+    ngx_pool_cleanup_t                 *cln;
+
     ngx_stream_handler_pt              *h;
+    ngx_stream_lua_main_conf_t         *lmcf;
     ngx_stream_core_main_conf_t        *cmcf;
 
-    ngx_pool_cleanup_t         *cln;
 
     if (ngx_process == NGX_PROCESS_SIGNALLER || ngx_test_config) {
         return NGX_OK;
@@ -535,6 +532,7 @@ ngx_stream_lua_init(ngx_conf_t *cf)
     cln->handler = ngx_stream_lua_sema_mm_cleanup;
 
 
+
     if (lmcf->lua == NULL) {
         dd("initializing lua vm");
 
@@ -552,13 +550,32 @@ ngx_stream_lua_init(ngx_conf_t *cf)
 #endif
 
 
-        lmcf->lua = ngx_stream_lua_init_vm(NULL, cf->cycle, cf->pool, lmcf,
-                                           cf->log, NULL);
-        if (lmcf->lua == NULL) {
-            ngx_conf_log_error(NGX_LOG_ERR, cf, 0,
-                               "failed to initialize Lua VM");
-            return NGX_ERROR;
+        rc = ngx_stream_lua_init_vm(&lmcf->lua, NULL, cf->cycle, cf->pool,
+                                    lmcf, cf->log, NULL);
+        if (rc != NGX_OK) {
+            if (rc == NGX_DECLINED) {
+                ngx_stream_lua_assert(lmcf->lua != NULL);
+
+                ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
+                                   "failed to load the 'resty.core' module "
+                                   "(https://github.com/openresty/lua-resty"
+                                   "-core); ensure you are using an OpenResty "
+                                   "release from https://openresty.org/en/"
+                                   "download.html (reason: %s)",
+                                   lua_tostring(lmcf->lua, -1));
+
+            } else {
+                /* rc == NGX_ERROR */
+                ngx_conf_log_error(NGX_LOG_ALERT, cf, 0,
+                                   "failed to initialize Lua VM");
+            }
+
+             return NGX_ERROR;
         }
+
+        /* rc == NGX_OK */
+
+        ngx_stream_lua_assert(lmcf->lua != NULL);
 
         if (!lmcf->requires_shm && lmcf->init_handler) {
             saved_cycle = ngx_cycle;
@@ -647,7 +664,6 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
      */
 
     lmcf->pool = cf->pool;
-    lmcf->load_resty_core = NGX_CONF_UNSET;
     lmcf->max_pending_timers = NGX_CONF_UNSET;
     lmcf->max_running_timers = NGX_CONF_UNSET;
 #if (NGX_PCRE)
@@ -678,10 +694,6 @@ static char *
 ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 {
     ngx_stream_lua_main_conf_t       *lmcf = conf;
-
-    if (lmcf->load_resty_core == NGX_CONF_UNSET) {
-        lmcf->load_resty_core = 1;
-    }
 
 #if (NGX_PCRE)
     if (lmcf->regex_cache_max_entries == NGX_CONF_UNSET) {
@@ -775,9 +787,10 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 static char *
 ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
+#if (NGX_STREAM_SSL)
     ngx_stream_lua_srv_conf_t       *prev = parent;
     ngx_stream_lua_srv_conf_t       *conf = child;
-#if (NGX_STREAM_SSL)
+
     ngx_stream_ssl_conf_t           *sscf;
 
     dd("merge srv conf");
@@ -825,14 +838,10 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
 #if (NGX_STREAM_SSL)
 
-#   if defined(nginx_version) && nginx_version >= 1001013
-
     ngx_conf_merge_bitmask_value(conf->ssl_protocols, prev->ssl_protocols,
                                  NGX_CONF_BITMASK_SET|NGX_SSL_SSLv3
                                  |NGX_SSL_TLSv1|NGX_SSL_TLSv1_1
                                  |NGX_SSL_TLSv1_2);
-
-#   endif
 
     ngx_conf_merge_str_value(conf->ssl_ciphers, prev->ssl_ciphers,
                              "DEFAULT");
@@ -924,26 +933,13 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
         return NGX_ERROR;
     }
 
-    if (lscf->ssl_trusted_certificate.len) {
-
-#if defined(nginx_version) && nginx_version >= 1003007
-
-        if (ngx_ssl_trusted_certificate(cf, lscf->ssl,
-                                        &lscf->ssl_trusted_certificate,
-                                        lscf->ssl_verify_depth)
-            != NGX_OK)
-        {
-            return NGX_ERROR;
-        }
-
-#else
-
-        ngx_log_error(NGX_LOG_CRIT, cf->log, 0, "at least nginx 1.3.7 is "
-                      "required for the \"lua_ssl_trusted_certificate\" "
-                      "directive");
+    if (lscf->ssl_trusted_certificate.len
+        && ngx_ssl_trusted_certificate(cf, lscf->ssl,
+                                       &lscf->ssl_trusted_certificate,
+                                       lscf->ssl_verify_depth)
+        != NGX_OK)
+    {
         return NGX_ERROR;
-
-#endif
     }
 
     dd("ssl crl: %.*s", (int) lscf->ssl_crl.len, lscf->ssl_crl.data);

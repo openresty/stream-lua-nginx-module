@@ -94,9 +94,9 @@ qr/^(2|3)$/
 --- stream_response_like chomp
 \A[12]\n\z
 --- grep_error_log eval
-qr/(old foo: \d+|\[\w+\].*?writing a global lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk)/
+qr/(old foo: \d+|\[\w+\].*?writing a global Lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk)/
 --- grep_error_log_out eval
-[qr/\A\[warn\] .*?writing a global lua variable \('foo'\)
+[qr/\A\[warn\] .*?writing a global Lua variable \('foo'\)
 preread_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 
 
@@ -115,9 +115,9 @@ preread_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 --- stream_response_like chomp
 \A[12]\n\z
 --- grep_error_log eval
-qr/(old foo: \d+|\[\w+\].*?writing a global lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk, )/
+qr/(old foo: \d+|\[\w+\].*?writing a global Lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk, )/
 --- grep_error_log_out eval
-[qr/\A\[warn\] .*?writing a global lua variable \('foo'\)
+[qr/\A\[warn\] .*?writing a global Lua variable \('foo'\)
 content_by_lua\(nginx\.conf:\d+\):3: in main chunk, \n\z/, "old foo: 1\n"]
 
 
@@ -138,9 +138,9 @@ content_by_lua\(nginx\.conf:\d+\):3: in main chunk, \n\z/, "old foo: 1\n"]
 --- stream_response_like chomp
 \A(?:nil|1)\n\z
 --- grep_error_log eval
-qr/(old foo: \d+|\[\w+\].*?writing a global lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk)/
+qr/(old foo: \d+|\[\w+\].*?writing a global Lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in main chunk)/
 --- grep_error_log_out eval
-[qr/\A\[warn\] .*?writing a global lua variable \('foo'\)
+[qr/\A\[warn\] .*?writing a global Lua variable \('foo'\)
 log_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 
 
@@ -167,9 +167,9 @@ log_by_lua\(nginx\.conf:\d+\):3: in main chunk/, "old foo: 1\n"]
 --- stream_response_like chomp
 \A[12]\n\z
 --- grep_error_log eval
-qr/(old foo: \d+|\[\w+\].*?writing a global lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in\b)/
+qr/(old foo: \d+|\[\w+\].*?writing a global Lua variable \('[^'\s]+'\)|\w+_by_lua\(.*?\):\d+: in\b)/
 --- grep_error_log_out eval
-[qr/\A\[warn\] .*?writing a global lua variable \('foo'\)
+[qr/\A\[warn\] .*?writing a global Lua variable \('foo'\)
 content_by_lua\(nginx\.conf:\d+\):4: in\n\z/, "old foo: 1\n"]
 
 
@@ -196,9 +196,9 @@ content_by_lua\(nginx\.conf:\d+\):4: in\n\z/, "old foo: 1\n"]
 --- stream_response_like chomp
 \A[12]\n\z
 --- grep_error_log eval
-qr/(old foo: \d+|writing a global lua variable \('\w+'\))/
+qr/(old foo: \d+|writing a global Lua variable \('\w+'\))/
 --- grep_error_log_out eval
-["writing a global lua variable \('foo'\)\n", "old foo: 1\n"]
+["writing a global Lua variable \('foo'\)\n", "old foo: 1\n"]
 
 
 
@@ -217,9 +217,9 @@ qr/(old foo: \d+|writing a global lua variable \('\w+'\))/
     }
 --- stream_server_config
         proxy_pass backend;
---- grep_error_log eval: qr/(old foo: \d+|writing a global lua variable \('\w+'\))/
+--- grep_error_log eval: qr/(old foo: \d+|writing a global Lua variable \('\w+'\))/
 --- grep_error_log_out eval
-["writing a global lua variable \('foo'\)\n", "old foo: 1\n"]
+["writing a global Lua variable \('foo'\)\n", "old foo: 1\n"]
 --- error_log
 connect() to 0.0.0.1:1234 failed
 
@@ -239,9 +239,9 @@ connect() to 0.0.0.1:1234 failed
         }
 --- stream_response
 0
---- grep_error_log eval: qr/writing a global lua variable \('\w+'\)/
+--- grep_error_log eval: qr/writing a global Lua variable \('\w+'\)/
 --- grep_error_log_out eval
-["writing a global lua variable \('foo'\)\n", "writing a global lua variable \('1'\)\n"]
+["writing a global Lua variable \('foo'\)\n", "writing a global Lua variable \('1'\)\n"]
 
 
 

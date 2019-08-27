@@ -24,6 +24,9 @@
 #include "ngx_stream_lua_probe.h"
 
 
+#define NGX_STREAM_LUA_TIMER_ERRBUF_SIZE  128
+
+
 typedef struct {
     void        **main_conf;
     void        **srv_conf;
@@ -361,6 +364,10 @@ ngx_stream_lua_ngx_timer_helper(lua_State *L, int every)
 
     ngx_add_timer(ev, delay);
 
+    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                   "stream created timer (co: %p delay: %M ms)",
+                   tctx->co, delay);
+
     lua_pushinteger(L, 1);
     return 1;
 
@@ -521,6 +528,10 @@ ngx_stream_lua_timer_copy(ngx_stream_lua_timer_ctx_t *old_tctx)
 
     ngx_add_timer(ev, tctx->delay);
 
+    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                   "stream created next timer (co: %p delay: %M ms)",
+                   tctx->co, tctx->delay);
+
     return NGX_OK;
 
 nomem:
@@ -555,22 +566,30 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
     lua_State                       *L;
     ngx_int_t                        rc;
     ngx_connection_t                *c = NULL;
-    ngx_stream_lua_request_t        *r = NULL;
-    ngx_stream_lua_ctx_t            *ctx;
-    ngx_stream_lua_cleanup_t        *cln;
     ngx_pool_cleanup_t              *pcln;
 
+    ngx_stream_lua_request_t                *r = NULL;
+    ngx_stream_lua_cleanup_t                *cln;
+    ngx_stream_lua_ctx_t                    *ctx;
     ngx_stream_lua_timer_ctx_t               tctx;
     ngx_stream_lua_main_conf_t              *lmcf;
 
     ngx_stream_core_srv_conf_t        *clcf;
     ngx_stream_session_t              *s;
 
+    lua_Debug                ar;
+    u_char                  *p;
+    u_char                   errbuf[NGX_STREAM_LUA_TIMER_ERRBUF_SIZE];
+    const char              *source;
+    const char              *errmsg;
+
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua ngx.timer expired");
 
     ngx_memcpy(&tctx, ev->data, sizeof(ngx_stream_lua_timer_ctx_t));
     ngx_free(ev);
+
+    ngx_stream_lua_assert(tctx.co_ref && tctx.co);
 
     lmcf = tctx.lmcf;
 
@@ -586,14 +605,17 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
     }
 
     if (lmcf->running_timers >= lmcf->max_running_timers) {
-        ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-                      "stream lua: %i lua_max_running_timers are not enough",
-                      lmcf->max_running_timers);
+        p = ngx_snprintf(errbuf, NGX_STREAM_LUA_TIMER_ERRBUF_SIZE - 1,
+                         "stream lua: %i lua_max_running_timers are not enough",
+                         lmcf->max_running_timers);
+        *p = '\0';
+        errmsg = (const char *) errbuf;
         goto failed;
     }
 
     c = ngx_stream_lua_create_fake_connection(tctx.pool);
     if (c == NULL) {
+        errmsg = "could not create fake connection";
         goto failed;
     }
 
@@ -605,6 +627,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     s = ngx_stream_lua_create_fake_session(c);
     if (s == NULL) {
+        errmsg = "could not create fake session";
         goto failed;
     }
 
@@ -614,31 +637,17 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     clcf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
-#if defined(nginx_version) && nginx_version >= 1003014
-
-#   if nginx_version >= 1009000
-
+#if defined(nginx_version) && nginx_version >= 1009000
     ngx_set_connection_log(s->connection, clcf->error_log);
 
-#   else
-
-
-#   endif
-
 #else
-
-    c->log->file = clcf->error_log->file;
-
-    if (!(c->log->log_level & NGX_LOG_DEBUG_CONNECTION)) {
-        c->log->log_level = clcf->error_log->log_level;
-    }
-
 #endif
 
     dd("lmcf: %p", lmcf);
 
     ctx = ngx_stream_lua_create_ctx(s);
     if (ctx == NULL) {
+        errmsg = "could not create ctx";
         goto failed;
     }
 
@@ -649,6 +658,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
         pcln = ngx_pool_cleanup_add(r->pool, 0);
         if (pcln == NULL) {
+            errmsg = "could not add vm cleanup";
             goto failed;
         }
 
@@ -662,6 +672,7 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
     cln = ngx_stream_lua_cleanup_add(r, 0);
     if (cln == NULL) {
+        errmsg = "could not add request cleanup";
         goto failed;
     }
 
@@ -718,13 +729,25 @@ ngx_stream_lua_timer_handler(ngx_event_t *ev)
 
 failed:
 
-    if (tctx.co_ref && tctx.co) {
-        lua_pushlightuserdata(tctx.co, ngx_stream_lua_lightudata_mask(
-                              coroutines_key));
-        lua_rawget(tctx.co, LUA_REGISTRYINDEX);
-        luaL_unref(tctx.co, -1, tctx.co_ref);
-        lua_settop(tctx.co, 0);
+    /* co stack: func [args] */
+    lua_getinfo(tctx.co, ">Sf", &ar);
+
+    source = ar.source;
+
+    if (source == NULL) {
+        source = "(unknown)";
     }
+
+    ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
+                  "stream lua failed to run timer with function "
+                  "defined at %s:%d: %s",
+                  source, ar.linedefined, errmsg);
+
+    lua_pushlightuserdata(tctx.co, ngx_stream_lua_lightudata_mask(
+                          coroutines_key));
+    lua_rawget(tctx.co, LUA_REGISTRYINDEX);
+    luaL_unref(tctx.co, -1, tctx.co_ref);
+    lua_settop(tctx.co, 0);
 
     if (tctx.vm_state) {
         ngx_stream_lua_cleanup_vm(tctx.vm_state);

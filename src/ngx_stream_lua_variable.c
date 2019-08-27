@@ -19,242 +19,11 @@
 #include "ddebug.h"
 
 
-#include "ngx_stream_lua_variable.h"
 #include "ngx_stream_lua_util.h"
 
 
-static int ngx_stream_lua_var_get(lua_State *L);
-static int ngx_stream_lua_var_set(lua_State *L);
 
 
-void
-ngx_stream_lua_inject_variable_api(lua_State *L)
-{
-    /* {{{ register reference maps */
-    lua_newtable(L);    /* ngx.var */
-
-    lua_createtable(L, 0, 2 /* nrec */); /* metatable for .var */
-    lua_pushcfunction(L, ngx_stream_lua_var_get);
-    lua_setfield(L, -2, "__index");
-    lua_pushcfunction(L, ngx_stream_lua_var_set);
-    lua_setfield(L, -2, "__newindex");
-    lua_setmetatable(L, -2);
-
-    lua_setfield(L, -2, "var");
-}
-
-
-/**
- * Get nginx internal variables content
- *
- * @retval Always return a string or nil on Lua stack. Return nil when failed
- * to get content, and actual content string when found the specified variable.
- * @seealso ngx_stream_lua_var_set
- * */
-static int
-ngx_stream_lua_var_get(lua_State *L)
-{
-    ngx_stream_lua_request_t    *r;
-    u_char                      *p, *lowcase;
-    size_t                       len;
-    ngx_uint_t                   hash;
-    ngx_str_t                    name;
-
-    ngx_stream_variable_value_t         *vv;
-
-    r = ngx_stream_lua_get_req(L);
-    if (r == NULL) {
-        return luaL_error(L, "no request object found");
-    }
-
-    ngx_stream_lua_check_fake_request(L, r);
-
-
-    if (lua_type(L, -1) != LUA_TSTRING) {
-        return luaL_error(L, "bad variable name");
-    }
-
-    p = (u_char *) lua_tolstring(L, -1, &len);
-
-    lowcase = lua_newuserdata(L, len);
-
-    hash = ngx_hash_strlow(lowcase, p, len);
-
-    name.len = len;
-    name.data = lowcase;
-
-    vv = ngx_stream_get_variable(r->session, &name, hash);
-
-    if (vv == NULL || vv->not_found) {
-        lua_pushnil(L);
-        return 1;
-    }
-
-    lua_pushlstring(L, (const char *) vv->data, (size_t) vv->len);
-    return 1;
-}
-
-
-/**
- * Set nginx internal variable content
- *
- * @retval Always return a boolean on Lua stack. Return true when variable
- * content was modified successfully, false otherwise.
- * @seealso ngx_stream_lua_var_get
- * */
-static int
-ngx_stream_lua_var_set(lua_State *L)
-{
-    u_char                      *p, *lowcase, *val;
-    size_t                       len;
-    ngx_str_t                    name;
-    ngx_uint_t                   hash;
-    ngx_stream_lua_request_t    *r;
-    int                          value_type;
-    const char                  *msg;
-
-    ngx_stream_variable_t               *v;
-    ngx_stream_variable_value_t         *vv;
-    ngx_stream_core_main_conf_t         *cmcf;
-
-    r = ngx_stream_lua_get_req(L);
-    if (r == NULL) {
-        return luaL_error(L, "no request object found");
-    }
-
-    ngx_stream_lua_check_fake_request(L, r);
-
-    /* we skip the first argument that is the table */
-
-    /* we read the variable name */
-
-    if (lua_type(L, 2) != LUA_TSTRING) {
-        return luaL_error(L, "bad variable name");
-    }
-
-    p = (u_char *) lua_tolstring(L, 2, &len);
-
-    lowcase = lua_newuserdata(L, len + 1);
-
-    hash = ngx_hash_strlow(lowcase, p, len);
-    lowcase[len] = '\0';
-
-    name.len = len;
-    name.data = lowcase;
-
-    /* we read the variable new value */
-
-    value_type = lua_type(L, 3);
-    switch (value_type) {
-    case LUA_TNUMBER:
-    case LUA_TSTRING:
-        p = (u_char *) luaL_checklstring(L, 3, &len);
-
-        val = ngx_palloc(r->connection->pool, len);
-        if (val == NULL) {
-            return luaL_error(L, "memory allocation error");
-        }
-
-        ngx_memcpy(val, p, len);
-
-        break;
-
-    case LUA_TNIL:
-        /* undef the variable */
-
-        val = NULL;
-        len = 0;
-
-        break;
-
-    default:
-        msg = lua_pushfstring(L, "string, number, or nil expected, "
-                              "but got %s", lua_typename(L, value_type));
-        return luaL_argerror(L, 1, msg);
-    }
-
-    /* we fetch the variable itself */
-
-    cmcf = ngx_stream_lua_get_module_main_conf(r, ngx_stream_core_module);
-
-    v = ngx_hash_find(&cmcf->variables_hash, hash, name.data, name.len);
-
-    if (v) {
-        if (!(v->flags & NGX_STREAM_VAR_CHANGEABLE)) {
-            return luaL_error(L, "variable \"%s\" not changeable", lowcase);
-        }
-
-        if (v->set_handler) {
-
-            dd("set variables with set_handler");
-
-            vv = ngx_palloc(r->connection->pool,
-                            sizeof(ngx_stream_variable_value_t));
-            if (vv == NULL) {
-                return luaL_error(L, "no memory");
-            }
-
-            if (value_type == LUA_TNIL) {
-                vv->valid = 0;
-                vv->not_found = 1;
-                vv->no_cacheable = 0;
-                vv->data = NULL;
-                vv->len = 0;
-
-            } else {
-                vv->valid = 1;
-                vv->not_found = 0;
-                vv->no_cacheable = 0;
-
-                vv->data = val;
-                vv->len = len;
-            }
-
-            v->set_handler(r->session, vv, v->data);
-
-            return 0;
-        }
-
-        if (v->flags & NGX_STREAM_VAR_INDEXED) {
-            vv = &r->session->variables[v->index];
-
-            dd("set indexed variable");
-
-            if (value_type == LUA_TNIL) {
-                vv->valid = 0;
-                vv->not_found = 1;
-                vv->no_cacheable = 0;
-
-                vv->data = NULL;
-                vv->len = 0;
-
-            } else {
-                vv->valid = 1;
-                vv->not_found = 0;
-                vv->no_cacheable = 0;
-
-                vv->data = val;
-                vv->len = len;
-            }
-
-            return 0;
-        }
-
-        return luaL_error(L, "variable \"%s\" cannot be assigned a value",
-                          lowcase);
-    }
-
-    /* variable not found */
-
-    return luaL_error(L, "variable \"%s\" not found for writing; "
-                      "maybe it is a built-in variable that is not changeable "
-                      "or you forgot to use \"set $%s '';\" "
-                      "in the config file to define it first",
-                      lowcase, lowcase);
-}
-
-
-#ifndef NGX_LUA_NO_FFI_API
 int
 ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
     size_t name_len, u_char *lowcase_buf, int capture_id, u_char **value,
@@ -262,11 +31,6 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
 {
     ngx_uint_t                   hash;
     ngx_str_t                    name;
-#if (NGX_PCRE)
-    u_char                      *p;
-    ngx_uint_t                   n;
-    int                         *cap;
-#endif
 
     ngx_stream_variable_value_t         *vv;
 
@@ -280,36 +44,6 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
         return NGX_ERROR;
     }
 
-#if (NGX_PCRE)
-    if (name_data == 0) {
-        if (capture_id <= 0) {
-            return NGX_DECLINED;
-        }
-
-        /* it is a regex capturing variable */
-
-        n = (ngx_uint_t) capture_id * 2;
-
-        dd("n = %d, ncaptures = %d", (int) n, (int) r->ncaptures);
-
-        if (r->captures == NULL
-            || r->captures_data == NULL
-            || n >= r->ncaptures)
-        {
-            return NGX_DECLINED;
-        }
-
-        /* n >= 0 && n < r->ncaptures */
-
-        cap = r->captures;
-        p = r->captures_data;
-
-        *value = &p[cap[n]];
-        *value_len = (size_t) (cap[n + 1] - cap[n]);
-
-        return NGX_OK;
-    }
-#endif
 
     hash = ngx_hash_strlow(lowcase_buf, name_data, name_len);
 
@@ -415,12 +149,12 @@ ngx_stream_lua_ffi_var_set(ngx_stream_lua_request_t *r, u_char *name_data,
                 vv->len = value_len;
             }
 
-            v->set_handler(r, vv, v->data);
+            v->set_handler(r->session, vv, v->data);
             return NGX_OK;
         }
 
         if (v->flags & NGX_STREAM_VAR_INDEXED) {
-            vv = &r->variables[v->index];
+            vv = &r->session->variables[v->index];
 
             dd("set indexed variable");
 
@@ -475,7 +209,6 @@ nomem:
     *errlen = ngx_snprintf(errbuf, *errlen, "no memory") - errbuf;
     return NGX_ERROR;
 }
-#endif /* NGX_LUA_NO_FFI_API */
 
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
