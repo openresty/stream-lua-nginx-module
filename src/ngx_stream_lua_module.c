@@ -823,10 +823,10 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 static char *
 ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
-#if (NGX_STREAM_SSL)
     ngx_stream_lua_srv_conf_t       *prev = parent;
     ngx_stream_lua_srv_conf_t       *conf = child;
 
+#if (NGX_STREAM_SSL)
     ngx_stream_ssl_conf_t           *sscf;
 
     dd("merge srv conf");
