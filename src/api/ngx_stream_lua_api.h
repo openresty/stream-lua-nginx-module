@@ -21,6 +21,9 @@
 
 
 
+#include <ngx_stream.h>
+#include "../ngx_stream_lua_request.h"
+
 
 #include <lua.h>
 #include <stdint.h>
