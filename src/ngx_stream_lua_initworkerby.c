@@ -96,6 +96,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     conf_ctx = (ngx_stream_conf_ctx_t *)
                cycle->conf_ctx[ngx_stream_module.index];
+    stream_ctx.main_conf = conf_ctx->main_conf;
 
     top_clcf = conf_ctx->srv_conf[ngx_stream_core_module.ctx_index];
     top_llcf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
@@ -200,12 +201,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         return NGX_ERROR;
     }
 
-    stream_ctx.main_conf = ngx_pcalloc(conf.pool,
-                                       sizeof(void *) * ngx_stream_max_module);
-    if (stream_ctx.main_conf == NULL) {
-        return NGX_ERROR;
-    }
-
 #if defined(nginx_version) && nginx_version >= 1009011
     modules = cycle->modules;
 #else
@@ -218,21 +213,6 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         }
 
         module = modules[i]->ctx;
-
-        if (module->create_main_conf) {
-            cur = module->create_main_conf(&conf);
-            if (cur == NULL) {
-                return NGX_ERROR;
-            }
-
-            if (ngx_modules[i]->index == ngx_stream_lua_module.index) {
-                ngx_memcpy(cur,
-                           conf_ctx->main_conf[ngx_stream_lua_module.ctx_index],
-                           sizeof(ngx_stream_lua_main_conf_t));
-            }
-
-            stream_ctx.main_conf[modules[i]->ctx_index] = cur;
-        }
 
         if (module->create_srv_conf) {
             cur = module->create_srv_conf(&conf);
