@@ -1,3 +1,0 @@
-ngx_addon_name=ngx_stream_fake_merge_module
-STREAM_MODULES="$STREAM_MODULES $ngx_addon_name"
-NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_stream_fake_merge_module.c"

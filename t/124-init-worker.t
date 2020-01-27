@@ -699,21 +699,3 @@ This also affects merge_loc_conf
 ok
 --- no_error_log
 [error]
-
-
-
-=== TEST 20: ensure it does not mutate another module's main_conf (github issue #1553)
-https://github.com/openresty/lua-nginx-module/issues/1553
---- stream_config
-    init_worker_by_lua_block {
-        return
-    }
---- stream_server_config
-    content_by_lua_block {
-        ngx.say("fake_var = ", ngx.var.fake_var)
-    }
---- stream_response
-fake_var = 1
---- no_error_log
-[error]
-[alert]
