@@ -286,10 +286,13 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     /* {{{raw req socket object metatable */
     lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
                           raw_req_socket_metatable_key));
-    lua_createtable(L, 0 /* narr */, 8 /* nrec */);
+    lua_createtable(L, 0 /* narr */, 9 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_receive);
     lua_setfield(L, -2, "receive");
+
+    lua_pushcfunction(L, ngx_stream_lua_socket_tcp_receiveany);
+    lua_setfield(L, -2, "receiveany");
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_receiveuntil);
     lua_setfield(L, -2, "receiveuntil");
