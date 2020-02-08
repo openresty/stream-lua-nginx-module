@@ -16,6 +16,7 @@ ngx-build $force $version \
             --with-ld-opt="-L$PCRE_LIB -L$OPENSSL_LIB -Wl,-rpath,$PCRE_LIB:$LIBDRIZZLE_LIB:$OPENSSL_LIB" \
             --with-http_stub_status_module \
             --with-http_image_filter_module \
+            --with-http_ssl_module \
             --without-mail_pop3_module \
             --without-mail_imap_module \
             --without-mail_smtp_module \
