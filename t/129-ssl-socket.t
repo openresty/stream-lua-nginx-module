@@ -1228,7 +1228,7 @@ SSL reused session
 === TEST 16: explicit ssl protocol configuration
 --- stream_server_config
     resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_ssl_protocols TLSv1;
+    lua_ssl_protocols TLSv1.1;
 
     content_by_lua '
             local sock = ngx.socket.tcp()
@@ -1293,7 +1293,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "openresty.org"',
-qr/SSL: TLSv1, cipher: "ECDHE-RSA-AES(?:256|128)-SHA\b/,
+qr/SSL: TLSv1\.1, cipher: "ECDHE-RSA-AES(?:256|128)-SHA\b/,
 ]
 --- no_error_log
 SSL reused session
