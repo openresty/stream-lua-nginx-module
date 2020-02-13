@@ -169,7 +169,7 @@ close: 1 nil
 --- error_log eval
 [
 'lua ssl server name: "test.com"',
-qr/elapsed in ssl cert by lua: 0.(?:09|1[01])\d+,/,
+qr/elapsed in ssl cert by lua: 0.(?:09|1\d)\d+,/,
 ]
 
 --- no_error_log
