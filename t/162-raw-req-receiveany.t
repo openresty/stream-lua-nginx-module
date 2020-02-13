@@ -1,11 +1,10 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use Test::Nginx::Socket "no_plan";
 use Test::Nginx::Socket::Lua::Stream;
 
-#repeat_each(2);
+repeat_each(2);
 
-#plan tests => repeat_each() * 49;
+plan tests => repeat_each() * 20;
 
 our $HtmlDir = html_dir;
 
@@ -17,7 +16,7 @@ log_level 'debug';
 
 no_long_string();
 #no_diff();
-no_shuffle();
+#no_shuffle();
 run_tests();
 
 __DATA__
@@ -116,3 +115,77 @@ receiveany error:
 --- error_log
 read timed out
 client timeout
+
+
+
+=== TEST 3: receiveany with limited, max <= 0
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if sock == nil then
+            ngx.log(ngx.ERR, 'raw req socket error: ', err)
+            return
+        end
+        sock:settimeouts(500, 500, 500)
+
+        local function receiveany_log_err(...)
+            local ok, err = pcall(sock.receiveany, sock, ...)
+            if not ok then
+                ngx.log(ngx.ERR, 'failed receiveany ', err)
+            end
+        end
+
+
+        receiveany_log_err(0)
+        receiveany_log_err(-1)
+        receiveany_log_err(100, 200)
+        receiveany_log_err()
+        receiveany_log_err(nil)
+    }
+--- error_log
+bad argument #2 to '?' (bad max argument)
+bad argument #2 to '?' (bad max argument)
+expecting 2 arguments (including the object), but got 3
+expecting 2 arguments (including the object), but got 1
+bad argument #2 to '?' (bad max argument)
+
+
+
+=== TEST 4: receiveany send data after read side timeout
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if sock == nil then
+            ngx.log(ngx.ERR, 'failed to get raw req socket', err)
+            return
+        end
+        sock:settimeouts(500, 500, 500)
+
+        local data, err, bytes = nil, nil
+        while true do
+            data, err = sock:receiveany(1024)
+            if err then
+                if err ~= 'closed' then
+                    ngx.log(ngx.ERR, 'receiveany unexpected err: ', err)
+                    break
+                end
+
+                data = "send data after read side closed"
+                bytes, err = sock:send(data)
+                if not bytes then
+                    ngx.log(ngx.ERR, 'failed to send after error ',err)
+                end
+
+                break
+            end
+            ngx.say(data)
+        end
+
+        sock:send("send data after read side ")
+        sock:send(err)
+    }
+--- stream_response chomp
+send data after read side timeout
+--- error_log
+receiveany unexpected err: timeout
+
