@@ -13,7 +13,7 @@ our $HtmlDir = html_dir;
 no_long_string();
 #no_diff();
 #log_level 'warn';
-#no_shuffle();
+no_shuffle();
 
 run_tests();
 
