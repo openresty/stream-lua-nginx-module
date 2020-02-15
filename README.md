@@ -175,7 +175,7 @@ purpose instead.
 
 **Note:** the lingering close directive that used to exist in older version of
 `stream_lua_nginx_module` has been removed and can now be simulated with the
-newly added [reqsock:shutdown](#reqsockshutdown) API if necessary.
+newly added [tcpsock:shutdown](#tcpsockshutdown) API if necessary.
 
 [Back to TOC](#table-of-contents)
 
@@ -341,16 +341,16 @@ reqsock:receiveany
 
 **context:** *content_by_lua&#42;, ngx.timer.&#42;, ssl_certificate_by_lua&#42;*
 
-This method's detail is same to [tcpsock:receiveany](https://github.com/openresty/lua-nginx-module#tcpsockreceiveany)
+This method is similar to [tcpsock:receiveany](https://github.com/openresty/lua-nginx-module#tcpsockreceiveany) method
 
 This method was introduced into `stream-lua-nginx-module` since `v0.0.8`.
 
 [Back to TOC](#directives)
 
-reqsock:shutdown
+tcpsock:shutdown
 ----------------
 
-**syntax:** *ok, err = reqsock:shutdown("send")*
+**syntax:** *ok, err = tcpsock:shutdown("send")*
 
 **context:** *content_by_lua&#42;*
 
