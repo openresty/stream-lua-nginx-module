@@ -1265,11 +1265,21 @@ ngx_stream_lua_socket_udp_read_handler(ngx_stream_lua_request_t *r,
     ngx_connection_t            *c;
 
     ngx_stream_lua_loc_conf_t           *llcf;
+    ngx_stream_lua_socket_udp_upstream_t *u_r;
 
     c = u->udp_connection.connection;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua udp socket read handler");
+
+    u_r = r->downstream;
+    if (u_r != NULL && u_r != u || u_r->request != NULL && u_r->request != r) {
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua udp socket read event handler: bad request crossed requests");
+        ngx_stream_lua_socket_udp_handle_error(r, u,
+                                              NGX_STREAM_LUA_SOCKET_FT_ERROR);
+        return;
+    }
 
     if (c->read->timedout) {
         c->read->timedout = 0;
@@ -1690,6 +1700,10 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
     ngx_stream_lua_socket_udp_upstream_t           *u;
 
     r = ngx_stream_lua_get_req(L);
+    u = r->downstream;
+    if (u != NULL && u->request != NULL && u->request != r) {
+        return luaL_error(L, "bad request");
+    }
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -1771,6 +1785,7 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
 
     coctx->data = u;
     ctx->downstream = u;
+    r->downstream = u;
 
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
