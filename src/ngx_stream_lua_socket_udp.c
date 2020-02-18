@@ -1273,7 +1273,7 @@ ngx_stream_lua_socket_udp_read_handler(ngx_stream_lua_request_t *r,
                    "lua udp socket read handler");
 
     u_r = r->downstream;
-    if (u_r != NULL && u_r != u || u_r->request != NULL && u_r->request != r) {
+    if ((u_r != NULL && u_r != u) || (u_r->request != NULL && u_r->request != r)) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "lua udp socket read event handler: bad request crossed requests");
         ngx_stream_lua_socket_udp_handle_error(r, u,
