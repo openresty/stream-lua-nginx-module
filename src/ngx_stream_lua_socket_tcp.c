@@ -5067,7 +5067,10 @@ ngx_stream_lua_req_socket_tcp(lua_State *L)
     raw = 1;
 
     r = ngx_stream_lua_get_req(L);
-
+    u = r->downstream;
+    if (u != NULL && u->request != NULL && u->request != r) {
+        return luaL_error(L, "bad request");
+    }
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
@@ -5171,6 +5174,7 @@ ngx_stream_lua_req_socket_tcp(lua_State *L)
 
     coctx->data = u;
     ctx->downstream = u;
+    r->downstream = u;
 
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
@@ -5192,6 +5196,7 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
 {
     ngx_stream_lua_ctx_t                        *ctx;
     ngx_stream_lua_socket_tcp_upstream_t        *u;
+    ngx_stream_lua_socket_tcp_upstream_t        *u_r;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua request socket read event handler");
@@ -5204,6 +5209,13 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
 
     u = ctx->downstream;
     if (u == NULL || u->peer.connection == NULL) {
+        r->read_event_handler = ngx_stream_lua_block_reading;
+        return;
+    }
+    u_r = r->downstream;
+    if (u_r != NULL && u_r != u || u_r->request != NULL && u_r->request != r) {
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua request socket read event handler: bad request crossed requests");
         r->read_event_handler = ngx_stream_lua_block_reading;
         return;
     }
