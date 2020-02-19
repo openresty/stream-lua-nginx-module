@@ -5211,7 +5211,7 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
     }
     u_r = r->downstream;
     if ((u_r != NULL && u_r != u) || (u_r->request != NULL && u_r->request != r)) {
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                        "lua request socket read event handler: bad request crossed requests");
         r->read_event_handler = ngx_stream_lua_block_reading;
         return;
