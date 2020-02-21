@@ -10,6 +10,11 @@ our $HtmlDir = html_dir;
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
+$ENV{TEST_NGINX_SERVER_PORT} ||= 1984;
+our $port = int($ENV{TEST_NGINX_SERVER_PORT});
+$port += 1;
+$ENV{TEST_NGINX_STREAM_PORT} = $ENV{TEST_NGINX_STREAM_PORT} || "$port";
+
 
 #log_level 'warn';
 log_level 'debug';
@@ -3526,3 +3531,79 @@ orld
 [error]
 --- error_log
 lua tcp socket calling receiveany() method to read at most 7 bytes
+
+
+
+=== TEST 67: bad request tries to send
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    content_by_lua_block {
+        local socket = ngx.req.socket(true)
+        socket:settimeout(9999*1000)
+        local readdata = function()
+            local data, err, partial = socket:receive(10000)
+            if err then
+                ngx.log(ngx.ERR, "receive error ", err, ' partial ', partial)
+                ngx.exit(0)
+            end
+            ngx.log(ngx.INFO, "received ", #data)
+
+            return data
+        end
+
+        local th = ngx.thread.spawn(readdata)
+        ngx.sleep(0.05)
+
+        ngx.log(ngx.INFO, "socket set to nil")
+        socket = nil
+
+        ngx.sleep(0.1)
+
+        ngx.log(ngx.INFO, "start gc collect")
+        collectgarbage("collect")
+        ngx.log(ngx.INFO, "  end gc collect")
+    }
+--- config
+server_tokens off;
+location = /t2 {
+    content_by_lua_block {
+        local port = $TEST_NGINX_STREAM_PORT
+        local sock1 = ngx.socket.tcp()
+        sock1:settimeouts(10, 6000, 6000)
+        local ok, err = sock1:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("sock1 failed: ", err)
+            ngx.log(ngx.ERR, "sock1 failed: ", err)
+            ngx.exit(501)
+            return
+        end
+        ngx.say("sock1 connected")
+        ngx.log(ngx.INFO, 'sock1 connected')
+
+        for i = 1, 3 do
+            sock1:send("hello")
+            ngx.sleep(0.5)
+        end
+        ngx.log(ngx.INFO, 'sock 1 sent')
+        ngx.sleep(0.05)
+
+        ok, err = sock1:receiveany(20)
+        if not ok then
+            ngx.log(ngx.ERR, "sock1 receive error: ", err)
+        else
+            ngx.say("sock1 recv: ", ok)
+        end
+    }
+}
+--- timeout: 8
+--- request
+GET /t2
+--- error_log
+is NULL
+to NULL
+start gc collect
+end gc collect
+--- no_error_log
+[alert]
+

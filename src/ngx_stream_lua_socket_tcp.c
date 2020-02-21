@@ -2183,6 +2183,11 @@ ngx_stream_lua_socket_tcp_peek_resume(ngx_stream_lua_request_t *r)
     dd("coctx: %p", coctx);
 
     u = ctx->downstream;
+    if (u == NULL) {
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "stream lua tcp socket resuming peek downstream cleanup");
+        return NGX_ERROR;
+    }
     c = r->connection;
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
     nreqs = c->requests;
@@ -4308,6 +4313,7 @@ static void
 ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u)
 {
+    ngx_stream_lua_ctx_t           *ctx;
     ngx_connection_t               *c;
 
     ngx_stream_lua_socket_pool_t           *spool;
@@ -4327,6 +4333,12 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
 
     ngx_stream_lua_socket_tcp_finalize_write_part(r, u, 0);
 
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+    if (ctx != NULL) {
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "stream lua finalize socket ctx downstream to NULL");
+        ctx->downstream = NULL;
+    }
     if (u->raw_downstream || u->body_downstream) {
         u->peer.connection = NULL;
         return;
@@ -5206,13 +5218,15 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
 
     u = ctx->downstream;
     if (u == NULL || u->peer.connection == NULL) {
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "lua request socket read event handler ctx downstream is NULL");
         r->read_event_handler = ngx_stream_lua_block_reading;
         return;
     }
     u_r = r->downstream;
     if ((u_r != NULL && u_r != u) || (u_r->request != NULL && u_r->request != r)) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                       "lua request socket read event handler: bad request crossed requests");
+                      "lua request socket read event handler: bad request crossed requests");
         r->read_event_handler = ngx_stream_lua_block_reading;
         return;
     }
