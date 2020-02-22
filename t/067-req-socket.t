@@ -819,7 +819,9 @@ got the request socket
 done
 --- no_error_log
 [error]
---- grep_error_log eval: qr/stream lua finalize socket|GC cycle done/
+--- grep_error_log eval: qr/stream lua finalize socket(?: ctx)?|GC cycle done/
 --- grep_error_log_out
 stream lua finalize socket
+stream lua finalize socket ctx
 GC cycle done
+--- ONLY
