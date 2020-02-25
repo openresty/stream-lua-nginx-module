@@ -227,10 +227,10 @@ killed
 --- no_error_log
 [error]
 lua tcp socket abort resolver
---- grep_error_log: stream lua finalize socket
+--- grep_error_log: stream lua finalize socket ctx downstream to NULL
 --- grep_error_log_out
-stream lua finalize socket
-stream lua finalize socket
+stream lua finalize socket ctx downstream to NULL
+stream lua finalize socket ctx downstream to NULL
 
 --- error_log
 

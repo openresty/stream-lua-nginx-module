@@ -26,7 +26,6 @@ typedef void (*ngx_stream_lua_event_handler_pt)(ngx_stream_lua_request_t *r);
 
 struct ngx_stream_lua_request_s {
     ngx_connection_t                     *connection;
-    void                                 *downstream;
     ngx_stream_session_t                 *session;
     ngx_pool_t                           *pool;
     ngx_stream_lua_cleanup_t             *cleanup;
