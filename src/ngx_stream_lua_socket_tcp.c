@@ -5200,7 +5200,6 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
 {
     ngx_stream_lua_ctx_t                        *ctx;
     ngx_stream_lua_socket_tcp_upstream_t        *u;
-    ngx_stream_lua_socket_tcp_upstream_t        *u_r;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua request socket read event handler");
