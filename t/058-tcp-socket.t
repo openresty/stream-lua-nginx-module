@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => ((repeat_each() * 259) - 2);
+plan tests => repeat_each() * 258;
 
 our $HtmlDir = html_dir;
 
@@ -3599,7 +3599,6 @@ location = /t2 {
         end
     }
 }
---- timeout: 1000ms
 --- request
 GET /t2
 --- error_log
@@ -3675,7 +3674,7 @@ sock1 receive error: timeout
             ngx.log(ngx.INFO, "thread end")
         end
     }
---- timeout: 600ms
+--- timeout: 2000ms
 --- error_log
 connected
 send ok
@@ -3802,7 +3801,6 @@ thread end ok
             ngx.log(ngx.INFO, "thread end")
         end
     }
---- timeout: 600ms
 --- error_log
 connected
 send ok

@@ -2185,7 +2185,7 @@ ngx_stream_lua_socket_tcp_peek_resume(ngx_stream_lua_request_t *r)
     u = ctx->downstream;
     if (u == NULL) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                       "stream lua tcp socket resuming peek downstream cleanup");
+                       "ctx.downstream is NULL in stream lua socket tcp peek resume handler");
         return NGX_ERROR;
     }
     c = r->connection;
@@ -4336,9 +4336,10 @@ ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx != NULL) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                       "stream lua finalize socket ctx downstream to NULL");
+                       "stream lua setting ctx.downstream to NULL");
         ctx->downstream = NULL;
     }
+
     if (u->raw_downstream || u->body_downstream) {
         u->peer.connection = NULL;
         return;
@@ -5213,7 +5214,7 @@ ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r)
     u = ctx->downstream;
     if (u == NULL || u->peer.connection == NULL) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                       "lua request socket read event handler ctx downstream is NULL");
+                       "ctx.downstream is NULL in stream lua request socket read event handler");
         r->read_event_handler = ngx_stream_lua_block_reading;
         return;
     }
