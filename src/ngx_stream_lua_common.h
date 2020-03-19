@@ -17,6 +17,8 @@
 #define _NGX_STREAM_LUA_COMMON_H_INCLUDED_
 
 
+#include "ngx_stream_lua_autoconf.h"
+
 #include <nginx.h>
 #include <ngx_core.h>
 #include <ngx_stream.h>

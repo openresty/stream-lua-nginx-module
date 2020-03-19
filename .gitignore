@@ -56,3 +56,4 @@ html_out/
 ebooks.sh
 *.pdf
 *.patch
+src/ngx_stream_lua_autoconf.h
