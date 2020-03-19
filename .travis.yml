@@ -38,7 +38,7 @@ env:
   matrix:
     - NGINX_VERSION=1.17.8 OPENSSL_VER=1.0.2t
     - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.0l
-    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.1d
+    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.1f
 
 services:
  - memcache
