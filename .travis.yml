@@ -36,9 +36,9 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.0.2t
+    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.0.2u
     - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.0l
-    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.1d
+    - NGINX_VERSION=1.17.8 OPENSSL_VER=1.1.1f
 
 services:
  - memcache
@@ -46,7 +46,7 @@ services:
 
 install:
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
-  - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -P download-cache https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz; fi
+  - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -P download-cache https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz || wget -P download-cache https://www.openssl.org/source/old/${OPENSSL_VER//[a-z]/}/openssl-$OPENSSL_VER.tar.gz; fi
   - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
   - git clone https://github.com/openresty/openresty.git ../openresty
