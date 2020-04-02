@@ -25,7 +25,7 @@ env:
     - LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
     - LUAJIT_INC=$LUAJIT_PREFIX/include/luajit-2.1
     - LUA_INCLUDE_DIR=$LUAJIT_INC
-    - PCRE_VER=8.40
+    - PCRE_VER=8.44
     - PCRE_PREFIX=/opt/pcre
     - PCRE_LIB=$PCRE_PREFIX/lib
     - PCRE_INC=$PCRE_PREFIX/include
@@ -45,7 +45,7 @@ services:
  - redis-server
 
 install:
-  - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-$PCRE_VER.tar.gz; fi
+  - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VER.tar.gz; fi
   - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -P download-cache https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz || wget -P download-cache https://www.openssl.org/source/old/${OPENSSL_VER//[a-z]/}/openssl-$OPENSSL_VER.tar.gz; fi
   - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
