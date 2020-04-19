@@ -1369,6 +1369,9 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
             ngx_stream_ssl_module);
         if (sscf != NULL) {
             depth = sscf->verify_depth;
+        } else {
+            /* same as the default value of ssl_verify_depth */
+            depth = 1;
         }
     }
     SSL_set_verify_depth(ssl_conn, depth);
