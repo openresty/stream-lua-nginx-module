@@ -1334,6 +1334,7 @@ int
 ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
     void *cdata, int depth, char **err)
 {
+    ngx_stream_lua_ctx_t        *ctx;
     ngx_ssl_conn_t              *ssl_conn;
     ngx_stream_ssl_conf_t       *sscf;
     STACK_OF(X509)              *chain = cdata;
@@ -1346,6 +1347,17 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
 #else
     int                         i;
 #endif
+
+    ctx = ngx_stream_get_module_ctx(r->session, ngx_stream_lua_module);
+    if (ctx == NULL) {
+        *err = "no request ctx found";
+        return NGX_ERROR;
+    }
+
+    if (!(ctx->context & NGX_STREAM_LUA_CONTEXT_SSL_CERT)) {
+        *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
 
     if (r->connection == NULL || r->connection->ssl == NULL) {
         *err = "bad request";
