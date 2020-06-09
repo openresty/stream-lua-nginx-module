@@ -1332,12 +1332,12 @@ ngx_ssl_verify_callback(int ok, X509_STORE_CTX *x509_store)
 
 int
 ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
-    void *cdata, int depth, char **err)
+    void *ca_certs, int depth, char **err)
 {
     ngx_stream_lua_ctx_t        *ctx;
     ngx_ssl_conn_t              *ssl_conn;
     ngx_stream_ssl_conf_t       *sscf;
-    STACK_OF(X509)              *chain = cdata;
+    STACK_OF(X509)              *chain = ca_certs;
     STACK_OF(X509_NAME)         *name_chain = NULL;
     X509                        *x509 = NULL;
     X509_NAME                   *subject = NULL;
@@ -1391,9 +1391,9 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
     /* set CA chain */
 
     if (chain != NULL) {
-        ca_store = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(ssl_conn));
+        ca_store = X509_STORE_new();
         if (ca_store == NULL) {
-            *err = "SSL_CTX_get_cert_store() failed";
+            *err = "X509_STORE_new() failed";
             return NGX_ERROR;
         }
 
@@ -1402,7 +1402,7 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
         name_chain = sk_X509_NAME_new_null();
         if (name_chain == NULL) {
             *err = "sk_X509_NAME_new_null() failed";
-            return NGX_ERROR;
+            goto failed;
         }
 
         for (i = 0; i < sk_X509_num(chain); i++) {
@@ -1432,12 +1432,19 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
             }
         }
 
+        if (SSL_set0_verify_cert_store(ssl_conn, ca_store) == 0) {
+            *err = "SSL_set0_verify_cert_store() failed";
+            goto failed;
+        }
+
         SSL_set_client_CA_list(ssl_conn, name_chain);
     }
 
     return NGX_OK;
 
 failed:
+
+    X509_STORE_free(ca_store);
 
     sk_X509_NAME_free(name_chain);
 
