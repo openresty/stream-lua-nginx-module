@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 3);
+plan tests => repeat_each() * (blocks() * 3 + 3);
 
 no_long_string();
 
@@ -108,3 +108,64 @@ abc
 32
 --- no_error_log
 [error]
+
+
+
+=== TEST 11: escape type
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 0))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 1))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 2))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 3))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 4))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 5))
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 6))
+    }
+--- stream_response
+https://www.google.com/%3Ft=abc@%20:
+https://www.google.com/%3Ft=abc@%20:
+https%3A%2F%2Fwww.google.com%2F%3Ft%3Dabc%40%20%3A
+https://www.google.com/?t=abc@%20:
+https://www.google.com/?t=abc@%20:
+https://www.google.com/?t=abc@%20:
+https://www.google.com/?t=abc@%20:
+--- no_error_log
+[error]
+
+
+
+=== TEST 12: escape type error
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", true))
+    }
+--- stream_response
+--- error_log eval
+qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" is not a number/
+--- no_error_log
+[alert]
+
+
+=== TEST 13: escape type out of range
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", -1))
+    }
+--- stream_response
+--- error_log eval
+qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" -1 out of range/
+--- no_error_log
+[alert]
+
+
+=== TEST 14: escape type error
+--- stream_server_config
+    content_by_lua_block {
+        ngx.say(ngx.escape_uri("https://www.google.com/?t=abc@ :", 100))
+    }
+--- stream_response
+--- error_log eval
+qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" 100 out of range/
+--- no_error_log
+[alert]
