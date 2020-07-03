@@ -41,8 +41,8 @@ Version
 =======
 
 This document describes ngx_stream_lua
-[v0.0.8](https://github.com/openresty/stream-lua-nginx-module/tags), which is not
-released yet.
+[v0.0.8](https://github.com/openresty/stream-lua-nginx-module/tags), which was released
+on 2 July, 2020.
 
 Synopsis
 ========
