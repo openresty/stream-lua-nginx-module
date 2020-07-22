@@ -720,6 +720,8 @@ lua ssl server name: "test.com"
                         ffi.string(errmsg[0]))
                 return
             end
+
+            ffi.C.ngx_stream_lua_ffi_free_cert(cert)
         }
 
         content_by_lua_block {
@@ -732,6 +734,7 @@ lua ssl server name: "test.com"
     proxy_ssl                   on;
     proxy_ssl_certificate       ../../cert/test.crt;
     proxy_ssl_certificate_key   ../../cert/test.key;
+    proxy_ssl_session_reuse     off;
 
 --- stream_response
 SUCCESS
@@ -785,6 +788,7 @@ client certificate subject: emailAddress=agentzh@gmail.com,CN=test.com
     proxy_ssl                   on;
     proxy_ssl_certificate       ../../cert/test.crt;
     proxy_ssl_certificate_key   ../../cert/test.key;
+    proxy_ssl_session_reuse     off;
 
 --- stream_response
 FAILED:self signed certificate
@@ -837,6 +841,8 @@ client certificate subject: emailAddress=agentzh@gmail.com,CN=test.com
                         ffi.string(errmsg[0]))
                 return
             end
+
+            ffi.C.ngx_stream_lua_ffi_free_cert(cert)
         }
 
         content_by_lua_block {
@@ -847,6 +853,7 @@ client certificate subject: emailAddress=agentzh@gmail.com,CN=test.com
 --- stream_server_config
     proxy_pass                  unix:$TEST_NGINX_HTML_DIR/nginx.sock;
     proxy_ssl                   on;
+    proxy_ssl_session_reuse     off;
 
 --- stream_response
 NONE
