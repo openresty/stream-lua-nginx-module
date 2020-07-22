@@ -1318,7 +1318,7 @@ failed:
 
 
 static int
-ngx_ssl_verify_callback(int ok, X509_STORE_CTX *x509_store)
+ngx_stream_lua_ssl_verify_callback(int ok, X509_STORE_CTX *x509_store)
 {
     /*
      * we never terminate handshake here and user can later use
@@ -1372,7 +1372,8 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
 
     /* enable verify */
 
-    SSL_set_verify(ssl_conn, SSL_VERIFY_PEER, ngx_ssl_verify_callback);
+    SSL_set_verify(ssl_conn, SSL_VERIFY_PEER,
+                   ngx_stream_lua_ssl_verify_callback);
 
     /* set depth */
 
@@ -1381,11 +1382,13 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
             ngx_stream_ssl_module);
         if (sscf != NULL) {
             depth = sscf->verify_depth;
+
         } else {
             /* same as the default value of ssl_verify_depth */
             depth = 1;
         }
     }
+
     SSL_set_verify_depth(ssl_conn, depth);
 
     /* set CA chain */
@@ -1444,9 +1447,9 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
 
 failed:
 
-    X509_STORE_free(ca_store);
-
     sk_X509_NAME_free(name_chain);
+
+    X509_STORE_free(ca_store);
 
     return NGX_ERROR;
 }
