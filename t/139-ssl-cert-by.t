@@ -10,7 +10,7 @@ my $openssl_version = eval { `$NginxBinary -V 2>&1` };
 if ($openssl_version =~ m/built with OpenSSL (0|1\.0\.(?:0|1[^\d]|2[a-d]).*)/) {
     plan(skip_all => "too old OpenSSL, need 1.0.2e, was $1");
 } else {
-    plan tests => repeat_each() * (blocks() * 6 + 8);
+    plan tests => repeat_each() * (blocks() * 6 + 7);
 }
 
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
@@ -1421,6 +1421,80 @@ close: 1 nil
 
 --- error_log
 client socket file: 
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 21: get server_port - IPv4
+--- stream_config
+    lua_package_path "../lua-resty-core/lib/?.lua;;";
+
+    server {
+        listen 127.0.0.1:12346 ssl;
+
+        ssl_certificate_by_lua_block {
+            local ssl = require "ngx.ssl"
+            local byte = string.byte
+            local port, err = ssl.server_port()
+            print("server listen on port: ", port)
+        }
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("127.0.0.1", 12346)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+server listen on port: 12346
 
 --- no_error_log
 [error]
