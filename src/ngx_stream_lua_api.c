@@ -35,11 +35,6 @@ ngx_stream_lua_get_global_state(ngx_conf_t *cf)
 }
 
 
-ngx_stream_lua_request_t *
-ngx_stream_lua_get_request(lua_State *L)
-{
-    return ngx_stream_lua_get_req(L);
-}
 
 
 static ngx_int_t ngx_stream_lua_shared_memory_init(ngx_shm_zone_t *shm_zone,
