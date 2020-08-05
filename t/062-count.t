@@ -43,10 +43,12 @@ ngx: 53
         for k, v in pairs(ngx.req) do
             n = n + 1
         end
+        -- ngx.req.socket
+        -- ngx.req.start_time
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 1
+n = 2
 --- no_error_log
 [error]
 
