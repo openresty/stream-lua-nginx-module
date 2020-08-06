@@ -2180,8 +2180,6 @@ ngx_stream_lua_socket_tcp_peek_resume(ngx_stream_lua_request_t *r)
         return NGX_ERROR;
     }
 
-    dd("coctx: %p", coctx);
-
     u = ctx->downstream;
     c = r->connection;
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
