@@ -279,6 +279,8 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
         if (cctx == NULL) {
             goto failed;  /* error */
         }
+
+        cctx->ctx_ref = LUA_NOREF;
     }
 
     cctx->exit_code = 1;  /* successful by default */

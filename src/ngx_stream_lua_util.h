@@ -23,6 +23,7 @@
 
 
 #include "ngx_stream_lua_common.h"
+#include "ngx_stream_lua_ssl.h"
 #include "ngx_stream_lua_api.h"
 
 
