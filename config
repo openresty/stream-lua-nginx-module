@@ -212,7 +212,6 @@ fi
 # ----------------------------------------
 
 ngx_feature="LuaJIT has FFI"
-CC_TEST_FLAGS="$ngx_lua_opt_I $CFLAGS"
 ngx_feature_libs="$ngx_module_libs"
 ngx_feature_run=no
 ngx_feature_incs="#include <lualib.h>
