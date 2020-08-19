@@ -1678,6 +1678,7 @@ ngx_stream_lua_udp_socket_cleanup(void *data)
 int
 ngx_stream_lua_req_socket_udp(lua_State *L)
 {
+    int                                             n;
     ngx_stream_lua_udp_connection_t                *pc;
     ngx_stream_lua_srv_conf_t                      *lscf;
     ngx_connection_t                               *c;
@@ -1688,6 +1689,17 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
     ngx_stream_lua_co_ctx_t                        *coctx;
 
     ngx_stream_lua_socket_udp_upstream_t           *u;
+
+    n = lua_gettop(L);
+
+    if (n != 0 && n != 1) {
+        return luaL_error(L, "expecting zero arguments, but got %d",
+                          lua_gettop(L));
+    }
+
+    if (n == 1) {
+        lua_pop(L, 1);
+    }
 
     r = ngx_stream_lua_get_req(L);
 

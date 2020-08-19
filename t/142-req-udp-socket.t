@@ -211,3 +211,35 @@ got the request socket
 --- grep_error_log_out
 stream lua finalize socket
 GC cycle done
+
+
+
+=== TEST 6: ngx.req.socket with raw argument, argument is ignored
+--- dgram_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if not sock then
+            ngx.log(ngx.ERR, "failed to get the request socket: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        local data, err = sock:receive()
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        -- print("data: ", data)
+
+        local ok, err = sock:send("received: " .. data)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+    }
+--- dgram_request chomp
+hello world! my
+--- dgram_response chomp
+received: hello world! my
+--- no_error_log
+[error]
