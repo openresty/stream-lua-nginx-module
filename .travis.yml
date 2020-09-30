@@ -36,9 +36,9 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.19.2 OPENSSL_VER=1.0.2u
-    - NGINX_VERSION=1.19.2 OPENSSL_VER=1.1.0l
-    - NGINX_VERSION=1.19.2 OPENSSL_VER=1.1.1f
+    - NGINX_VERSION=1.19.3 OPENSSL_VER=1.0.2u
+    - NGINX_VERSION=1.19.3 OPENSSL_VER=1.1.0l
+    - NGINX_VERSION=1.19.3 OPENSSL_VER=1.1.1f
 
 services:
  - memcache
@@ -50,7 +50,7 @@ install:
   - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/lua-cjson.git
   - git clone https://github.com/openresty/openresty.git ../openresty
-  - git clone -b 1.19.2.x https://github.com/xiaocang/no-pool-nginx.git ../no-pool-nginx
+  - git clone -b 1.19.3.x https://github.com/xiaocang/no-pool-nginx.git ../no-pool-nginx
   - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
   - git clone https://github.com/openresty/mockeagain.git
   - git clone https://github.com/openresty/test-nginx.git
