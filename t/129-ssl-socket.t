@@ -1928,10 +1928,18 @@ SSL reused session
         collectgarbage()
     }
 
---- stream_response
-connected: 1
+--- stream_response eval
+# Since nginx version 1.19.1, invalidity date is considerd a non-critical CRL
+# entry extension, in other words, revoke still works even if CRL has expired.
+$Test::Nginx::Util::NginxVersion > 1.019001 ?
+
+"connected: 1
+failed to do SSL handshake: 23: certificate revoked
+failed to send stream request: closed\n" :
+
+"connected: 1
 failed to do SSL handshake: 12: CRL has expired
-failed to send stream request: closed
+failed to send stream request: closed\n";
 
 --- user_files eval
 ">>> test.key
