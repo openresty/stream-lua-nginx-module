@@ -592,6 +592,13 @@ ngx_stream_lua_ffi_max_regex_cache_size(void)
 }
 
 
+const char *
+ngx_stream_lua_ffi_pcre_version(void)
+{
+    return pcre_version();
+}
+
+
 #endif /* NGX_PCRE */
 
 
