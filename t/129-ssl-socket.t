@@ -732,7 +732,7 @@ $::DSTRootCertificate"
 
 --- stream_response eval
 qr{connected: 1
-failed to do SSL handshake: (22: certificate chain too long|20: unable to get local issuer certificate)
+failed to do SSL handshake: (22: certificate chain too long|20: unable to get local issuer certificate|21: unable to verify the first certificate)
 failed to send stream request: closed
 }
 
@@ -741,7 +741,7 @@ failed to send stream request: closed
 --- grep_error_log_out
 --- error_log eval
 ['lua ssl server name: "openresty.org"',
-qr/lua ssl certificate verify error: \((22: certificate chain too long|20: unable to get local issuer certificate)\)/]
+qr/lua ssl certificate verify error: \((22: certificate chain too long|20: unable to get local issuer certificate|21: unable to verify the first certificate)\)/]
 --- no_error_log
 SSL reused session
 [alert]
@@ -808,7 +808,7 @@ $::DSTRootCertificate"
 
 --- stream_response eval
 qr/connected: 1
-failed to do SSL handshake: (22: certificate chain too long|20: unable to get local issuer certificate)
+failed to do SSL handshake: (22: certificate chain too long|20: unable to get local issuer certificate|21: unable to verify the first certificate)
 failed to send stream request: closed
 /
 
