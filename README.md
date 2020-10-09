@@ -334,6 +334,19 @@ The raw TCP sockets returned by this module will contain the following extra met
 
 [Back to TOC](#directives)
 
+reqsock:receiveany
+------------------
+
+**syntax:** *data, err = reqsock:receiveany(max)*
+
+**context:** *content_by_lua&#42;, ngx.timer.&#42;, ssl_certificate_by_lua&#42;*
+
+This method is similar to [tcpsock:receiveany](https://github.com/openresty/lua-nginx-module#tcpsockreceiveany) method
+
+This method was introduced into `stream-lua-nginx-module` since `v0.0.8`.
+
+[Back to TOC](#directives)
+
 tcpsock:shutdown
 ----------------
 
