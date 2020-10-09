@@ -966,7 +966,7 @@ bad argument #2 to '?' (bad max argument)
         end
         sock:settimeouts(500, 500, 500)
 
-        local data, err, bytes = nil, nil
+        local data, err, bytes
         while true do
             data, err = sock:receiveany(1024)
             if err then
@@ -986,11 +986,17 @@ bad argument #2 to '?' (bad max argument)
             ngx.say(data)
         end
 
-        sock:send("send data after read side ")
-        sock:send(err)
+        local bytes, err2 = sock:send("send data after read side ")
+        if not bytes then
+            ngx.log(ngx.ERR, "failed to send: ", err2)
+        end
+
+        local bytes, err2 = sock:send(err)
+        if not bytes then
+            ngx.log(ngx.ERR, "failed to send: ", err2)
+        end
     }
 --- stream_response chomp
 send data after read side timeout
 --- error_log
 receiveany unexpected err: timeout
-
