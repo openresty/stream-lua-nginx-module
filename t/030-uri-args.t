@@ -26,8 +26,8 @@ __DATA__
         local t = {a = "bar", b = "foo"}
         ngx.say(ngx.encode_args(t))
     }
---- stream_response
-a=bar&b=foo
+--- stream_response eval
+qr/a=bar&b=foo|b=foo&a=bar/
 --- no_error_log
 [error]
 

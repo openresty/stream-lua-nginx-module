@@ -147,6 +147,7 @@ qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" is n
 [alert]
 
 
+
 === TEST 13: escape type out of range
 --- stream_server_config
     content_by_lua_block {
@@ -157,6 +158,7 @@ qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" is n
 qr/\[error\] \d+#\d+: \*\d+ lua entry thread aborted: runtime error: "type" -1 out of range/
 --- no_error_log
 [alert]
+
 
 
 === TEST 14: escape type error
