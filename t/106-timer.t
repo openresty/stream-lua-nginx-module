@@ -12,7 +12,7 @@ our $StapScript = $t::StapThread::StapScript;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 8 + 46);
+plan tests => repeat_each() * (blocks() * 8 + 45);
 
 #no_diff();
 no_long_string();
