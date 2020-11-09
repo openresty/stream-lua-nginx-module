@@ -33,7 +33,7 @@
 
 
 #include "ngx_stream_lua_prereadby.h"
-
+#include "ngx_stream_lua_accessby.h"
 
 static void *ngx_stream_lua_create_main_conf(ngx_conf_t *cf);
 static char *ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf);
@@ -237,6 +237,36 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_preread_handler_inline },
 
+    /* access_by_lua "<inline script>" */
+    { ngx_string("access_by_lua"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_access_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_access_handler_inline },
+
+    /* access_by_lua_block { <inline script> } */
+    { ngx_string("access_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_access_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_access_handler_inline },
+
+    /* access_by_lua_file rel/or/abs/path/to/script */
+    { ngx_string("access_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_access_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_access_handler_file },
+
+    { ngx_string("access_by_lua_no_postpone"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, postponed_to_access_phase_end),
+      NULL },
 
     /* content_by_lua "<inline script>" */
     { ngx_string("content_by_lua"),
@@ -529,6 +559,21 @@ ngx_stream_lua_init(ngx_conf_t *cf)
         lmcf->postponed_to_preread_phase_end = 0;
     }
 
+    dd("requires access: %d", (int) lmcf->requires_access);
+
+    if (lmcf->requires_access) {
+        h = ngx_array_push(&cmcf->phases[NGX_STREAM_ACCESS_PHASE].handlers);
+        if (h == NULL) {
+            return NGX_ERROR;
+        }
+
+        *h = ngx_stream_lua_access_handler;
+    }
+
+    if (lmcf->postponed_to_access_phase_end == NGX_CONF_UNSET) {
+        lmcf->postponed_to_access_phase_end = 0;
+    }
+
     dd("requires log: %d", (int) lmcf->requires_log);
 
     if (lmcf->requires_log) {
@@ -704,6 +749,7 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
 #endif
 
     lmcf->postponed_to_preread_phase_end = NGX_CONF_UNSET;
+    lmcf->postponed_to_access_phase_end = NGX_CONF_UNSET;
 
     lmcf->set_sa_restart = NGX_CONF_UNSET;
 
@@ -971,6 +1017,13 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->preread_handler = prev->preread_handler;
         conf->preread_src_key = prev->preread_src_key;
         conf->preread_chunkname = prev->preread_chunkname;
+    }
+
+    if (conf->access_src.value.len == 0) {
+        conf->access_src = prev->access_src;
+        conf->access_handler = prev->access_handler;
+        conf->access_src_key = prev->access_src_key;
+        conf->access_chunkname = prev->access_chunkname;
     }
 
     return NGX_CONF_OK;

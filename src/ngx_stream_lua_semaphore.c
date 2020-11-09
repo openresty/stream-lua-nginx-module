@@ -391,7 +391,8 @@ ngx_stream_lua_ffi_sema_wait(ngx_stream_lua_request_t *r,
         | NGX_STREAM_LUA_CONTEXT_PREREAD
         | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
         | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-        | NGX_STREAM_LUA_CONTEXT_TIMER,
+        | NGX_STREAM_LUA_CONTEXT_TIMER
+        | NGX_STREAM_LUA_CONTEXT_ACCESS,
         err, errlen);
 
     if (rc != NGX_OK) {

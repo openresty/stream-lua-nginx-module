@@ -138,7 +138,8 @@ ngx_stream_lua_uthread_wait(lua_State *L)
                                | NGX_STREAM_LUA_CONTEXT_PREREAD
                                | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER);
+                               | NGX_STREAM_LUA_CONTEXT_TIMER
+                               | NGX_STREAM_LUA_CONTEXT_ACCESS);
 
     coctx = ctx->cur_co_ctx;
 
@@ -238,7 +239,8 @@ ngx_stream_lua_uthread_kill(lua_State *L)
                                | NGX_STREAM_LUA_CONTEXT_PREREAD
                                | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                               | NGX_STREAM_LUA_CONTEXT_TIMER);
+                               | NGX_STREAM_LUA_CONTEXT_TIMER
+                               | NGX_STREAM_LUA_CONTEXT_ACCESS);
 
     coctx = ctx->cur_co_ctx;
 
