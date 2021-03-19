@@ -8,11 +8,21 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(1);
 
-plan tests => repeat_each() * (blocks() * 4 - 1);
+plan tests => repeat_each() * (blocks() * 4 + 1);
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
 
+sub read_file {
+    my $infile = shift;
+    open my $in, $infile
+        or die "cannot open $infile for reading: $!";
+    my $cert = do { local $/; <$in> };
+    close $in;
+    $cert;
+}
+
+our $DSTRootCertificate = read_file("t/cert/dst-ca.crt");
 our $ServerRoot = server_root();
 
 #no_diff();
@@ -699,3 +709,67 @@ This also affects merge_loc_conf
 ok
 --- no_error_log
 [error]
+
+
+
+=== TEST 20: lua_ssl_trusted_certificate
+--- stream_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    lua_ssl_trusted_certificate ../html/trusted.crt;
+    lua_ssl_verify_depth 2;
+
+    init_worker_by_lua_block {
+        local semaphore = require "ngx.semaphore"
+        local sem = semaphore:new(0)
+        package.loaded.sem = sem
+
+        local function test_ssl_verify()
+            local sock = ngx.socket.tcp()
+            sock:settimeout(2000)
+            local ok, err = sock:connect("openresty.org", 443)
+            if not ok then
+                ngx.log(ngx.ERR, "failed to connect: ", err)
+                return
+            end
+
+            ngx.log(ngx.WARN, "connected: ", ok)
+
+            local session, err = sock:sslhandshake(nil, "openresty.org", true)
+            if not session then
+                ngx.log(ngx.ERR, "failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.log(ngx.WARN, "ssl handshake: ", type(session))
+
+            local ok, err = sock:close()
+            ngx.log(ngx.WARN, "close: ", ok, " ", err)
+
+            sem:post(1)
+        end
+
+        ngx.timer.at(0, test_ssl_verify)
+    }
+
+--- stream_server_config
+    content_by_lua_block {
+        local sem = package.loaded.sem
+        local ok, err = sem:wait(3)
+        if not ok then
+            ngx.say("wait test_ssl_verify failed: ", err)
+        end
+
+        ngx.say('ok')
+    }
+--- user_files eval
+">>> trusted.crt
+$::DSTRootCertificate"
+
+--- stream_response
+ok
+--- no_error_log
+[error]
+--- error_log
+connected: 1
+ssl handshake: userdata
+close: 1 nil

@@ -51,8 +51,8 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     ngx_conf_file_t         *conf_file;
     ngx_stream_session_t    *s;
 
-    ngx_stream_core_srv_conf_t    *clcf, *top_clcf;
-    ngx_stream_lua_srv_conf_t     *llcf, *top_llcf;
+    ngx_stream_core_srv_conf_t    *cscf, *top_cscf;
+    ngx_stream_lua_srv_conf_t     *lscf, *top_lscf;
 
     lmcf = ngx_stream_cycle_get_module_main_conf(cycle, ngx_stream_lua_module);
 
@@ -98,8 +98,8 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
                cycle->conf_ctx[ngx_stream_module.index];
     stream_ctx.main_conf = conf_ctx->main_conf;
 
-    top_clcf = conf_ctx->srv_conf[ngx_stream_core_module.ctx_index];
-    top_llcf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
+    top_cscf = conf_ctx->srv_conf[ngx_stream_core_module.ctx_index];
+    top_lscf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
 
@@ -223,16 +223,24 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
             stream_ctx.srv_conf[modules[i]->ctx_index] = cur;
 
             if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index) {
-                clcf = cur;
+                cscf = cur;
                 /* just to silence the error in
                  * ngx_stream_core_merge_srv_conf */
-                clcf->handler = ngx_stream_lua_content_handler;
+                cscf->handler = ngx_stream_lua_content_handler;
             }
 
             if (module->merge_srv_conf) {
-                prev = module->create_srv_conf(&conf);
-                if (prev == NULL) {
-                    return NGX_ERROR;
+                if (modules[i] == &ngx_stream_lua_module) {
+                    prev = top_lscf;
+
+                } else if (modules[i] == &ngx_stream_core_module) {
+                    prev = top_cscf;
+
+                } else {
+                    prev = module->create_srv_conf(&conf);
+                    if (prev == NULL) {
+                        return NGX_ERROR;
+                    }
                 }
 
                 rv = module->merge_srv_conf(&conf, prev, cur);
@@ -262,24 +270,24 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     s->main_conf = stream_ctx.main_conf;
     s->srv_conf = stream_ctx.srv_conf;
 
-    clcf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
+    cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
-    llcf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
+    lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 
-    if (top_llcf->log_socket_errors != NGX_CONF_UNSET) {
-        llcf->log_socket_errors = top_llcf->log_socket_errors;
+    if (top_lscf->log_socket_errors != NGX_CONF_UNSET) {
+        lscf->log_socket_errors = top_lscf->log_socket_errors;
     }
 
-    if (top_clcf->resolver != NULL) {
-        clcf->resolver = top_clcf->resolver;
+    if (top_cscf->resolver != NULL) {
+        cscf->resolver = top_cscf->resolver;
     }
 
-    if (top_clcf->resolver_timeout != NGX_CONF_UNSET_MSEC) {
-        clcf->resolver_timeout = top_clcf->resolver_timeout;
+    if (top_cscf->resolver_timeout != NGX_CONF_UNSET_MSEC) {
+        cscf->resolver_timeout = top_cscf->resolver_timeout;
     }
 
 #if defined(nginx_version) && nginx_version >= 1009000
-    ngx_set_connection_log(s->connection, clcf->error_log);
+    ngx_set_connection_log(s->connection, cscf->error_log);
 
 #else
 #endif
