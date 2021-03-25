@@ -247,7 +247,7 @@ received: hello world! my
 
 
 === TEST 7: request on secondary ip address
-bugfix: stream cosocket doest send udp reply with first address
+bugfix: stream cosocket send udp reply with first address
 when receive packet on secondary addresses
 
 sudo ip addr add 10.254.254.1/24 dev lo
