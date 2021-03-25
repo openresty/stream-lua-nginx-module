@@ -11,7 +11,7 @@ compiler:
 
 addons:
   apt:
-    packages: [ axel, cpanminus, libgd-dev, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl ]
+    packages: [ axel, cpanminus, libgd-dev, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl, bind-utils ]
 
 cache:
   apt: true
@@ -65,6 +65,8 @@ install:
 
 script:
   - sudo iptables -I OUTPUT 1 -p udp --dport 10086 -j REJECT
+  - sudo iptables -A OUTPUT -p tcp --dst 127.0.0.2 --dport 12345 -j DROP
+  - sudo iptables -A OUTPUT -p udp --dst 127.0.0.2 --dport 12345 -j DROP
   - sudo iptables -A OUTPUT -p tcp --dst 127.0.0.2 --dport 12345 -j DROP
   - sudo iptables -A OUTPUT -p udp --dst 127.0.0.2 --dport 12345 -j DROP
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
