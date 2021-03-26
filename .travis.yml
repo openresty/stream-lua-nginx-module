@@ -11,7 +11,7 @@ compiler:
 
 addons:
   apt:
-    packages: [ axel, cpanminus, libgd-dev, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl, bind-utils ]
+    packages: [ axel, cpanminus, libgd-dev, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl, dnsutils ]
 
 cache:
   apt: true
