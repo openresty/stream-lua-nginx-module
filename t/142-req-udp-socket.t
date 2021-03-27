@@ -246,7 +246,7 @@ received: hello world! my
 
 
 
-=== TEST 6: request on secondary ip address
+=== TEST 7: request on secondary ip address
 sudo ip addr add 10.254.254.1/24 dev lo
 sudo ip addr add 10.254.254.2/24 dev lo
 nmap will be blocked by travis , use dig to send dns request.
