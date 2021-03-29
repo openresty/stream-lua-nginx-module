@@ -243,3 +243,43 @@ hello world! my
 received: hello world! my
 --- no_error_log
 [error]
+
+
+
+=== TEST 7: request on secondary ip address
+sudo ip addr add 10.254.254.1/24 dev lo
+sudo ip addr add 10.254.254.2/24 dev lo
+nmap will be blocked by travis , use dig to send dns request.
+--- dgram_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if not sock then
+            ngx.log(ngx.ERR,"ngx.req.socket error : ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        local data = sock:receive()
+        local ok, err = sock:send(data)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+    }
+--- config
+     location = /dns {
+         content_by_lua_block {
+            local cmd = "dig -b 10.254.254.1 @10.254.254.2 www.baidu.com -p " .. tostring(ngx.var.server_port + 1)
+            local f = io.popen(cmd, "r")
+            ngx.sleep(0.2)
+            local result = f:read("*a")
+            f:close()
+            ngx.say("hello")
+         }
+     }
+--- request
+GET /dns
+--- response_body
+hello
+--- grep_error_log eval: qr/sendto: fd.*$/
+--- grep_error_log_out eval
+qr/sendto: fd:\d+ \d+ of \d+ to "10.254.254.1"/
