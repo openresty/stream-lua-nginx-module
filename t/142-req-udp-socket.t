@@ -268,7 +268,7 @@ nmap will be blocked by travis , use dig to send dns request.
 --- config
      location = /dns {
          content_by_lua_block {
-            local cmd = "dig -b 10.254.254.1 @10.254.254.2 www.baidu.com -p " .. tostring(ngx.var.server_port + 1)
+            local cmd = "dig -b 10.254.254.1 @10.254.254.2 openresty.org -p " .. tostring(ngx.var.server_port + 1)
             local f = io.popen(cmd, "r")
             ngx.sleep(0.2)
             local result = f:read("*a")
