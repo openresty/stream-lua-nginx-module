@@ -205,3 +205,29 @@
    fun:ngx_stream_lua_socket_udp_send
    fun:lj_BC_FUNCC
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   fun:__sendmsg_nocancel
+   fun:ngx_write_channel
+   fun:ngx_pass_open_channel
+   fun:ngx_start_worker_processes
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   fun:__sendmsg_nocancel
+   fun:ngx_write_channel
+   fun:ngx_pass_open_channel
+   fun:ngx_start_privileged_agent_processes
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   sendmsg(msg.msg_control)
+   fun:__sendmsg_nocancel
+   fun:ngx_stream_lua_udp_sendmsg
+   fun:ngx_stream_lua_socket_udp_send
+}
