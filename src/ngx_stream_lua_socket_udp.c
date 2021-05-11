@@ -71,8 +71,10 @@ static int ngx_stream_lua_socket_udp_close(lua_State *L);
 static ngx_int_t ngx_stream_lua_socket_udp_resume(ngx_stream_lua_request_t *r);
 static void ngx_stream_lua_udp_resolve_cleanup(void *data);
 static void ngx_stream_lua_udp_socket_cleanup(void *data);
+#ifndef NGX_WIN32
 static ssize_t ngx_stream_lua_udp_sendmsg(ngx_connection_t *c,
     ngx_iovec_t *vec);
+#endif
 
 
 enum {
@@ -788,8 +790,10 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
     int                                  type;
     const char                          *msg;
     ngx_str_t                            query;
+#ifndef NGX_WIN32
     ngx_iovec_t                          vec;
     struct iovec                         iovs[1];
+#endif
 
     ngx_stream_lua_socket_udp_upstream_t        *u;
     ngx_stream_lua_loc_conf_t                   *llcf;
@@ -924,7 +928,11 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
 #endif
 
     dd("sending query %.*s", (int) query.len, query.data);
+#ifdef NGX_WIN32
+    n = ngx_udp_send(u->udp_connection.connection, query.data, query.len);
+    dd("ngx_udp_send returns %d (query len %d)", (int) n, (int) query.len);
 
+#else
     vec.iovs = iovs;
     vec.nalloc = 1;
     vec.count = 1;
@@ -935,6 +943,7 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
 
     dd("ngx_stream_lua_udp_sendmsg returns %d (query len %d)",
        (int) n, (int) query.len);
+#endif
 
     if (n == NGX_ERROR || n == NGX_AGAIN) {
         u->socket_errno = ngx_socket_errno;
@@ -1808,6 +1817,8 @@ ngx_stream_lua_req_socket_udp(lua_State *L)
 }
 
 
+#ifndef NGX_WIN32
+
 static ssize_t
 ngx_stream_lua_udp_sendmsg(ngx_connection_t *c, ngx_iovec_t *vec)
 {
@@ -1945,5 +1956,7 @@ eintr:
 
     return n;
 }
+
+#endif
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
