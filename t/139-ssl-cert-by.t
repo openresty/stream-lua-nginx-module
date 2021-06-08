@@ -1057,7 +1057,7 @@ close: 1 nil
 [alert]
 --- grep_error_log eval: qr/uthread: [^.,]+/
 --- grep_error_log_out
-uthread: thread created: suspended
+uthread: thread created: running
 uthread: hello in thread
 uthread: done
 
