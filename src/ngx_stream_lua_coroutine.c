@@ -368,10 +368,7 @@ ngx_stream_lua_inject_coroutine_api(ngx_log_t *log, lua_State *L)
 #else
                         "local ctx = raw_ctx(r)\n"
 #endif
-                        /* ignore header and body filters */
-                        "if ctx ~= 0x020 and ctx ~= 0x040 then\n"
-                            "return ours(...)\n"
-                        "end\n"
+                        "return ours(...)\n"
                     "end\n"
                     "return std(...)\n"
                 "end\n"
