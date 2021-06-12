@@ -795,42 +795,45 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     dd("merge srv conf");
 
-    if (conf->srv.ssl_cert_src.len == 0) {
-        conf->srv.ssl_cert_src = prev->srv.ssl_cert_src;
-        conf->srv.ssl_cert_src_key = prev->srv.ssl_cert_src_key;
-        conf->srv.ssl_cert_handler = prev->srv.ssl_cert_handler;
-    }
-
-    if (conf->srv.ssl_cert_src.len) {
-        sscf = ngx_stream_conf_get_module_srv_conf(cf, ngx_stream_ssl_module);
-        if (sscf == NULL || sscf->ssl.ctx == NULL) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no ssl configured for the server");
-
-            return NGX_CONF_ERROR;
+    sscf = ngx_stream_conf_get_module_srv_conf(cf, ngx_stream_ssl_module);
+    if (sscf && sscf->listen) {
+        if (conf->srv.ssl_cert_src.len == 0) {
+            conf->srv.ssl_cert_src = prev->srv.ssl_cert_src;
+            conf->srv.ssl_cert_src_key = prev->srv.ssl_cert_src_key;
+            conf->srv.ssl_cert_handler = prev->srv.ssl_cert_handler;
         }
+
+        if (conf->srv.ssl_cert_src.len) {
+            sscf = ngx_stream_conf_get_module_srv_conf(cf, ngx_stream_ssl_module);
+            if (sscf->ssl.ctx == NULL) {
+                ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                              "no ssl configured for the server");
+
+                return NGX_CONF_ERROR;
+            }
 
 #ifdef LIBRESSL_VERSION_NUMBER
 
-        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "LibreSSL is not supported by ssl_certificate_by_lua*");
-        return NGX_CONF_ERROR;
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                          "LibreSSL is not supported by ssl_certificate_by_lua*");
+            return NGX_CONF_ERROR;
 
 #else
 
 #   if OPENSSL_VERSION_NUMBER >= 0x1000205fL
 
-        SSL_CTX_set_cert_cb(sscf->ssl.ctx, ngx_stream_lua_ssl_cert_handler, NULL);
+            SSL_CTX_set_cert_cb(sscf->ssl.ctx, ngx_stream_lua_ssl_cert_handler, NULL);
 
 #   else
 
-        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "OpenSSL too old to support ssl_certificate_by_lua*");
-        return NGX_CONF_ERROR;
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                          "OpenSSL too old to support ssl_certificate_by_lua*");
+            return NGX_CONF_ERROR;
 
 #   endif
 
 #endif
+        }
     }
 
 
