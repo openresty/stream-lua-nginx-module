@@ -966,7 +966,7 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
 
     ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
                   "OpenSSL too old to support lua_ssl_ciphersuites");
-    return NGX_CONF_ERROR;
+    return NGX_ERROR;
 
 #   endif
 #endif

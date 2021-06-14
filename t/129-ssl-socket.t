@@ -2491,6 +2491,7 @@ SSL reused session
 
 
 === TEST 32: default cipher - TLSv1.3
+--- skip_openssl: 8: < 1.1.1
 --- http_config
     server {
         listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -2577,6 +2578,7 @@ SSL reused session
 
 
 === TEST 33: explicit cipher configuration - TLSv1.3
+--- skip_openssl: 8: < 1.1.1
 --- http_config
     server {
         listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -2664,6 +2666,7 @@ SSL reused session
 
 
 === TEST 34: explicit cipher configuration not in the default list - TLSv1.3
+--- skip_openssl: 8: < 1.1.1
 --- http_config
     server {
         listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
