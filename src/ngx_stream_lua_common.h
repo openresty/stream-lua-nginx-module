@@ -246,6 +246,7 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
     ngx_uint_t              ssl_protocols;
     ngx_str_t               ssl_ciphers;
+    ngx_str_t               ssl_ciphersuites;
     ngx_uint_t              ssl_verify_depth;
     ngx_str_t               ssl_trusted_certificate;
     ngx_str_t               ssl_crl;

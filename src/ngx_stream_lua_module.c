@@ -376,6 +376,15 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       offsetof(ngx_stream_lua_srv_conf_t, ssl_ciphers),
       NULL },
 
+#ifdef NGX_SSL_TLSv1_3
+    { ngx_string("lua_ssl_ciphersuites"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_str_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, ssl_ciphersuites),
+      NULL },
+#endif
+
     { ngx_string("ssl_certificate_by_lua_block"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
       ngx_stream_lua_ssl_cert_by_lua_block,
@@ -846,6 +855,13 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->ssl_ciphers, prev->ssl_ciphers,
                              "DEFAULT");
 
+#ifdef NGX_SSL_TLSv1_3
+    ngx_conf_merge_str_value(conf->ssl_ciphersuites, prev->ssl_ciphersuites,
+                             "TLS_AES_256_GCM_SHA384"
+                             ":TLS_CHACHA20_POLY1305_SHA256"
+                             ":TLS_AES_128_GCM_SHA256");
+#endif
+
     ngx_conf_merge_uint_value(conf->ssl_verify_depth,
                               prev->ssl_verify_depth, 1);
     ngx_conf_merge_str_value(conf->ssl_trusted_certificate,
@@ -932,6 +948,29 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
                       &lscf->ssl_ciphers);
         return NGX_ERROR;
     }
+
+#ifdef NGX_SSL_TLSv1_3
+#   if OPENSSL_VERSION_NUMBER >= 0x1010100fL
+
+    if (SSL_CTX_set_ciphersuites(lscf->ssl->ctx,
+                                (const char *) lscf->ssl_ciphersuites.data)
+        == 0)
+    {
+        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
+                      "SSL_CTX_set_ciphersuites(\"%V\") failed",
+                      &lscf->ssl_ciphersuites);
+        return NGX_ERROR;
+    }
+
+#   else
+
+    ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                  "OpenSSL too old to support lua_ssl_ciphersuites");
+    return NGX_CONF_ERROR;
+
+#   endif
+#endif
+
 
     if (lscf->ssl_trusted_certificate.len
         && ngx_ssl_trusted_certificate(cf, lscf->ssl,

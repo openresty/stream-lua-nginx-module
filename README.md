@@ -156,6 +156,7 @@ behavior.
 * [lua_socket_keepalive_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_keepalive_timeout)
 * [lua_socket_log_errors](https://github.com/openresty/lua-nginx-module#lua_socket_log_errors)
 * [lua_ssl_ciphers](https://github.com/openresty/lua-nginx-module#lua_ssl_ciphers)
+* [lua_ssl_ciphersuites](https://github.com/openresty/lua-nginx-module#lua_ssl_ciphersuites)
 * [lua_ssl_crl](https://github.com/openresty/lua-nginx-module#lua_ssl_crl)
 * [lua_ssl_protocols](https://github.com/openresty/lua-nginx-module#lua_ssl_protocols)
 * [lua_ssl_trusted_certificate](https://github.com/openresty/lua-nginx-module#lua_ssl_trusted_certificate)
