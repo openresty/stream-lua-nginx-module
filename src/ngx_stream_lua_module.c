@@ -856,10 +856,12 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                              "DEFAULT");
 
 #ifdef NGX_SSL_TLSv1_3
-    ngx_conf_merge_str_value(conf->ssl_ciphersuites, prev->ssl_ciphersuites,
-                             "TLS_AES_256_GCM_SHA384"
-                             ":TLS_CHACHA20_POLY1305_SHA256"
-                             ":TLS_AES_128_GCM_SHA256");
+    if (conf->ssl_ciphersuites.data == NULL) {
+        if (prev->ssl_ciphersuites.data) {
+            conf->ssl_ciphersuites.len = prev->ssl_ciphersuites.len;
+            conf->ssl_ciphersuites.data = prev->ssl_ciphersuites.data;
+        }
+    }
 #endif
 
     ngx_conf_merge_uint_value(conf->ssl_verify_depth,
@@ -952,21 +954,25 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
 #ifdef NGX_SSL_TLSv1_3
 #   if OPENSSL_VERSION_NUMBER >= 0x1010100fL
 
-    if (SSL_CTX_set_ciphersuites(lscf->ssl->ctx,
-                                (const char *) lscf->ssl_ciphersuites.data)
-        == 0)
-    {
-        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
-                      "SSL_CTX_set_ciphersuites(\"%V\") failed",
-                      &lscf->ssl_ciphersuites);
-        return NGX_ERROR;
+    if (lscf->ssl_ciphersuites.data) {
+        if (SSL_CTX_set_ciphersuites(lscf->ssl->ctx,
+                                    (const char *) lscf->ssl_ciphersuites.data)
+            == 0)
+        {
+            ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
+                          "SSL_CTX_set_ciphersuites(\"%V\") failed",
+                          &lscf->ssl_ciphersuites);
+            return NGX_ERROR;
+        }
     }
 
 #   else
 
-    ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                  "OpenSSL too old to support lua_ssl_ciphersuites");
-    return NGX_ERROR;
+    if (lscf->ssl_ciphersuites.data) {
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      "OpenSSL too old to support lua_ssl_ciphersuites");
+        return NGX_ERROR;
+    }
 
 #   endif
 #endif
