@@ -10,7 +10,7 @@ my $openssl_version = eval { `$NginxBinary -V 2>&1` };
 if ($openssl_version =~ m/built with OpenSSL (0|1\.0\.(?:0|1[^\d]|2[a-d]).*)/) {
     plan(skip_all => "too old OpenSSL, need 1.0.2e, was $1");
 } else {
-    plan tests => repeat_each() * (blocks() * 6 + 8);
+    plan tests => repeat_each() * (blocks() * 6 + 5);
 }
 
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
@@ -1063,7 +1063,7 @@ uthread: done
 
 
 
-=== TEST 16: simple logging - use ssl_certificate_by_lua* on the http {} level
+=== TEST 16: simple logging - use ssl_certificate_by_lua* on the server {} level
 GitHub openresty/lua-resty-core#42
 --- stream_config
     server {
@@ -1132,7 +1132,369 @@ ssl_certificate_by_lua:1: ssl cert by lua is running!
 
 
 
-=== TEST 17: simple logging (syslog)
+=== TEST 17: simple logging - use ssl_certificate_by_lua* on the stream {} level
+--- stream_config
+    ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+    ssl_certificate ../../cert/test.crt;
+    ssl_certificate_key ../../cert/test.key;
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+lua ssl server name: "test.com"
+ssl_certificate_by_lua:1: ssl cert by lua is running!
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 18: simple logging - use ssl_certificate_by_lua* on the stream {} level and server {} level
+--- stream_config
+    ssl_certificate_by_lua_block { print("ssl cert by lua on stream level is running!") }
+    ssl_certificate ../../cert/test.crt;
+    ssl_certificate_key ../../cert/test.key;
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate_by_lua_block { print("ssl cert by lua on server level is running!") }
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+lua ssl server name: "test.com"
+ssl_certificate_by_lua:1: ssl cert by lua on server level is running!
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 19: use ssl_certificate_by_lua* on the server {} level with non-ssl server
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+        ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+received: it works!
+close: 1 nil
+
+--- no_error_log
+ssl_certificate_by_lua:1: ssl cert by lua is running!
+[error]
+[alert]
+
+
+
+=== TEST 20: use ssl_certificate_by_lua* on the stream {} level with non-ssl server
+--- stream_config
+    ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+received: it works!
+close: 1 nil
+
+--- no_error_log
+ssl_certificate_by_lua:1: ssl cert by lua is running!
+[error]
+[alert]
+
+
+
+=== TEST 21: listen two ports (one for ssl and one for non-ssl) in one server - connect ssl port
+--- stream_config
+    server {
+        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:8181;
+        ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("127.0.0.2", 8080)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+lua ssl server name: "test.com"
+ssl_certificate_by_lua:1: ssl cert by lua is running!
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 22: listen two ports (one for ssl and one for non-ssl) in one server - connect non-ssl port
+--- stream_config
+    server {
+        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:8181;
+        ssl_certificate_by_lua_block { print("ssl cert by lua is running!") }
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("127.0.0.2", 8181)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+received: it works!
+close: 1 nil
+
+--- no_error_log
+ssl_certificate_by_lua:1: ssl cert by lua is running!
+[error]
+[alert]
+
+
+
+=== TEST 23: simple logging (syslog)
 github issue #723
 --- stream_config
     server {
@@ -1204,7 +1566,7 @@ ssl_certificate_by_lua:1: ssl cert by lua is running!
 
 
 
-=== TEST 18: check the count of running timers
+=== TEST 24: check the count of running timers
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -1279,7 +1641,7 @@ close: 1 nil
 
 
 
-=== TEST 19: get raw_client_addr - IPv4
+=== TEST 25: get raw_client_addr - IPv4
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
@@ -1355,7 +1717,7 @@ client ip: 127.0.0.1
 
 
 
-=== TEST 20: get raw_client_addr - unix domain socket
+=== TEST 26: get raw_client_addr - unix domain socket
 --- stream_config
     lua_package_path "../lua-resty-core/lib/?.lua;;";
 
