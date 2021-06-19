@@ -48,6 +48,10 @@ static char *ngx_stream_lua_lowat_check(ngx_conf_t *cf, void *post, void *data);
 #if (NGX_STREAM_SSL)
 static ngx_int_t ngx_stream_lua_set_ssl(ngx_conf_t *cf,
     ngx_stream_lua_loc_conf_t *llcf);
+#if (nginx_version >= 1019004)
+static char *ngx_stream_lua_ssl_conf_command_check(ngx_conf_t *cf, void *post,
+    void *data);
+#endif
 #endif
 static char *ngx_stream_lua_malloc_trim(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
@@ -55,7 +59,12 @@ static char *ngx_stream_lua_malloc_trim(ngx_conf_t *cf, ngx_command_t *cmd,
 
 static ngx_conf_post_t  ngx_stream_lua_lowat_post =
     { ngx_stream_lua_lowat_check };
-
+#if (NGX_STREAM_SSL)
+#if (nginx_version >= 1019004)
+static ngx_conf_post_t  ngx_stream_lua_ssl_conf_command_post =
+    { ngx_stream_lua_ssl_conf_command_check };
+#endif
+#endif
 
 
 
@@ -412,6 +421,14 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       offsetof(ngx_stream_lua_srv_conf_t, ssl_crl),
       NULL },
 
+#if (nginx_version >= 1019004)
+    { ngx_string("lua_ssl_conf_command"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE2,
+      ngx_conf_set_keyval_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, ssl_conf_commands),
+      &ngx_stream_lua_ssl_conf_command_post },
+#endif
 #endif  /* NGX_STREAM_SSL */
 
      { ngx_string("lua_malloc_trim"),
@@ -854,6 +871,10 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->ssl_trusted_certificate,
                              prev->ssl_trusted_certificate, "");
     ngx_conf_merge_str_value(conf->ssl_crl, prev->ssl_crl, "");
+#if (nginx_version >= 1019004)
+    ngx_conf_merge_ptr_value(conf->ssl_conf_commands, prev->ssl_conf_commands,
+                             NULL);
+#endif
 
     if (ngx_stream_lua_set_ssl(cf, conf) != NGX_OK) {
         return NGX_CONF_ERROR;
@@ -951,9 +972,26 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
         return NGX_ERROR;
     }
 
+#if (nginx_version >= 1019004)
+    if (ngx_ssl_conf_commands(cf, lscf->ssl, lscf->ssl_conf_commands)
+        != NGX_OK) {
+        return NGX_ERROR;
+    }
+#endif
     return NGX_OK;
 }
 
+#if (nginx_version >= 1019004)
+static char *
+ngx_stream_lua_ssl_conf_command_check(ngx_conf_t *cf, void *post, void *data)
+{
+#ifndef SSL_CONF_FLAG_FILE
+    return "is not supported on this platform";
+#endif
+
+    return NGX_CONF_OK;
+}
+#endif
 #endif  /* NGX_STREAM_SSL */
 
 
