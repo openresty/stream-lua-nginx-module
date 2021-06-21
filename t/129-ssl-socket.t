@@ -6,7 +6,7 @@ use File::Basename;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 240;
+plan tests => repeat_each() * (blocks() * 7 + 2);
 
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
