@@ -160,6 +160,7 @@ behavior.
 * [lua_ssl_protocols](https://github.com/openresty/lua-nginx-module#lua_ssl_protocols)
 * [lua_ssl_trusted_certificate](https://github.com/openresty/lua-nginx-module#lua_ssl_trusted_certificate)
 * [lua_ssl_verify_depth](https://github.com/openresty/lua-nginx-module#lua_ssl_verify_depth)
+* [lua_ssl_conf_command](https://github.com/openresty/lua-nginx-module#lua_ssl_conf_command)
 * [lua_check_client_abort](https://github.com/openresty/lua-nginx-module#lua_check_client_abort)
 * [lua_max_pending_timers](https://github.com/openresty/lua-nginx-module#lua_max_pending_timers)
 * [lua_max_running_timers](https://github.com/openresty/lua-nginx-module#lua_max_running_timers)
