@@ -50,6 +50,10 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         lua_pushliteral(L, "init_worker");
         break;
 
+    case NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO:
+        lua_pushliteral(L, "ssl_client_hello");
+        break;
+
     case NGX_STREAM_LUA_CONTEXT_SSL_CERT:
         lua_pushliteral(L, "ssl_cert");
         break;
