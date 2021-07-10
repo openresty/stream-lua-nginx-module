@@ -26,7 +26,6 @@ run_tests();
 
 __DATA__
 
-
 === TEST 1: simple logging
 --- stream_config
     server {
@@ -1807,6 +1806,3 @@ ssl handshake: userdata
 uthread: hello from f()
 uthread: killed
 uthread: failed to kill: already waited or killed
-
-
-

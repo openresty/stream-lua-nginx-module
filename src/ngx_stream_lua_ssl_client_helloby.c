@@ -609,7 +609,7 @@ int ngx_stream_lua_ffi_ssl_get_client_hello_server_name(
     return NGX_OK;
 
 #   else
-    *err = "OpenSSL too old to";
+    *err = "OpenSSL too old to support this function";
     return NGX_ERROR;
 
 #   endif
@@ -644,7 +644,7 @@ ngx_stream_lua_ffi_ssl_get_client_hello_ext(ngx_stream_lua_request_t *r,
         return NGX_DECLINED;
     }
 #else
-    *err = "OpenSSL too old to";
+    *err = "OpenSSL too old to support this function";
     return NGX_ERROR;
 #endif
 
