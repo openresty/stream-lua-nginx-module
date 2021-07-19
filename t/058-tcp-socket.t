@@ -4,12 +4,17 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 219;
+plan tests => repeat_each() * 258;
 
 our $HtmlDir = html_dir;
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
+$ENV{TEST_NGINX_SERVER_PORT} ||= 1984;
+our $port = int($ENV{TEST_NGINX_SERVER_PORT});
+$port += 1;
+$ENV{TEST_NGINX_STREAM_PORT} = $ENV{TEST_NGINX_STREAM_PORT} || "$port";
+
 
 #log_level 'warn';
 log_level 'debug';
@@ -3526,3 +3531,288 @@ orld
 [error]
 --- error_log
 lua tcp socket calling receiveany() method to read at most 7 bytes
+
+
+
+=== TEST 67: bad request req.socket receive after gc
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    content_by_lua_block {
+        local socket = ngx.req.socket(true)
+        socket:settimeout(9999*1000)
+        local readdata = function()
+            local data, err, partial = socket:receive(10000)
+            if err then
+                ngx.log(ngx.ERR, "receive error ", err, ' partial ', partial)
+                ngx.exit(0)
+            end
+            ngx.log(ngx.INFO, "received ", #data)
+
+            return data
+        end
+
+        local th = ngx.thread.spawn(readdata)
+        ngx.sleep(0.01)
+
+        ngx.log(ngx.INFO, "socket set to nil")
+        socket = nil
+
+        ngx.sleep(0.05)
+
+        ngx.log(ngx.INFO, "start gc collect")
+        collectgarbage("collect")
+        ngx.log(ngx.INFO, "  end gc collect")
+    }
+--- config
+server_tokens off;
+location = /t2 {
+    content_by_lua_block {
+        local port = $TEST_NGINX_STREAM_PORT
+        local sock1 = ngx.socket.tcp()
+        sock1:settimeouts(10, 500, 500)
+        local ok, err = sock1:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("sock1 failed: ", err)
+            ngx.log(ngx.ERR, "sock1 failed: ", err)
+            ngx.exit(501)
+            return
+        end
+        ngx.say("sock1 connected")
+        ngx.log(ngx.INFO, 'sock1 connected')
+
+        for i = 1, 3 do
+            ok, err = sock1:send("hello")
+            if not ok then
+                ngx.log(ngx.ERR, 'sock1 send error: ', err)
+            end
+            ngx.sleep(0.02)
+        end
+        ngx.log(ngx.INFO, 'sock 1 sent')
+        ngx.sleep(0.05)
+
+        ok, err = sock1:receive(20)
+        if not ok then
+            ngx.log(ngx.ERR, "sock1 receive error: ", err)
+        else
+            ngx.say("sock1 recv: ", ok)
+        end
+    }
+}
+--- request
+GET /t2
+--- error_log
+is NULL
+to NULL
+start gc collect
+end gc collect
+sock1 receive error: timeout
+--- no_error_log
+[alert]
+
+
+
+=== TEST 68: bad request tries to receive after gc
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    lua_socket_connect_timeout 100ms;
+    lua_socket_send_timeout 100ms;
+    lua_socket_read_timeout 100ms;
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeouts(100, 100, 100)
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to connect: ", err)
+        else
+            ngx.log(ngx.INFO, "connected")
+        end
+        local function f()
+            ngx.log(ngx.INFO, "sending stats")
+            local bytes, err = sock:send("stats\r\n")
+            if not bytes then
+                ngx.log(ngx.ERR, "send error: ", err)
+            else
+                ngx.log(ngx.ERR, "send ok ", bytes)
+            end
+            ngx.sleep(0.005)
+            ngx.log(ngx.INFO, "recving first line")
+            local data, err, part = sock:receive("*l")
+            if data then
+                ngx.log(ngx.INFO, "recv: ", data)
+            else
+                if part then
+                    ngx.log(ngx.INFO, "recv part: ", part)
+                else
+                    ngx.log(ngx.ERR, "recv error: ", err)
+                end
+            end
+            ngx.log(ngx.INFO, "recving left lines")
+            local data, err, part = sock:receive(10000)
+            if data then
+                ngx.log(ngx.INFO, "received ", #data)
+            else
+                if part then
+                    ngx.log(ngx.INFO, 'received part ', #part)
+                end
+                if err then
+                    ngx.log(ngx.ERR, ' receive error: ', err)
+                end
+            end
+        end
+        local th = ngx.thread.spawn(f)
+        ngx.sleep(0.02)
+
+        sock = nil
+        collectgarbage("collect")
+        ngx.log(ngx.INFO, "gc collected")
+        ok, err = ngx.thread.wait(th)
+        if not ok then
+            ngx.log(ngx.ERR, "thread failed: ", err)
+        else
+            ngx.log(ngx.INFO, "thread end")
+        end
+    }
+--- timeout: 2000ms
+--- error_log
+connected
+send ok
+recving first line
+recv:
+recving left lines
+to NULL
+stream lua tcp socket dummy handler
+stream lua tcp socket dummy handler
+gc collected
+--- abort
+--- no_error_log
+[alert]
+
+
+
+=== TEST 69: bad request tries to send
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+        else
+            ngx.say("connected")
+        end
+        local function f()
+            sock:send("")
+            ngx.log(ngx.INFO, "send 1st line")
+            ngx.sleep(0.02)
+            ngx.log(ngx.INFO, "send 2nd line")
+            sock:send("\r\n")
+        end
+        local th = ngx.thread.spawn(f)
+        ngx.sleep(0.01)
+        sock = nil
+        collectgarbage("collect")
+        ngx.log(ngx.INFO, "gc collected")
+        ok, err = ngx.thread.wait(th)
+        if not ok then
+            ngx.log(ngx.ERR, "thread failed: ", err)
+        else
+            ngx.log(ngx.INFO, "thread end ok")
+        end
+    }
+--- stream_response
+connected
+
+--- error_log
+to NULL
+send 1st line
+send 2nd line
+gc collected
+thread ended normally
+thread failed: nil
+--- no_error_log
+[alert]
+thread end ok
+--- abort
+
+
+
+=== TEST 70: bad request tries to receiveuntil after gc
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    lua_socket_connect_timeout 100ms;
+    lua_socket_send_timeout 100ms;
+    lua_socket_read_timeout 100ms;
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeouts(100, 100, 100)
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to connect: ", err)
+        else
+            ngx.log(ngx.INFO, "connected")
+        end
+        local function f()
+            ngx.log(ngx.INFO, "sending stats")
+            local bytes, err = sock:send("stats\r\n")
+            if not bytes then
+                ngx.log(ngx.ERR, "send error: ", err)
+            else
+                ngx.log(ngx.ERR, "send ok ", bytes)
+            end
+            ngx.sleep(0.005)
+            ngx.log(ngx.INFO, "recving first line")
+            local data, err, part = sock:receive("*l")
+            if data then
+                ngx.log(ngx.INFO, "recv: ", data)
+            else
+                if part then
+                    ngx.log(ngx.INFO, "recv part: ", part)
+                else
+                    ngx.log(ngx.ERR, "recv error: ", err)
+                end
+            end
+            ngx.log(ngx.INFO, "receiveuntil openresty.com")
+            local data, err, part = sock:receiveuntil('openresty.com')
+            if data then
+                ngx.log(ngx.INFO, "received ", #data)
+            else
+                if part then
+                    ngx.log(ngx.INFO, 'received part ', #part)
+                end
+                if err then
+                    ngx.log(ngx.ERR, ' receive error: ', err)
+                end
+            end
+        end
+        local th = ngx.thread.spawn(f)
+        ngx.sleep(0.02)
+
+        sock = nil
+        collectgarbage("collect")
+        ngx.log(ngx.INFO, "gc collected")
+        ok, err = ngx.thread.wait(th)
+        if not ok then
+            ngx.log(ngx.ERR, "thread failed: ", err)
+        else
+            ngx.log(ngx.INFO, "thread end")
+        end
+    }
+--- error_log
+connected
+send ok
+recving first line
+recv:
+receiveuntil openresty.com
+to NULL
+stream lua tcp socket dummy handler
+stream lua tcp socket dummy handler
+gc collected
+--- abort
+--- no_error_log
+[alert]
+
+
