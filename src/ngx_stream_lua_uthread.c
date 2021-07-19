@@ -136,7 +136,7 @@ ngx_stream_lua_uthread_wait(lua_State *L)
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
                                | NGX_STREAM_LUA_CONTEXT_PREREAD
-
+                               | NGX_STREAM_LUA_CONTEXT_ACCESS
                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 
@@ -236,7 +236,7 @@ ngx_stream_lua_uthread_kill(lua_State *L)
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
 
                                | NGX_STREAM_LUA_CONTEXT_PREREAD
-
+                               | NGX_STREAM_LUA_CONTEXT_ACCESS
                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                | NGX_STREAM_LUA_CONTEXT_TIMER);
 

@@ -58,6 +58,10 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         lua_pushliteral(L, "preread");
         break;
 
+    case NGX_STREAM_LUA_CONTEXT_ACCESS:
+        lua_pushliteral(L, "access");
+        break;
+
     case NGX_STREAM_LUA_CONTEXT_CONTENT:
         lua_pushliteral(L, "content");
         break;

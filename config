@@ -279,6 +279,7 @@ STREAM_LUA_SRCS=" \
                 $ngx_addon_dir/src/ngx_stream_lua_ssl_certby.c \
                 $ngx_addon_dir/src/ngx_stream_lua_log_ringbuf.c \
                 $ngx_addon_dir/src/ngx_stream_lua_input_filters.c \
+                $ngx_addon_dir/src/ngx_stream_lua_accessby.c \
                 "
 
 STREAM_LUA_DEPS=" \
@@ -322,6 +323,7 @@ STREAM_LUA_DEPS=" \
                 $ngx_addon_dir/src/ngx_stream_lua_ssl_certby.h \
                 $ngx_addon_dir/src/ngx_stream_lua_log_ringbuf.h \
                 $ngx_addon_dir/src/ngx_stream_lua_input_filters.h \
+                $ngx_addon_dir/src/ngx_stream_lua_accessby.h \
                 "
 
 # ----------------------------------------

@@ -78,6 +78,7 @@ extern char ngx_stream_lua_headers_metatable_key;
      : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"     \
      : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"           \
      : (c) == NGX_STREAM_LUA_CONTEXT_PREREAD ? "preread_by_lua*"             \
+     : (c) == NGX_STREAM_LUA_CONTEXT_ACCESS ? "access_by_lua*"               \
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"    \
      : "(unknown)")
 

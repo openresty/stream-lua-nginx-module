@@ -130,7 +130,8 @@
 #define NGX_STREAM_LUA_CONTEXT_INIT_WORKER                          0x0008
 #define NGX_STREAM_LUA_CONTEXT_BALANCER                             0x0010
 #define NGX_STREAM_LUA_CONTEXT_PREREAD                              0x0020
-#define NGX_STREAM_LUA_CONTEXT_SSL_CERT                             0x0040
+#define NGX_STREAM_LUA_CONTEXT_ACCESS                               0x0040
+#define NGX_STREAM_LUA_CONTEXT_SSL_CERT                             0x0080
 
 
 #define NGX_STREAM_LUA_FFI_NO_REQ_CTX         -100
@@ -206,6 +207,7 @@ struct ngx_stream_lua_main_conf_s {
     ngx_array_t         *preload_hooks; /* of ngx_stream_lua_preload_hook_t */
 
     ngx_flag_t           postponed_to_preread_phase_end;
+    ngx_flag_t           postponed_to_access_phase_end;
 
     ngx_stream_lua_main_conf_handler_pt          init_handler;
     ngx_str_t                                    init_src;
@@ -232,7 +234,8 @@ struct ngx_stream_lua_main_conf_s {
     ngx_flag_t           set_sa_restart;
 
     unsigned             requires_preread:1;
-
+    unsigned             requires_capture_filter:1;
+    unsigned             requires_access:1;   
     unsigned             requires_log:1;
     unsigned             requires_shm:1;
     unsigned             requires_capture_log:1;
@@ -264,16 +267,24 @@ struct ngx_stream_lua_srv_conf_s {
                                                   code cache */
 
     ngx_stream_lua_handler_pt           preread_handler;
-
+    ngx_stream_lua_handler_pt           access_handler;
     ngx_stream_lua_handler_pt           content_handler;
     ngx_stream_lua_handler_pt           log_handler;
 
     u_char                      *preread_chunkname;
-    ngx_stream_complex_value_t   preread_src;     /* access_by_lua
+    ngx_stream_complex_value_t   preread_src;     /* preread_by_lua
                                                 inline script/script
                                                 file path */
 
-    u_char                  *preread_src_key; /* cached key for access_src */
+    u_char                  *preread_src_key; /* cached key for preread_src */
+
+    u_char                      *access_chunkname;
+    ngx_stream_complex_value_t   access_src;     /* access_by_lua
+                                                inline script/script
+                                                file path */
+
+    u_char                  *access_src_key; /* cached key for access_src */
+
 
     u_char                  *content_chunkname;
 
@@ -487,7 +498,7 @@ typedef struct ngx_stream_lua_ctx_s {
                                        response headers */
 
     unsigned         entered_preread_phase:1;
-
+    unsigned         entered_access_phase:1;
     unsigned         entered_content_phase:1;
 
     unsigned         buffering:1; /* HTTP 1.0 response body buffering flag */
