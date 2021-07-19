@@ -147,6 +147,8 @@ behavior.
 * [balancer_by_lua_file](https://github.com/openresty/lua-nginx-module#balancer_by_lua_file)
 * [log_by_lua_block](#log_by_lua_block)
 * [log_by_lua_file](#log_by_lua_file)
+* [ssl_client_hello_by_lua_block](https://github.com/openresty/lua-nginx-module#ssl_client_hello_by_lua_block)
+* [ssl_client_hello_by_lua_file](https://github.com/openresty/lua-nginx-module#ssl_client_hello_by_lua_file)
 * [ssl_certificate_by_lua_block](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_block)
 * [ssl_certificate_by_lua_file](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
