@@ -835,9 +835,9 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     if (sscf && sscf->listen) {
         if (conf->srv.ssl_client_hello_src.len == 0) {
             conf->srv.ssl_client_hello_src = prev->srv.ssl_client_hello_src;
-            conf->srv.ssl_client_hello_src_key = 
+            conf->srv.ssl_client_hello_src_key =
                 prev->srv.ssl_client_hello_src_key;
-            conf->srv.ssl_client_hello_handler = 
+            conf->srv.ssl_client_hello_handler =
                 prev->srv.ssl_client_hello_handler;
         }
 

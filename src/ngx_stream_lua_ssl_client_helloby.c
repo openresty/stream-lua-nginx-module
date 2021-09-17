@@ -10,7 +10,6 @@
 
 #if (NGX_STREAM_SSL)
 
-
 #include "ngx_stream_lua_cache.h"
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_util.h"
@@ -20,7 +19,6 @@
 #include "ngx_stream_lua_ssl_client_helloby.h"
 #include "ngx_stream_lua_directive.h"
 #include "ngx_stream_lua_ssl.h"
-
 
 
 static void ngx_stream_lua_ssl_client_hello_done(void *data);
@@ -126,7 +124,7 @@ ngx_stream_lua_ssl_client_hello_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
     value = cf->args->elts;
 
-    lscf->srv.ssl_client_hello_handler = 
+    lscf->srv.ssl_client_hello_handler =
         (ngx_stream_lua_srv_conf_handler_pt) cmd->post;
 
     if (cmd->post == ngx_stream_lua_ssl_client_hello_handler_file) {
@@ -168,7 +166,7 @@ ngx_stream_lua_ssl_client_hello_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
         p = ngx_copy(p, "ssl_client_hello_by_lua",
                      sizeof("ssl_client_hello_by_lua") - 1);
-        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG, 
+        p = ngx_copy(p, NGX_STREAM_LUA_INLINE_TAG,
                      NGX_STREAM_LUA_INLINE_TAG_LEN);
         p = ngx_stream_lua_digest_hex(p, value[1].data, value[1].len);
         *p = '\0';
@@ -181,7 +179,7 @@ ngx_stream_lua_ssl_client_hello_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
 
 int
-ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn, 
+ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn,
     int *al, void *arg)
 {
     lua_State                          *L;
@@ -260,7 +258,7 @@ ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn,
     ngx_set_connection_log(fc, cscf->error_log);
 
 #else
-#   error "stream ssl_client_hello_by_lua only supports nginx >= 1.19.3"
+#error "stream ssl_client_hello_by_lua only supports nginx >= 1.19.3"
 #endif
 
     if (cctx == NULL) {
@@ -412,8 +410,8 @@ ngx_stream_lua_ssl_client_hello_aborted(void *data)
 
 
 static u_char *
-ngx_stream_lua_log_ssl_client_hello_error(ngx_log_t *log, u_char *buf, 
-                                          size_t len)
+ngx_stream_lua_log_ssl_client_hello_error(ngx_log_t *log, u_char *buf,
+    size_t len)
 {
     u_char              *p;
     ngx_connection_t    *c;
@@ -447,7 +445,8 @@ ngx_stream_lua_log_ssl_client_hello_error(ngx_log_t *log, u_char *buf,
 
 
 static ngx_int_t
-ngx_stream_lua_ssl_client_hello_by_chunk(lua_State *L, ngx_stream_lua_request_t *r)
+ngx_stream_lua_ssl_client_hello_by_chunk(lua_State *L,
+    ngx_stream_lua_request_t *r)
 {
     int                              co_ref;
     ngx_int_t                        rc;
@@ -541,8 +540,8 @@ ngx_stream_lua_ssl_client_hello_by_chunk(lua_State *L, ngx_stream_lua_request_t 
 
 
 int ngx_stream_lua_ffi_ssl_get_client_hello_server_name(
-     ngx_stream_lua_request_t *r, const char **name, 
-     size_t *namelen, char **err)
+    ngx_stream_lua_request_t *r, const char **name,
+    size_t *namelen, char **err)
 {
     ngx_ssl_conn_t          *ssl_conn;
 #ifdef SSL_ERROR_WANT_CLIENT_HELLO_CB
@@ -563,15 +562,17 @@ int ngx_stream_lua_ffi_ssl_get_client_hello_server_name(
 
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 
-#   ifdef SSL_ERROR_WANT_CLIENT_HELLO_CB
+#ifdef SSL_ERROR_WANT_CLIENT_HELLO_CB
     remaining = 0;
 
     /* This code block is taken from OpenSSL's client_hello_select_server_ctx()
      * */
     if (!SSL_client_hello_get0_ext(ssl_conn, TLSEXT_TYPE_server_name, &p,
-                                   &remaining)) {
+                                   &remaining))
+    {
         return NGX_DECLINED;
     }
+
     if (remaining <= 2) {
         *err = "Bad SSL Client Hello Extension";
         return NGX_ERROR;
@@ -583,44 +584,43 @@ int ngx_stream_lua_ffi_ssl_get_client_hello_server_name(
         *err = "Bad SSL Client Hello Extension";
         return NGX_ERROR;
     }
-    remaining = len;
 
+    remaining = len;
     if (remaining == 0 || *p++ != TLSEXT_NAMETYPE_host_name) {
         *err = "Bad SSL Client Hello Extension";
         return NGX_ERROR;
     }
-    remaining--;
 
+    remaining--;
     if (remaining <= 2) {
         *err = "Bad SSL Client Hello Extension";
         return NGX_ERROR;
     }
+
     len = (*(p++) << 8);
     len += *(p++);
     if (len + 2 > remaining) {
         *err = "Bad SSL Client Hello Extension";
         return NGX_ERROR;
     }
-    remaining = len;
 
+    remaining = len;
     *name = (const char *) p;
     *namelen = len;
 
     return NGX_OK;
 
-#   else
+#else
     *err = "OpenSSL too old to support this function";
     return NGX_ERROR;
-
-#   endif
+#endif
 
 #else
-
     *err = "no TLS extension support";
     return NGX_ERROR;
-
 #endif
 }
+
 
 int
 ngx_stream_lua_ffi_ssl_get_client_hello_ext(ngx_stream_lua_request_t *r,
@@ -643,13 +643,13 @@ ngx_stream_lua_ffi_ssl_get_client_hello_ext(ngx_stream_lua_request_t *r,
     if (0 == SSL_client_hello_get0_ext(ssl_conn, type, out, outlen)) {
         return NGX_DECLINED;
     }
+
+    return NGX_OK;
+
 #else
     *err = "OpenSSL too old to support this function";
     return NGX_ERROR;
 #endif
-
-    return NGX_OK;
-
 }
 
 
@@ -680,24 +680,29 @@ ngx_stream_lua_ffi_ssl_set_protocols(ngx_stream_lua_request_t *r,
     if (!(protocols & NGX_SSL_SSLv2)) {
         SSL_set_options(ssl_conn, SSL_OP_NO_SSLv2);
     }
+
     if (!(protocols & NGX_SSL_SSLv3)) {
         SSL_set_options(ssl_conn, SSL_OP_NO_SSLv3);
     }
+
     if (!(protocols & NGX_SSL_TLSv1)) {
         SSL_set_options(ssl_conn, SSL_OP_NO_TLSv1);
     }
+
 #ifdef SSL_OP_NO_TLSv1_1
     SSL_clear_options(ssl_conn, SSL_OP_NO_TLSv1_1);
     if (!(protocols & NGX_SSL_TLSv1_1)) {
         SSL_set_options(ssl_conn, SSL_OP_NO_TLSv1_1);
     }
 #endif
+
 #ifdef SSL_OP_NO_TLSv1_2
     SSL_clear_options(ssl_conn, SSL_OP_NO_TLSv1_2);
     if (!(protocols & NGX_SSL_TLSv1_2)) {
         SSL_set_options(ssl_conn, SSL_OP_NO_TLSv1_2);
     }
 #endif
+
 #ifdef SSL_OP_NO_TLSv1_3
     SSL_clear_options(ssl_conn, SSL_OP_NO_TLSv1_3);
     if (!(protocols & NGX_SSL_TLSv1_3)) {

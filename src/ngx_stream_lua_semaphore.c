@@ -388,11 +388,11 @@ ngx_stream_lua_ffi_sema_wait(ngx_stream_lua_request_t *r,
     }
 
     rc = ngx_stream_lua_ffi_check_context(ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                          | NGX_STREAM_LUA_CONTEXT_PREREAD
-                                          | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
-                                          | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                                          | NGX_STREAM_LUA_CONTEXT_TIMER,
-                                          err, errlen);
+        | NGX_STREAM_LUA_CONTEXT_PREREAD
+        | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
+        | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+        | NGX_STREAM_LUA_CONTEXT_TIMER,
+        err, errlen);
 
     if (rc != NGX_OK) {
         return NGX_ERROR;
