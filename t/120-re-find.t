@@ -768,3 +768,31 @@ not matched!
 not matched!
 --- no_error_log
 [error]
+
+
+
+=== TEST 31: ignore match limit in DFA mode
+--- stream_config
+    lua_regex_match_limit 1;
+--- stream_server_config
+    content_by_lua_block {
+        local s = "This is <something> <something else> <something further> no more"
+        local from, to, err = ngx.re.find(s, "<.*>", "d")
+        if from then
+            ngx.say("from: ", from)
+            ngx.say("to: ", to)
+            ngx.say("matched: ", string.sub(s, from, to))
+        else
+            if err then
+                ngx.say("error: ", err)
+                return
+            end
+            ngx.say("not matched!")
+        end
+    }
+--- stream_response
+from: 9
+to: 56
+matched: <something> <something else> <something further>
+--- no_error_log
+[error]
