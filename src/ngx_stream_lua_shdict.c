@@ -734,7 +734,7 @@ ngx_stream_lua_shdict_push_helper(lua_State *L, int flags)
                        "type matched, reusing it");
 
         sd->expires = 0;
-
+        sd->value_len = 0;
         /* free list nodes */
 
         queue = ngx_stream_lua_shdict_get_list_head(sd, key.len);
