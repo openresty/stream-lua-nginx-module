@@ -156,3 +156,203 @@ my $s = "ngx.say('ok')\n";
 ok
 --- no_error_log
 [error]
+
+
+
+=== TEST 6: tcp: nginx crash when resolve an not exist domain in ngx.thread.spawn
+https://github.com/openresty/lua-nginx-module/issues/1915
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    content_by_lua_block {
+        local function tcp(host, port)
+            local sock = ngx.socket.tcp()
+            local ok,err = sock:connect(host, port)
+            if not ok then
+                ngx.log(ngx.WARN, "failed: ", err)
+                sock:close()
+                return false
+            end
+
+            sock:close()
+            return true
+        end
+
+        local host = "www.notexistdomain.com"
+        local port = 80
+
+        local threads = {}
+        for i = 1, 3 do
+            threads[i] = ngx.thread.spawn(tcp, host, port)
+        end
+
+        local ok, res = ngx.thread.wait(threads[1],threads[2],threads[3])
+        if not ok then
+            ngx.say("failed to wait thread")
+            return
+        end
+
+        ngx.say("res: ", res)
+
+        for i = 1, 3 do
+            ngx.thread.kill(threads[i])
+        end
+    }
+
+--- request
+GET /t
+--- response_body
+res: false
+--- error_log
+www.notexistdomain.com could not be resolved
+
+
+
+=== TEST 7: domain exists with tcp socket
+https://github.com/openresty/lua-nginx-module/issues/1915
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    content_by_lua_block {
+        local function tcp(host, port)
+            local sock = ngx.socket.tcp()
+            local ok,err = sock:connect(host, port)
+            if not ok then
+                ngx.log(ngx.WARN, "failed: ", err)
+                sock:close()
+                return false
+            end
+
+            sock:close()
+            return true
+        end
+
+        local host = "www.openresty.org"
+        local port = 80
+
+        local threads = {}
+        for i = 1, 3 do
+            threads[i] = ngx.thread.spawn(tcp, host, port)
+        end
+
+        local ok, res = ngx.thread.wait(threads[1],threads[2],threads[3])
+        if not ok then
+            ngx.say("failed to wait thread")
+            return
+        end
+
+        ngx.say("res: ", res)
+
+        for i = 1, 3 do
+            ngx.thread.kill(threads[i])
+        end
+    }
+
+--- request
+GET /t
+--- response_body
+res: true
+--- no_error_log
+[error]
+
+
+
+=== TEST 8: domain exists with udp socket
+https://github.com/openresty/lua-nginx-module/issues/1915
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    content_by_lua_block {
+        local function udp(host, port)
+            local sock = ngx.socket.udp()
+            local ok,err = sock:setpeername(host, port)
+            if not ok then
+                ngx.log(ngx.WARN, "failed: ", err)
+                sock:close()
+                return false
+            end
+
+            sock:close()
+            return true
+        end
+
+        local host = "www.notexistdomain.com"
+        local port = 80
+
+        local threads = {}
+        for i = 1, 3 do
+            threads[i] = ngx.thread.spawn(udp, host, port)
+        end
+
+        local ok, res = ngx.thread.wait(threads[1],threads[2],threads[3])
+        if not ok then
+            ngx.say("failed to wait thread")
+            return
+        end
+
+        ngx.say("res: ", res)
+
+        for i = 1, 3 do
+            ngx.thread.kill(threads[i])
+        end
+    }
+
+--- request
+GET /t
+--- response_body
+res: false
+--- error_log
+www.notexistdomain.com could not be resolved
+
+
+
+=== TEST 9: udp: nginx crash when resolve an not exist domain in ngx.thread.spawn
+https://github.com/openresty/lua-nginx-module/issues/1915
+--- stream_config eval
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    content_by_lua_block {
+        local function udp(host, port)
+            local sock = ngx.socket.udp()
+            local ok,err = sock:setpeername(host, port)
+            if not ok then
+                ngx.log(ngx.WARN, "failed: ", err)
+                sock:close()
+                return false
+            end
+
+            sock:close()
+            return true
+        end
+
+        local host = "www.openresty.org"
+        local port = 80
+
+        local threads = {}
+        for i = 1, 3 do
+            threads[i] = ngx.thread.spawn(udp, host, port)
+        end
+
+        local ok, res = ngx.thread.wait(threads[1],threads[2],threads[3])
+        if not ok then
+            ngx.say("failed to wait thread")
+            return
+        end
+
+        ngx.say("res: ", res)
+
+        for i = 1, 3 do
+            ngx.thread.kill(threads[i])
+        end
+    }
+
+--- request
+GET /t
+--- response_body
+res: true
+--- no_error_log
+[error]
