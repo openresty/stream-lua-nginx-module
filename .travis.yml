@@ -43,6 +43,8 @@ services:
  - redis-server
 
 install:
+  - sudo apt update
+  - sudo apt install --only-upgrade ca-certificates
   - if [ ! -f download-cache/pcre-$PCRE_VER.tar.gz ]; then wget -P download-cache/ https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VER.tar.gz; fi
   - if [ ! -f download-cache/openssl-$OPENSSL_VER.tar.gz ]; then wget -P download-cache https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz || wget -P download-cache https://www.openssl.org/source/old/${OPENSSL_VER//[a-z]/}/openssl-$OPENSSL_VER.tar.gz; fi
   - git clone https://github.com/openresty/openresty-devel-utils.git

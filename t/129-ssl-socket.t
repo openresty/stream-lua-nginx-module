@@ -29,7 +29,7 @@ sub read_file {
     $cert;
 }
 
-our $DSTRootCertificate = read_file("t/cert/dst-ca.crt");
+our $DSTRootCertificate = read_file("t/cert/root-ca.crt");
 our $GoogleRootCertificate = read_file("t/cert/google.crt");
 our $TestCertificate = read_file("t/cert/test.crt");
 our $TestCertificateKey = read_file("t/cert/test.key");
