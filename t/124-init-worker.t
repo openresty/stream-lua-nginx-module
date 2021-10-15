@@ -22,7 +22,7 @@ sub read_file {
     $cert;
 }
 
-our $DSTRootCertificate = read_file("t/cert/dst-ca.crt");
+our $DSTRootCertificate = read_file("t/cert/root-ca.crt");
 our $ServerRoot = server_root();
 
 #no_diff();
