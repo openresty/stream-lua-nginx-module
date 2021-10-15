@@ -172,8 +172,6 @@ static void ngx_stream_lua_socket_free_pool(ngx_log_t *log,
 static int ngx_stream_lua_socket_shutdown_pool(lua_State *L);
 static void ngx_stream_lua_socket_shutdown_pool_helper(
     ngx_stream_lua_socket_pool_t *spool);
-static void
-    ngx_stream_lua_socket_empty_resolve_handler(ngx_resolver_ctx_t *ctx);
 static int ngx_stream_lua_socket_prepare_error_retvals(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u,
     lua_State *L, ngx_uint_t ft_type);
@@ -1133,13 +1131,6 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
 
     return ngx_stream_lua_socket_tcp_connect_helper(L, u, r, ctx, p,
                                                     len, port, 0);
-}
-
-
-static void
-ngx_stream_lua_socket_empty_resolve_handler(ngx_resolver_ctx_t *ctx)
-{
-    /* do nothing */
 }
 
 
@@ -6174,10 +6165,8 @@ ngx_stream_lua_tcp_resolve_cleanup(void *data)
         return;
     }
 
-    /* just to be safer */
-    rctx->handler = ngx_stream_lua_socket_empty_resolve_handler;
-
-    ngx_resolve_name_done(rctx);
+    /* postpone free the rctx in the handler */
+    rctx->handler = ngx_resolve_name_done;
 }
 
 
