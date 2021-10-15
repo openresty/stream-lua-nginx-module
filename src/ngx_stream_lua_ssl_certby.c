@@ -440,16 +440,19 @@ ngx_stream_lua_log_ssl_cert_error(ngx_log_t *log, u_char *buf, size_t len)
 
     c = log->data;
 
-    if (c->addr_text.len) {
-        p = ngx_snprintf(buf, len, ", client: %V", &c->addr_text);
-        len -= p - buf;
-        buf = p;
-    }
+    if (c != NULL) {
+        if (c->addr_text.len) {
+            p = ngx_snprintf(buf, len, ", client: %V", &c->addr_text);
+            len -= p - buf;
+            buf = p;
+        }
 
-    if (c && c->listening && c->listening->addr_text.len) {
-        p = ngx_snprintf(buf, len, ", server: %V", &c->listening->addr_text);
-        /* len -= p - buf; */
-        buf = p;
+        if (c->listening && c->listening->addr_text.len) {
+            p = ngx_snprintf(buf, len, ", server: %V",
+                             &c->listening->addr_text);
+            /* len -= p - buf; */
+            buf = p;
+        }
     }
 
     return buf;
@@ -1423,7 +1426,7 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
 
     if (depth < 0) {
         sscf = ngx_stream_get_module_srv_conf(r->session,
-            ngx_stream_ssl_module);
+                                              ngx_stream_ssl_module);
         if (sscf != NULL) {
             depth = sscf->verify_depth;
 
