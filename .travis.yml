@@ -68,6 +68,7 @@ script:
   - sudo iptables -A OUTPUT -p udp --dst 127.0.0.2 --dport 12345 -j DROP
   - sudo ip addr add 10.254.254.1/24 dev lo
   - sudo ip addr add 10.254.254.2/24 dev lo
+  - sudo ip route add prohibit 0.0.0.1/32
   - tar zxf download-cache/pcre-$PCRE_VER.tar.gz
   - cd pcre-$PCRE_VER/
   - ./configure --prefix=$PCRE_PREFIX --enable-jit --enable-utf --enable-unicode-properties > build.log 2>&1 || (cat build.log && exit 1)
