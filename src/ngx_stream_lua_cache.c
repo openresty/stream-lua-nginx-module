@@ -93,7 +93,7 @@ ngx_stream_lua_cache_load_code(ngx_log_t *log, lua_State *L,
 
     dd("Value associated with given key in code cache table is not code "
        "chunk: stack top=%d, top value type=%s\n",
-       lua_gettop(L), lua_typename(L, -1));
+       lua_gettop(L), luaL_typename(L, -1));
 
     /*  remove cache table and value from stack */
     lua_pop(L, 2);                                /*  sp-=2 */
