@@ -1787,3 +1787,77 @@ client socket file:
 --- no_error_log
 [error]
 [alert]
+
+
+
+=== TEST 27: get ciphers
+--- stream_config
+    lua_package_path "../lua-resty-core/lib/?.lua;;";
+    lua_ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+
+    server {
+        listen 127.0.0.1:12346 ssl;
+
+        ssl_certificate_by_lua_block {
+            local ssl = require "ngx.ssl"
+            print("ciphers: ", ssl.ciphers())
+        }
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("127.0.0.1", 12346)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+ciphers: ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+
+--- no_error_log
+[error]
+[alert]
+[crit]
