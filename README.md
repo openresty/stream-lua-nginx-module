@@ -319,8 +319,9 @@ other stream modules.
     `ngx.ERR`, `ngx.WARN`, and etc.
 * [print](https://github.com/openresty/lua-nginx-module#print)
 * [ngx.ctx](https://github.com/openresty/lua-nginx-module#ngxctx)
-* [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
 * [ngx.balancer](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md)
+
+* [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
 
 Only raw request sockets are supported, for obvious reasons. The `raw` argument value
 is ignored and the raw request socket is always returned. Unlike ngx_http_lua,
