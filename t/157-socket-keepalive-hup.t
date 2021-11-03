@@ -27,7 +27,8 @@ __DATA__
 === TEST 1: exiting
 --- stream_server_config
     content_by_lua_block {
-        local f, err = io.open("t/servroot/logs/nginx.pid", "r")
+        local pidfile = ngx.config.prefix() .. "/logs/nginx.pid"
+        local f, err = io.open(pidfile, "r")
         if not f then
             ngx.say("failed to open nginx.pid: ", err)
             return
