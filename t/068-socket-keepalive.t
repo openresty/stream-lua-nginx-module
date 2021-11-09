@@ -1927,7 +1927,7 @@ queue connect operation for connection pool
         local sock1 = ngx.socket.connect("127.0.0.1", port, opts)
 
         local sock2 = ngx.socket.tcp()
-        sock2:settimeouts(10, 3000, 3000)
+        sock2:settimeouts(100, 3000, 3000)
         local ok, err = sock2:connect("127.0.0.1", port, opts)
         if not ok then
             ngx.say(err)
@@ -1942,7 +1942,7 @@ timeout
 
 === TEST 42: conn queuing: set timeout via lua_socket_connect_timeout
 --- stream_server_config
-    lua_socket_connect_timeout 10ms;
+    lua_socket_connect_timeout 100ms;
 
     content_by_lua_block {
         local port = $TEST_NGINX_MEMCACHED_PORT
