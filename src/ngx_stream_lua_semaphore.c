@@ -476,6 +476,10 @@ ngx_stream_lua_sema_handler(ngx_event_t *ev)
     ngx_queue_t                         *q;
 
     sem = ev->data;
+    ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                   "semaphore handler: wait queue: %sempty, resource count: %d",
+                   ngx_queue_empty(&sem->wait_queue) ? "" : "not ",
+                   sem->resource_count);
 
     while (!ngx_queue_empty(&sem->wait_queue) && sem->resource_count > 0) {
 
