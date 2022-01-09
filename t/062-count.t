@@ -45,10 +45,11 @@ ngx: 53
         end
         -- ngx.req.socket
         -- ngx.req.start_time
+        -- ngx.req.is_internal
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 2
+n = 3
 --- no_error_log
 [error]
 
