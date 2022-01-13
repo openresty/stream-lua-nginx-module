@@ -23,6 +23,17 @@
 #include "ngx_stream_lua_shdict.h"
 #include "ngx_stream_lua_util.h"
 
+ngx_stream_session_t *
+ngx_stream_lua_get_session(lua_State *L)
+{
+    ngx_stream_session_t    *s;
+
+    lua_getglobal(L, ngx_stream_lua_session_key);
+    s = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    return s;
+}
 
 lua_State *
 ngx_stream_lua_get_global_state(ngx_conf_t *cf)
@@ -60,6 +71,8 @@ ngx_stream_lua_add_package_preload(ngx_conf_t *cf, const char *package,
         lua_pushcfunction(L, func);
         lua_setfield(L, -2, package);
         lua_pop(L, 2);
+
+        return NGX_OK;
     }
 
     /* we always register preload_hooks since we always create new Lua VMs

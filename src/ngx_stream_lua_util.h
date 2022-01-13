@@ -32,6 +32,7 @@
 #endif
 
 
+#define ngx_stream_lua_session_key  "__ngx_sess"
 typedef struct {
     ngx_stream_lua_ffi_str_t         key;
     ngx_stream_lua_ffi_str_t         value;

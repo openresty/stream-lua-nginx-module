@@ -18,9 +18,7 @@
 
 #include <nginx.h>
 #include <ngx_core.h>
-
-
-
+#include <ngx_stream.h>
 
 #include <lua.h>
 #include <stdint.h>
@@ -53,6 +51,7 @@ typedef struct {
 
 lua_State *ngx_stream_lua_get_global_state(ngx_conf_t *cf);
 
+ngx_stream_session_t *ngx_stream_lua_get_session(lua_State *L);
 
 ngx_int_t ngx_stream_lua_add_package_preload(ngx_conf_t *cf,
     const char *package, lua_CFunction func);
