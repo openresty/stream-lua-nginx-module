@@ -34,7 +34,8 @@ ffi.cdef[[
         size_t pem_len, unsigned char *der, char **err);
 
     int ngx_stream_lua_ffi_priv_key_pem_to_der(const unsigned char *pem,
-        size_t pem_len, unsigned char *der, char **err);
+        size_t pem_len, const unsigned char *passphrase,
+        unsigned char *der, char **err);
 
     int ngx_stream_lua_ffi_ssl_set_der_certificate(void *r,
         const char *data, size_t len, char **err);
@@ -59,8 +60,6 @@ ffi.cdef[[
     void ngx_stream_lua_ffi_free_cert(void *cdata);
 
     void ngx_stream_lua_ffi_free_priv_key(void *cdata);
-
-    int ngx_stream_lua_ffi_ssl_clear_certs(void *r, char **err);
 
     int ngx_stream_lua_ffi_ssl_verify_client(void *r, void *cdata, int depth, char **err);
 
@@ -128,7 +127,7 @@ __DATA__
 
             out = ffi.new("char [?]", #pkey)
 
-            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, out, errmsg)
+            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, nil, out, errmsg)
             if rc < 1 then
                 ngx.log(ngx.ERR, "failed to parse PEM priv key: ",
                         ffi.string(errmsg[0]))
@@ -255,7 +254,7 @@ lua ssl server name: "test.com"
 
             out = ffi.new("char [?]", #pkey)
 
-            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, out, errmsg)
+            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, nil, out, errmsg)
             if rc < 1 then
                 ngx.log(ngx.ERR, "failed to parse PEM priv key: ",
                         ffi.string(errmsg[0]))
@@ -366,7 +365,7 @@ lua ssl server name: "test.com"
 
             out = ffi.new("char [?]", #pkey)
 
-            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, out, errmsg)
+            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, nil, out, errmsg)
             if rc < 1 then
                 ngx.log(ngx.ERR, "failed to parse PEM priv key: ",
                         ffi.string(errmsg[0]))
@@ -860,6 +859,133 @@ NONE
 
 --- error_log
 client certificate subject: nil
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 9: private key protected by passphrase
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate_by_lua_block {
+            collectgarbage()
+
+            require "defines"
+            local ffi = require "ffi"
+
+            local errmsg = ffi.new("char *[1]")
+
+            local r = require "resty.core.base" .get_request()
+            if not r then
+                ngx.log(ngx.ERR, "no request found")
+                return
+            end
+
+            ffi.C.ngx_stream_lua_ffi_ssl_clear_certs(r, errmsg)
+
+            local f = assert(io.open("t/cert/test.crt", "rb"))
+            local cert = f:read("*all")
+            f:close()
+
+            local out = ffi.new("char [?]", #cert)
+
+            local rc = ffi.C.ngx_stream_lua_ffi_cert_pem_to_der(cert, #cert, out, errmsg)
+            if rc < 1 then
+                ngx.log(ngx.ERR, "failed to parse PEM cert: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            local cert_der = ffi.string(out, rc)
+
+            local rc = ffi.C.ngx_stream_lua_ffi_ssl_set_der_certificate(r, cert_der, #cert_der, errmsg)
+            if rc ~= 0 then
+                ngx.log(ngx.ERR, "failed to set DER cert: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            f = assert(io.open("t/cert/test.key", "rb"))
+            local pkey = f:read("*all")
+            f:close()
+
+            out = ffi.new("char [?]", #pkey)
+
+            local rc = ffi.C.ngx_stream_lua_ffi_priv_key_pem_to_der(pkey, #pkey, "123456", out, errmsg)
+            if rc < 1 then
+                ngx.log(ngx.ERR, "failed to parse PEM priv key: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            local pkey_der = ffi.string(out, rc)
+
+            local rc = ffi.C.ngx_stream_lua_ffi_ssl_set_der_private_key(r, pkey_der, #pkey_der, errmsg)
+            if rc ~= 0 then
+                ngx.log(ngx.ERR, "failed to set DER priv key: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+        }
+
+        ssl_certificate ../../cert/test2.crt;
+        ssl_certificate_key ../../cert/test2.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+lua ssl server name: "test.com"
 
 --- no_error_log
 [error]
