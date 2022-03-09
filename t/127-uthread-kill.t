@@ -130,6 +130,7 @@ lua clean up the timer for pending ngx.sleep
 === TEST 3: kill pending resolver
 --- stream_server_config
     resolver 127.0.0.2:12345;
+    resolver_timeout 5ms;
     content_by_lua_block {
         function f()
             local sock = ngx.socket.tcp()
