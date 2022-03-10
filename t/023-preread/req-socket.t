@@ -279,10 +279,10 @@ received: d
         end
     }
 
-    proxy_pass 127.0.0.1:12333;
+    proxy_pass 127.0.0.1:$TEST_NGINX_RAND_PORT_1;
 --- stream_config
 server {
-    listen 127.0.0.1:12333;
+    listen 127.0.0.1:$TEST_NGINX_RAND_PORT_1;
 
     content_by_lua_block {
         local sock, err = ngx.req.socket()

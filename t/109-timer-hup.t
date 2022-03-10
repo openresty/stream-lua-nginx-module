@@ -322,7 +322,7 @@ TODO
     #lua_shared_dict test_dict 1m;
 
     server {
-        listen 12355;
+        listen $TEST_NGINX_RAND_PORT_1;
         location = /foo {
             echo 'foo';
         }
@@ -335,7 +335,7 @@ TODO
 
         -- Connect the socket
         local sock = ngx.socket.tcp()
-        local ok,err = sock:connect("127.0.0.1", 12355)
+        local ok,err = sock:connect("127.0.0.1", $TEST_NGINX_RAND_PORT_1)
         if not ok then
             ngx.log(ngx.ERR, err)
         end

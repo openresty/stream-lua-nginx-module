@@ -348,7 +348,7 @@ received memc reply: OK
 === TEST 5: ngx.exit(0) - no yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             ngx.exit(0)
             ngx.log(ngx.ERR, "should never reached here...")
@@ -368,7 +368,7 @@ received memc reply: OK
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -404,7 +404,7 @@ should never reached here
 === TEST 6: ngx.exit(ngx.ERROR) - no yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             ngx.exit(ngx.ERROR)
             ngx.log(ngx.ERR, "should never reached here...")
@@ -424,7 +424,7 @@ should never reached here
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -463,7 +463,7 @@ should never reached here
 === TEST 7: ngx.exit(0) -  yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             ngx.sleep(0.001)
             ngx.exit(0)
@@ -485,7 +485,7 @@ should never reached here
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -521,7 +521,7 @@ should never reached here
 === TEST 8: ngx.exit(ngx.ERROR) - yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             ngx.sleep(0.001)
             ngx.exit(ngx.ERROR)
@@ -543,7 +543,7 @@ should never reached here
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -582,7 +582,7 @@ should never reached here
 === TEST 9: lua exception - no yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             error("bad bad bad")
             ngx.log(ngx.ERR, "should never reached here...")
@@ -602,7 +602,7 @@ should never reached here
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -642,7 +642,7 @@ should never reached here
 === TEST 10: lua exception - yield
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
         ssl_client_hello_by_lua_block {
             ngx.sleep(0.001)
             error("bad bad bad")
@@ -663,7 +663,7 @@ should never reached here
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1305,8 +1305,8 @@ ssl_client_hello_by_lua:1: ssl client hello by lua is running!
 === TEST 20: listen two ports (one for ssl and one for non-ssl) in one server - connect ssl port
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
-        listen 127.0.0.2:8181;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_2;
         ssl_client_hello_by_lua_block { print("ssl client hello by lua is running!") }
         ssl_certificate ../../cert/test.crt;
         ssl_certificate_key ../../cert/test.key;
@@ -1321,7 +1321,7 @@ ssl_client_hello_by_lua:1: ssl client hello by lua is running!
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8080)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1372,8 +1372,8 @@ ssl_client_hello_by_lua:1: ssl client hello by lua is running!
 === TEST 21: listen two ports (one for ssl and one for non-ssl) in one server - connect non-ssl port
 --- stream_config
     server {
-        listen 127.0.0.2:8080 ssl;
-        listen 127.0.0.2:8181;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_1 ssl;
+        listen 127.0.0.2:$TEST_NGINX_RAND_PORT_2;
         ssl_client_hello_by_lua_block { print("ssl client hello by lua is running!") }
         ssl_certificate ../../cert/test.crt;
         ssl_certificate_key ../../cert/test.key;
@@ -1388,7 +1388,7 @@ ssl_client_hello_by_lua:1: ssl client hello by lua is running!
 
             sock:settimeout(2000)
 
-            local ok, err = sock:connect("127.0.0.2", 8181)
+            local ok, err = sock:connect("127.0.0.2", $TEST_NGINX_RAND_PORT_2)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
