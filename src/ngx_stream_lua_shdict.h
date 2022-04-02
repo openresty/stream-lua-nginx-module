@@ -76,7 +76,7 @@ typedef struct {
     int                  get_stale;
     int                 *is_stale;
     char               **errmsg;
-} ngx_stream_lua_shdict_get_t;
+} ngx_stream_lua_shdict_get_params_t;
 
 
 typedef struct {
@@ -92,7 +92,7 @@ typedef struct {
     int                  user_flags;
     char               **errmsg;
     int                 *forcible;
-} ngx_stream_lua_shdict_store_t;
+} ngx_stream_lua_shdict_store_params_t;
 
 
 typedef struct {
@@ -105,7 +105,7 @@ typedef struct {
     double               init;
     long                 init_ttl;
     int                 *forcible;
-} ngx_stream_lua_shdict_incr_t;
+} ngx_stream_lua_shdict_incr_params_t;
 #endif
 
 
