@@ -65,7 +65,7 @@ typedef struct {
 
 #if (NGX_DARWIN)
 typedef struct {
-    ngx_shm_zone_t      *zone;
+    void                *zone;
     const unsigned char *key;
     size_t               key_len;
     int                 *value_type;
@@ -80,7 +80,7 @@ typedef struct {
 
 
 typedef struct {
-    ngx_shm_zone_t      *zone;
+    void                *zone;
     int                  op;
     const unsigned char *key;
     size_t               key_len;
@@ -96,7 +96,7 @@ typedef struct {
 
 
 typedef struct {
-    ngx_shm_zone_t      *zone;
+    void                *zone;
     const unsigned char *key;
     size_t               key_len;
     double              *num_value;
