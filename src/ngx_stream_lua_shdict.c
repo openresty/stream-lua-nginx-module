@@ -2032,8 +2032,10 @@ int
 ngx_stream_lua_ffi_shdict_get_macos(ngx_stream_lua_shdict_get_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_get(p->zone, p->key, p->key_len,
-        p->value_type, p->str_value_buf, p->str_value_len, p->num_value,
-        p->user_flags, p->get_stale, p->is_stale, p->errmsg);
+                                         p->value_type, p->str_value_buf,
+                                         p->str_value_len, p->num_value,
+                                         p->user_flags, p->get_stale,
+                                         p->is_stale, p->errmsg);
 }
 
 
@@ -2041,8 +2043,10 @@ int
 ngx_stream_lua_ffi_shdict_store_macos(ngx_stream_lua_shdict_store_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_store(p->zone, p->op, p->key, p->key_len,
-        p->value_type, p->str_value_buf, p->str_value_len, p->num_value,
-        p->exptime, p->user_flags, p->errmsg, p->forcible);
+                                           p->value_type, p->str_value_buf,
+                                           p->str_value_len, p->num_value,
+                                           p->exptime, p->user_flags,
+                                           p->errmsg, p->forcible);
 }
 
 
@@ -2050,8 +2054,9 @@ int
 ngx_stream_lua_ffi_shdict_incr_macos(ngx_stream_lua_shdict_incr_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_incr(p->zone, p->key, p->key_len,
-            p->num_value, p->errmsg, p->has_init, p->init, p->init_ttl,
-            p->forcible);
+                                          p->num_value, p->errmsg,
+                                          p->has_init, p->init, p->init_ttl,
+                                          p->forcible);
 }
 #endif
 
