@@ -2029,7 +2029,7 @@ ngx_stream_lua_ffi_shdict_free_space(ngx_shm_zone_t *zone)
 
 #if (NGX_DARWIN)
 int
-ngx_stream_lua_ffi_shdict_get_macos_arm64(ngx_stream_lua_shdict_get_params_t *p)
+ngx_stream_lua_ffi_shdict_get_macos(ngx_stream_lua_shdict_get_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_get(p->zone, p->key, p->key_len,
         p->value_type, p->str_value_buf, p->str_value_len, p->num_value,
@@ -2038,7 +2038,7 @@ ngx_stream_lua_ffi_shdict_get_macos_arm64(ngx_stream_lua_shdict_get_params_t *p)
 
 
 int
-ngx_stream_lua_ffi_shdict_store_macos_arm64(ngx_stream_lua_shdict_store_params_t *p)
+ngx_stream_lua_ffi_shdict_store_macos(ngx_stream_lua_shdict_store_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_store(p->zone, p->op, p->key, p->key_len,
         p->value_type, p->str_value_buf, p->str_value_len, p->num_value,
@@ -2047,7 +2047,7 @@ ngx_stream_lua_ffi_shdict_store_macos_arm64(ngx_stream_lua_shdict_store_params_t
 
 
 int
-ngx_stream_lua_ffi_shdict_incr_macos_arm64(ngx_stream_lua_shdict_incr_params_t *p)
+ngx_stream_lua_ffi_shdict_incr_macos(ngx_stream_lua_shdict_incr_params_t *p)
 {
     return ngx_stream_lua_ffi_shdict_incr(p->zone, p->key, p->key_len,
             p->num_value, p->errmsg, p->has_init, p->init, p->init_ttl,
