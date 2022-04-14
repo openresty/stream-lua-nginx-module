@@ -184,7 +184,7 @@ close: 1 nil$
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
-        local port = 7658
+        local port = $TEST_NGINX_RAND_PORT_1
         local ok, err = sock:connect("127.0.0.1", port)
         if not ok then
             ngx.say("failed to connect: ", err)
@@ -245,7 +245,7 @@ received: OK!
 close: (?:nil socket busy writing|1 nil
 failed to send request: closed)$
 
---- tcp_listen: 7658
+--- tcp_listen: $TEST_NGINX_RAND_PORT_1
 --- tcp_shutdown: 0
 --- tcp_reply: OK!
 --- tcp_no_close: 1
@@ -260,7 +260,7 @@ failed to send request: closed)$
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()
-        local port = 7658
+        local port = $TEST_NGINX_RAND_PORT_2
         local ok, err = sock:connect("127.0.0.1", port)
         if not ok then
             ngx.say("failed to connect: ", err)
@@ -327,7 +327,7 @@ F(ngx_http_lua_socket_tcp_finalize_write_part) {
     print_ubacktrace()
 }
 --- stap_out2
---- tcp_listen: 7658
+--- tcp_listen: $TEST_NGINX_RAND_PORT_2
 --- tcp_shutdown: 1
 --- tcp_query eval: "flush_all\r\n"
 --- tcp_query_len: 11
