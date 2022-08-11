@@ -109,7 +109,6 @@ worker pid: \d+
         local pids = ngx.worker.pids()
         ngx.say("worker pid: ", pid)
         local count = ngx.worker.count()
-        ngx.say("worker count: ", count)
         if count ~= #pids then
             ngx.say("worker pids is wrong.")
         end
