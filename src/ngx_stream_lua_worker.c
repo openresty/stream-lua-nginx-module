@@ -29,7 +29,7 @@ ngx_stream_lua_ffi_worker_pid(void)
 
 
 int
-ngx_stream_lua_ffi_worker_pids(int *pids, size_t *pidslen)
+ngx_stream_lua_ffi_worker_pids(int *pids, size_t *pids_len)
 {
     ngx_int_t i, n;
 
@@ -52,7 +52,7 @@ ngx_stream_lua_ffi_worker_pids(int *pids, size_t *pidslen)
         return NGX_ERROR;
     }
 
-    *pidslen = n;
+    *pids_len = n;
 
     return NGX_OK;
 }
