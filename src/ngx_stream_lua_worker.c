@@ -29,6 +29,36 @@ ngx_stream_lua_ffi_worker_pid(void)
 
 
 int
+ngx_stream_lua_ffi_worker_pids(int *pids, size_t *pids_len)
+{
+    ngx_int_t i, n;
+
+    n = 0;
+    for (i = 0; i < NGX_MAX_PROCESSES; i++) {
+        if (i != ngx_process_slot && ngx_processes[i].pid == 0) {
+            break;
+        }
+
+        if (i == ngx_process_slot && ngx_processes[i].pid == 0) {
+            pids[n++] = ngx_pid;
+        }
+
+        if (ngx_processes[i].pid > 0) {
+            pids[n++] = ngx_processes[i].pid;
+        }
+    }
+
+    if (n == 0) {
+        return NGX_ERROR;
+    }
+
+    *pids_len = n;
+
+    return NGX_OK;
+}
+
+
+int
 ngx_stream_lua_ffi_worker_id(void)
 {
 #if defined(nginx_version) && nginx_version >= 1009001

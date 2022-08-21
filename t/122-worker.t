@@ -99,3 +99,29 @@ worker pid is correct\.
 worker pid: \d+
 --- no_error_log
 [error]
+
+
+
+=== TEST 6: content_by_lua + ngx.worker.pids
+--- stream_server_config
+    content_by_lua_block {
+        local pid = ngx.worker.pid()
+        local pids = ngx.worker.pids()
+        ngx.say("worker pid: ", pid)
+        local count = ngx.worker.count()
+        if count ~= #pids then
+            ngx.say("worker pids is wrong.")
+        end
+        for i = 1, count do
+            if pids[i] == pid then
+                ngx.say("worker pid is correct.")
+                return
+            end
+        end
+        ngx.say("worker pid is wrong.")
+    }
+--- stream_response_like
+worker pid: \d+
+worker pid is correct\.
+--- no_error_log
+[error]

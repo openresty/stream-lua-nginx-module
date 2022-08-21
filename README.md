@@ -514,6 +514,7 @@ output to be completely flushed out (to the system socket send buffers).
 * [ngx.config.ngx_lua_version](https://github.com/openresty/lua-nginx-module#ngxconfigngx_lua_version)
 * [ngx.worker.exiting](https://github.com/openresty/lua-nginx-module#ngxworkerexiting)
 * [ngx.worker.pid](https://github.com/openresty/lua-nginx-module#ngxworkerpid)
+* [ngx.worker.pids](https://github.com/openresty/lua-nginx-module#ngxworkerpids)
 * [ngx.worker.count](https://github.com/openresty/lua-nginx-module#ngxworkercount)
 * [ngx.worker.id](https://github.com/openresty/lua-nginx-module#ngxworkerid)
 * [coroutine.create](https://github.com/openresty/lua-nginx-module#coroutinecreate)
