@@ -71,6 +71,13 @@ extern char ngx_stream_lua_headers_metatable_key;
 #endif
 
 
+#define NGX_STREAM_LUA_CONTEXT_YIELDABLE (NGX_STREAM_LUA_CONTEXT_PREREAD     \
+                                | NGX_STREAM_LUA_CONTEXT_CONTENT             \
+                                | NGX_STREAM_LUA_CONTEXT_TIMER               \
+                                | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO    \
+                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT)
+
+
 #define ngx_stream_lua_context_name(c)                                       \
     ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
      : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                     \
