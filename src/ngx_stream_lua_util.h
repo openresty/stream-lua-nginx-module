@@ -81,6 +81,7 @@ extern char ngx_stream_lua_headers_metatable_key;
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO ?                      \
                                                  "ssl_client_hello_by_lua*"  \
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"    \
+     : (c) == NGX_STREAM_LUA_CONTEXT_ACCESS ? "access_by_lua*"               \
      : "(unknown)")
 
 

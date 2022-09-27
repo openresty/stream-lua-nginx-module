@@ -681,7 +681,8 @@ ngx_stream_lua_reset_ctx(ngx_stream_lua_request_t *r, lua_State *L,
 
     ctx->entry_co_ctx.co_ref = LUA_NOREF;
 
-
+    ctx->entered_preread_phase = 0;
+    ctx->entered_access_phase = 0;
     ctx->entered_content_phase = 0;
 
     ctx->exit_code = 0;

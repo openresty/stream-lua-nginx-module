@@ -141,6 +141,9 @@ behavior.
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
 * [preread_by_lua_block](#preread_by_lua_block)
 * [preread_by_lua_file](#preread_by_lua_file)
+* [access_by_lua](https://github.com/openresty/lua-nginx-module#access_by_lua)
+* [access_by_lua_block](https://github.com/openresty/lua-nginx-module#access_by_lua_block)
+* [access_by_lua_file](https://github.com/openresty/lua-nginx-module#access_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
 * [content_by_lua_file](https://github.com/openresty/lua-nginx-module#content_by_lua_file)
 * [balancer_by_lua_block](https://github.com/openresty/lua-nginx-module#balancer_by_lua_block)
@@ -170,6 +173,7 @@ behavior.
 * [lua_add_variable](#lua_add_variable)
 * [lua_capture_error_log](https://github.com/openresty/lua-nginx-module#lua_capture_error_log)
 * [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)
+* [access_by_lua_no_postpone](https://github.com/openresty/lua-nginx-module#access_by_lua_no_postpone)
 
 The [send_timeout](https://nginx.org/r/send_timeout) directive in the Nginx
 "http" subsystem is missing in the "stream" subsystem. As such,
@@ -529,7 +533,6 @@ output to be completely flushed out (to the system socket send buffers).
 TODO
 ====
 
-* Add new directives `access_by_lua_block` and `access_by_lua_file`.
 * Add `lua_postpone_output` to emulate the [postpone_output](https://nginx.org/r/postpone_output) directive.
 
 [Back to TOC](#table-of-contents)

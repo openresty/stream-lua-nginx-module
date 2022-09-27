@@ -129,6 +129,7 @@ ngx_stream_lua_coroutine_create_helper(lua_State *L,
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS
                                  );
 
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
@@ -210,6 +211,7 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS
                                  );
 
     p_coctx = ctx->cur_co_ctx;
@@ -271,6 +273,7 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS
                                  );
 
     coctx = ctx->cur_co_ctx;
@@ -431,6 +434,7 @@ ngx_stream_lua_coroutine_status(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS
                                  );
 
     coctx = ngx_stream_lua_get_co_ctx(co, ctx);
