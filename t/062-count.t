@@ -234,7 +234,7 @@ thread: 3
         ngx.say("worker: ", n)
     }
 --- stream_response
-worker: 4
+worker: 5
 --- no_error_log
 [error]
 
