@@ -124,12 +124,7 @@ ngx_stream_lua_coroutine_create_helper(lua_State *L,
     luaL_argcheck(L, lua_isfunction(L, 1) && !lua_iscfunction(L, 1), 1,
                   "Lua function expected");
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_TIMER
-                                 | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
-                                 | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
-                                 );
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_YIELDABLE);
 
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
 
