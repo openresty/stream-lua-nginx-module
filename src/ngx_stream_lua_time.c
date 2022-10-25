@@ -47,6 +47,13 @@ ngx_stream_lua_ffi_time(void)
 }
 
 
+long
+ngx_stream_lua_ffi_monotonic_msec(void)
+{
+    return (long) ngx_current_msec;
+}
+
+
 void
 ngx_stream_lua_ffi_update_time(void)
 {
