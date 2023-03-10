@@ -41,11 +41,12 @@ ngx_stream_lua_ffi_worker_pids(int *pids, size_t *pids_len)
             break;
         }
 
-        if (i == ngx_process_slot && ngx_processes[i].pid == 0) {
+        /* The current process */
+        if (i == ngx_process_slot) {
             pids[n++] = ngx_pid;
         }
 
-        if (ngx_processes[i].pid > 0) {
+        if (ngx_processes[i].channel[0] > 0 && ngx_processes[i].pid > 0) {
             pids[n++] = ngx_processes[i].pid;
         }
     }
