@@ -40,7 +40,7 @@ __DATA__
         ssl_verify_client on;
         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 
-        content_by_lua_block {
+        log_by_lua_block {
             ngx.log(ngx.INFO, "ssl_client_s_dn: ", ngx.var.ssl_client_s_dn)
         }
         return 'it works!\n';
