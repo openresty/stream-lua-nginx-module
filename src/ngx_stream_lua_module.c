@@ -1002,6 +1002,13 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->preread_chunkname = prev->preread_chunkname;
     }
 
+    if (conf->log_src.value.len == 0) {
+        conf->log_src = prev->log_src;
+        conf->log_handler = prev->log_handler;
+        conf->log_src_key = prev->log_src_key;
+        conf->log_chunkname = prev->log_chunkname;
+    }
+
     return NGX_CONF_OK;
 }
 
