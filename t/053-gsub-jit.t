@@ -28,8 +28,11 @@ __DATA__
     }
 --- stream_response
 hello, world world: 2
---- error_log
-pcre JIT compiling result: 1
+--- error_log eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+"pcre2 JIT compiled successfully\n"
+:
+"pcre JIT compiling result: 1\n"
 
 
 
@@ -45,8 +48,11 @@ pcre JIT compiling result: 1
     }
 --- stream_response
 hello, world: 0
---- error_log
-pcre JIT compiling result: 1
+--- error_log eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+"pcre2 JIT compiled successfully\n"
+:
+"pcre JIT compiling result: 1\n"
 
 
 
@@ -64,9 +70,15 @@ pcre JIT compiling result: 1
 hello, world world: 2
 
 --- grep_error_log eval
-qr/pcre JIT compiling result: \d+/
+$Test::Nginx::Util::PcreVersion == 2 ?
+"pcre2 JIT compiled successfully"
+:
+"pcre JIT compiling result: 1"
 
 --- grep_error_log_out eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+["pcre2 JIT compiled successfully\n", ""]
+:
 ["pcre JIT compiling result: 1\n", ""]
 
 
@@ -85,9 +97,15 @@ qr/pcre JIT compiling result: \d+/
 hello, world: 0
 
 --- grep_error_log eval
-qr/pcre JIT compiling result: \d+/
+$Test::Nginx::Util::PcreVersion == 2 ?
+"pcre2 JIT compiled successfully"
+:
+"pcre JIT compiling result: 1"
 
 --- grep_error_log_out eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+["pcre2 JIT compiled successfully\n", ""]
+:
 ["pcre JIT compiling result: 1\n", ""]
 
 
