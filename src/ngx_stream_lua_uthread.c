@@ -284,7 +284,7 @@ ngx_stream_lua_uthread_kill(lua_State *L)
         return 1;
     }
 
-    /* not reacheable */
+    /* not reachable */
 }
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

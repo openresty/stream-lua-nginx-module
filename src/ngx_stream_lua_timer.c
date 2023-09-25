@@ -919,7 +919,7 @@ ngx_stream_lua_abort_pending_timers(ngx_event_t *ev)
             next = cur->parent;
 
         } else {
-            /* not reacheable */
+            /* not reachable */
             next = NULL;
         }
 
