@@ -35,7 +35,7 @@
 #include "ngx_stream_lua_request.h"
 
 
-#if (NGX_PCRE)
+#if defined(NGX_PCRE) && !defined(NGX_PCRE2)
 
 #include <pcre.h>
 
