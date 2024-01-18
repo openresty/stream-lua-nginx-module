@@ -48,8 +48,14 @@ ffi.cdef[[
     void *ngx_stream_lua_ffi_parse_pem_cert(const unsigned char *pem,
         size_t pem_len, char **err);
 
+    void *ngx_stream_lua_ffi_parse_der_cert(const unsigned char *der,
+        size_t der_len, char **err);
+
     void *ngx_stream_lua_ffi_parse_pem_priv_key(const unsigned char *pem,
         size_t pem_len, char **err);
+
+    void *ngx_stream_lua_ffi_parse_der_priv_key(const unsigned char *der,
+        size_t der_len, char **err);
 
     int ngx_stream_lua_ffi_set_cert(void *r,
         void *cdata, char **err);
@@ -930,6 +936,128 @@ client certificate subject: nil
                         ffi.string(errmsg[0]))
                 return
             end
+        }
+
+        ssl_certificate ../../cert/test2.crt;
+        ssl_certificate_key ../../cert/test2.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local sess, err = sock:sslhandshake(nil, "test.com", true)
+            if not sess then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(sess))
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.say("failed to receive response status line: ", err)
+                    break
+                end
+
+                ngx.say("received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end  -- do
+        -- collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+received: it works!
+close: 1 nil
+
+--- error_log
+lua ssl server name: "test.com"
+
+--- no_error_log
+[error]
+[alert]
+
+
+=== TEST 10: DER cert + private key cdata
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate_by_lua_block {
+            collectgarbage()
+
+            local ffi = require "ffi"
+            require "defines"
+
+            local errmsg = ffi.new("char *[1]")
+
+            local r = require "resty.core.base" .get_request()
+            if not r then
+                ngx.log(ngx.ERR, "no request found")
+                return
+            end
+
+            ffi.C.ngx_stream_lua_ffi_ssl_clear_certs(r, errmsg)
+
+            local f = assert(io.open("t/cert/test_der.crt", "rb"))
+            local cert_data = f:read("*all")
+            f:close()
+
+            local cert = ffi.C.ngx_stream_lua_ffi_parse_der_cert(cert_data, #cert_data, errmsg)
+            if not cert then
+                ngx.log(ngx.ERR, "failed to parse DER cert: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            local rc = ffi.C.ngx_stream_lua_ffi_set_cert(r, cert, errmsg)
+            if rc ~= 0 then
+                ngx.log(ngx.ERR, "failed to set cdata cert: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            ffi.C.ngx_stream_lua_ffi_free_cert(cert)
+
+            f = assert(io.open("t/cert/test_der.key", "rb"))
+            local pkey_data = f:read("*all")
+            f:close()
+
+            local pkey = ffi.C.ngx_stream_lua_ffi_parse_der_priv_key(pkey_data, #pkey_data, errmsg)
+            if pkey == nil then
+                ngx.log(ngx.ERR, "failed to parse DER priv key: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            local rc = ffi.C.ngx_stream_lua_ffi_set_priv_key(r, pkey, errmsg)
+            if rc ~= 0 then
+                ngx.log(ngx.ERR, "failed to set cdata priv key: ",
+                        ffi.string(errmsg[0]))
+                return
+            end
+
+            ffi.C.ngx_stream_lua_ffi_free_priv_key(pkey)
         }
 
         ssl_certificate ../../cert/test2.crt;
