@@ -166,7 +166,7 @@ exec opts: 0
         end
 
         local m2 = ngx.re.match("world", "w", "d")
-        if m then
+        if m2 then
             ngx.say(m2[0])
         else
             ngx.say("not matched!")

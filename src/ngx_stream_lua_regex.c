@@ -796,6 +796,21 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
         re->ncaptures = 0;
 
     } else {
+        /* How pcre_exec() returns captured substrings
+         * The first two-thirds of the vector is used to pass back captured
+         * substrings, each substring using a pair of integers. The remaining
+         * third of the vector is used as workspace by pcre_exec() while
+         * matching capturing subpatterns, and is not available for passing
+         * back information. The number passed in ovecsize should always be a
+         * multiple of three. If it is not, it is rounded down.
+         *
+         * When a match is successful, information about captured substrings is
+         * returned in pairs of integers, starting at the beginning of ovector,
+         * and continuing up to two-thirds of its length at the most. The first
+         * element of each pair is set to the byte offset of the first character
+         * in a substring, and the second is set to the byte offset of the first
+         * character after the end of a substring.
+         */
         ovecsize = (re->ncaptures + 1) * 3;
     }
 
