@@ -695,11 +695,11 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
     ngx_pool_t  *old_pool;
 
     if (flags & NGX_LUA_RE_MODE_DFA) {
-        ovecsize = 2;
+        ovecsize = 1;
         re->ncaptures = 0;
 
     } else {
-        ovecsize = (re->ncaptures + 1) * 3;
+        ovecsize = re->ncaptures + 1;
     }
 
     old_pool = ngx_stream_lua_pcre_malloc_init(NULL);
@@ -717,7 +717,7 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
         }
 
         ngx_regex_match_data_size = ovecsize;
-        ngx_regex_match_data = pcre2_match_data_create(ovecsize / 3, NULL);
+        ngx_regex_match_data = pcre2_match_data_create(ovecsize, NULL);
 
         if (ngx_regex_match_data == NULL) {
             rc = PCRE2_ERROR_NOMEMORY;
@@ -762,8 +762,8 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
                    "n %ui, ovecsize %ui", flags, exec_opts, rc, n, ovecsize);
 #endif
 
-    if (!(flags & NGX_LUA_RE_MODE_DFA) && n > ovecsize / 3) {
-        n = ovecsize / 3;
+    if (n > ovecsize) {
+        n = ovecsize;
     }
 
     for (i = 0; i < n; i++) {
