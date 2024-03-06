@@ -1603,4 +1603,27 @@ failed:
 }
 
 
+int
+ngx_stream_lua_ffi_ssl_client_random(ngx_stream_lua_request_t *r,
+    unsigned char *out, size_t *outlen, char **err)
+{
+    ngx_ssl_conn_t          *ssl_conn;
+
+    if (r->connection == NULL || r->connection->ssl == NULL) {
+        *err = "bad request";
+        return NGX_ERROR;
+    }
+
+    ssl_conn = r->connection->ssl->connection;
+    if (ssl_conn == NULL) {
+        *err = "bad ssl conn";
+        return NGX_ERROR;
+    }
+
+    *outlen = SSL_get_client_random(ssl_conn, out, *outlen);
+
+    return NGX_OK;
+}
+
+
 #endif /* NGX_STREAM_SSL */
