@@ -1483,7 +1483,11 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
 
     ngx_stream_lua_ctx_t        *ctx;
     ngx_ssl_conn_t              *ssl_conn;
+#if defined(nginx_version) && nginx_version >= 1025005
+    ngx_stream_ssl_srv_conf_t   *sscf;
+#else
     ngx_stream_ssl_conf_t       *sscf;
+#endif
     STACK_OF(X509)              *chain = ca_certs;
     STACK_OF(X509_NAME)         *name_chain = NULL;
     X509                        *x509 = NULL;
