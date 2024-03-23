@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 221;
+plan tests => repeat_each() * 227;
 
 our $HtmlDir = html_dir;
 
@@ -3545,3 +3545,134 @@ lua tcp socket calling receiveany() method to read at most 7 bytes
 
 --- error_log
 shutdown on a not connected socket: closed
+
+
+
+=== TEST 68: send cdata
+--- stream_server_config
+    content_by_lua_block {
+        local ffi = require "ffi"
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+        local len = #req
+        local cdata = ffi.new("char [?]", len)
+        ffi.copy(cdata, req, len)
+
+        local bytes, err = sock:send_cdata(cdata, len)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+
+        ngx.say("request sent: ", bytes)
+
+        while true do
+            local line, err, part = sock:receive()
+            if line then
+                ngx.say("received: ", line)
+
+            else
+                ngx.say("failed to receive a line: ", err, " [", part, "]")
+                break
+            end
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+
+    location /foo {
+        content_by_lua_block { ngx.say("foo") }
+        more_clear_headers Date;
+    }
+
+--- stream_response
+connected: 1
+request sent: 57
+received: HTTP/1.1 200 OK
+received: Server: nginx
+received: Content-Type: text/plain
+received: Content-Length: 4
+received: Connection: close
+received: 
+received: foo
+failed to receive a line: closed []
+close: 1 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 69: send cdata reference
+--- stream_server_config
+    content_by_lua_block {
+        local buffer = require "string.buffer"
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+        local buf = buffer.new()
+        buf:put(req)
+        local cdata, len = buf:ref()
+        local bytes, err = sock:send_cdata(cdata, len)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+
+        ngx.say("request sent: ", bytes)
+
+        while true do
+            local line, err, part = sock:receive()
+            if line then
+                ngx.say("received: ", line)
+
+            else
+                ngx.say("failed to receive a line: ", err, " [", part, "]")
+                break
+            end
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+
+    location /foo {
+        content_by_lua_block { ngx.say("foo") }
+        more_clear_headers Date;
+    }
+
+--- stream_response
+connected: 1
+request sent: 57
+received: HTTP/1.1 200 OK
+received: Server: nginx
+received: Content-Type: text/plain
+received: Content-Length: 4
+received: Connection: close
+received: 
+received: foo
+failed to receive a line: closed []
+close: 1 nil
+--- no_error_log
+[error]

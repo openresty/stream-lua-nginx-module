@@ -1159,7 +1159,7 @@ SSL reused session
         server_name         test.com;
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
-        ssl_protocols       TLSv1;
+        ssl_protocols       TLSv1 TLSv1.2;
 
         location / {
             content_by_lua_block {
@@ -1245,7 +1245,7 @@ SSL reused session
         server_name         test.com;
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
-        ssl_protocols       TLSv1;
+        ssl_protocols       TLSv1 TLSv1.2;
 
         location / {
             content_by_lua_block {
@@ -1254,7 +1254,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_ssl_protocols TLSv1;
+    lua_ssl_protocols TLSv1.2;
 
     content_by_lua '
             local sock = ngx.socket.tcp()
@@ -1317,7 +1317,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "test.com"',
-qr/SSL: TLSv1, cipher: "ECDHE-RSA-AES256-SHA (SSLv3|TLSv1)/
+qr/SSL: TLSv1.2, cipher: "ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2/
 ]
 --- no_error_log
 SSL reused session
@@ -2469,9 +2469,10 @@ SSL reused session
         collectgarbage()
     }
 
---- stream_response
-connected: 1
-failed to do SSL handshake: 18: self signed certificate
+--- stream_response eval
+qr/connected: 1
+failed to do SSL handshake: 18: self[- ]signed certificate
+/ms
 
 --- user_files eval
 ">>> test.key
@@ -2481,8 +2482,8 @@ $::TestCertificate"
 
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
 --- grep_error_log_out
---- error_log
-lua ssl certificate verify error: (18: self signed certificate)
+--- error_log eval
+qr/lua ssl certificate verify error: \(18: self[- ]signed certificate\)/ms
 --- no_error_log
 SSL reused session
 [alert]
@@ -2678,6 +2679,7 @@ SSL reused session
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
         ssl_protocols       TLSv1.3;
+        ssl_conf_command Ciphersuites TLS_AES_128_CCM_SHA256;
 
         location / {
             content_by_lua_block {
@@ -2687,7 +2689,7 @@ SSL reused session
     }
 --- stream_server_config
     lua_ssl_protocols TLSv1.3;
-    lua_ssl_conf_command Ciphersuites TLS_AES_128_CCM_SHA256;
+    lua_ssl_conf_command Ciphersuites TLS_AES_256_GCM_SHA384;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()

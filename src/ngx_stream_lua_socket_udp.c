@@ -90,6 +90,11 @@ static char ngx_stream_lua_socket_udp_downstream_udata_metatable_key;
 static u_char ngx_stream_lua_socket_udp_buffer[UDP_MAX_DATAGRAM_SIZE];
 
 
+#define ngx_stream_lua_udp_socket_metatable_literal_key  "__udp_cosocket_mt"
+#define ngx_stream_lua_raw_udp_socket_metatable_literal_key                  \
+    "__raw_udp_cosocket_mt"
+
+
 void
 ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
 {
@@ -101,7 +106,7 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     /* udp upstream socket object metatable */
     lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
                           socket_udp_metatable_key));
-    lua_createtable(L, 0 /* narr */, 6 /* nrec */);
+    lua_createtable(L, 0 /* narr */, 7 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_udp_setpeername);
     lua_setfield(L, -2, "setpeername"); /* ngx socket mt */
@@ -121,6 +126,12 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
     lua_rawset(L, LUA_REGISTRYINDEX);
+
+    lua_pushliteral(L, ngx_stream_lua_udp_socket_metatable_literal_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_metatable_key));
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
 
     /* udp downstream socket object metatable */
@@ -139,6 +150,12 @@ ngx_stream_lua_inject_socket_udp_api(ngx_log_t *log, lua_State *L)
 
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    lua_pushliteral(L, ngx_stream_lua_raw_udp_socket_metatable_literal_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          socket_udp_raw_req_socket_metatable_key));
+    lua_rawget(L, LUA_REGISTRYINDEX);
     lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
 
@@ -547,7 +564,8 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
         addr.data = text;
 
         for (i = 0; i < ctx->naddrs; i++) {
-            addr.len = ngx_sock_ntop(ur->addrs[i].sockaddr, ur->addrs[i].socklen,
+            addr.len = ngx_sock_ntop(ur->addrs[i].sockaddr,
+                                     ur->addrs[i].socklen,
                                      text, NGX_SOCKADDR_STRLEN, 0);
 
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
@@ -912,7 +930,7 @@ ngx_stream_lua_socket_udp_send(lua_State *L)
 
     u->ft_type = 0;
 
-    /* mimic ngx_http_upstream_init_request here */
+    /* mimic ngx_stream_upstream_init_request here */
 
 #if 1
     u->waiting = 0;
@@ -1947,6 +1965,138 @@ eintr:
     }
 
     return n;
+}
+
+
+static void
+ngx_stream_lua_socket_send_cdata_err_retval_handler(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_udp_upstream_t *u, const char **errmsg)
+{
+    static u_char    errstr[NGX_MAX_ERROR_STR];
+    u_char          *p;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "lua udp socket send cdata error retval handler");
+
+    if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_RESOLVER) {
+        *errmsg = "failed to start the resolver";
+
+    } else if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_PARTIALWRITE) {
+        *errmsg = "partial write";
+
+    } else if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_TIMEOUT) {
+        *errmsg = "timeout";
+
+    } else if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_CLOSED) {
+        *errmsg = "closed";
+
+    } else if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_BUFTOOSMALL) {
+        *errmsg = "buffer too small";
+
+    } else if (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_NOMEM) {
+        *errmsg = "no memory";
+
+    } else {
+
+        if (u->socket_errno) {
+            p = ngx_strerror(u->socket_errno, errstr, sizeof(errstr));
+            /* for compatibility with LuaSocket */
+            ngx_strlow(errstr, errstr, p - errstr);
+            *errmsg = (const char *) errstr;
+
+        } else {
+            *errmsg = "error";
+        }
+    }
+}
+
+
+int
+ngx_stream_lua_ffi_socket_udp_send_cdata(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_udp_upstream_t *u, void *cdata, size_t len,
+    const char **errmsg)
+{
+    ssize_t                              n;
+#ifndef NGX_WIN32
+    ngx_iovec_t                          vec;
+    struct iovec                         iovs[1];
+#endif
+
+    ngx_stream_lua_loc_conf_t                   *llcf;
+
+    if (u == NULL || u->udp_connection.connection == NULL) {
+        llcf = ngx_stream_lua_get_module_loc_conf(r, ngx_stream_lua_module);
+
+        if (llcf->log_socket_errors) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "attempt to send data on a closed socket: u:%p, c:%p",
+                          u, u ? u->udp_connection.connection : NULL);
+        }
+
+        *errmsg = "closed";
+
+        return NGX_ERROR;
+    }
+
+    if (u->request != r) {
+        *errmsg = "bad request";
+        return NGX_ERROR;
+    }
+
+    if (u->ft_type) {
+        u->ft_type = 0;
+    }
+
+    if (u->waiting) {
+        *errmsg = "socket busy";
+        return NGX_ERROR;
+    }
+
+    u->ft_type = 0;
+
+    /* mimic ngx_stream_upstream_init_request here */
+
+#if 1
+    u->waiting = 0;
+#endif
+
+    dd("sending query %.*s", (int) len, cdata);
+#ifdef NGX_WIN32
+    n = ngx_udp_send(u->udp_connection.connection, cdata, len);
+    dd("ngx_udp_send returns %d (query len %d)", (int) n, (int) len);
+
+#else
+    vec.iovs = iovs;
+    vec.nalloc = 1;
+    vec.count = 1;
+    iovs[0].iov_base = cdata;
+    iovs[0].iov_len = len;
+    vec.size = len;
+    n = ngx_stream_lua_udp_sendmsg(u->udp_connection.connection, &vec);
+
+    dd("ngx_stream_lua_udp_sendmsg returns %d (query len %d)",
+       (int) n, (int) len);
+#endif
+
+    if (n == NGX_ERROR || n == NGX_AGAIN) {
+        u->socket_errno = ngx_socket_errno;
+        ngx_stream_lua_socket_send_cdata_err_retval_handler(r, u, errmsg);
+
+        return NGX_ERROR;
+    }
+
+    if (n != (ssize_t) len) {
+        dd("not the while query was sent");
+
+        u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_PARTIALWRITE;
+        ngx_stream_lua_socket_send_cdata_err_retval_handler(r, u, errmsg);
+
+        return NGX_ERROR;
+    }
+
+    dd("n == len");
+
+    return NGX_OK;
 }
 
 #endif

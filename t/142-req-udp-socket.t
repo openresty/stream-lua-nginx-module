@@ -283,3 +283,75 @@ hello
 --- grep_error_log eval: qr/sendto: fd.*$/
 --- grep_error_log_out eval
 qr/sendto: fd:\d+ \d+ of \d+ to "10.254.254.1"/
+
+
+
+=== TEST 8: send cdata
+--- dgram_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if not sock then
+            ngx.log(ngx.ERR, "failed to get the request socket: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        local data, err = sock:receive()
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        -- print("data: ", data)
+
+        local buffer = require "string.buffer"
+        local buf = buffer.new()
+        buf:put("received: ", data)
+        local data, len = buf:ref()
+        local ok, err = sock:send_cdata(data, len)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+    }
+--- dgram_request chomp
+hello world! my
+--- dgram_response chomp
+received: hello world! my
+--- no_error_log
+[error]
+
+
+
+=== TEST 9: raw socket send cdata
+--- dgram_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if not sock then
+            ngx.log(ngx.ERR, "failed to get the request socket: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        local data, err = sock:receive()
+        if not data then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+
+        -- print("data: ", data)
+
+        local buffer = require "string.buffer"
+        local buf = buffer.new()
+        buf:put("received: ", data)
+        local data, len = buf:ref()
+        local ok, err = sock:send_cdata(data, len)
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
+            return ngx.exit(ngx.ERROR)
+        end
+    }
+--- dgram_request chomp
+hello world! my
+--- dgram_response chomp
+received: hello world! my
+--- no_error_log
+[error]

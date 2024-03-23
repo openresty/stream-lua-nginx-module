@@ -121,6 +121,8 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
 
     ngx_uint_t                       reused;
 
+    const char                      *error_ret;
+
 #if (NGX_STREAM_SSL)
     ngx_str_t                        ssl_name;
 #endif

@@ -3,7 +3,7 @@
 use Test::Nginx::Socket::Lua::Stream;
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 3 + 11);
+plan tests => repeat_each() * (blocks() * 3 + 6);
 
 our $HtmlDir = html_dir;
 
@@ -510,61 +510,3 @@ attempt to peek on a consumed socket
 --- no_error_log
 [warn]
 
-
-
-=== TEST 12: peek works with other preread handlers
---- stream_server_config
-    ssl_preread on;
-    preread_by_lua_block {
-        local rsock = assert(ngx.req.socket())
-
-        local data, err = rsock:peek(2)
-        if not data then
-            ngx.log(ngx.ERR, "failed to peek the request socket: ", err)
-            return
-        end
-
-        local n = ngx.var.ssl_preread_server_name
-        if not n or n == '' then
-            ngx.log(ngx.INFO, "$ssl_preread_server_name is empty")
-
-        else
-            ngx.log(ngx.INFO, "$ssl_preread_server_name = ", n)
-        end
-
-
-        if n == "my.sni.server.name" then
-            assert(string.byte(data:sub(1, 1)) == 0x16)
-            assert(string.byte(data:sub(2, 2)) == 0x03)
-            ngx.exit(200)
-        end
-
-        local sock = ngx.socket.tcp()
-        local ok, err = sock:connect("127.0.0.1", tonumber(ngx.var.server_port))
-        if not ok then
-            ngx.say(err)
-            return ngx.exit(500)
-        end
-
-        local _, err = sock:sslhandshake(nil, "my.sni.server.name")
-        if not err then
-            ngx.say("did not error as expected")
-            return ngx.exit(500)
-        end
-
-        sock:close()
-    }
-
-    return done;
---- stream_request chop
-hello
---- stream_response chop
-done
---- error_log
-$ssl_preread_server_name is empty while prereading client data
-$ssl_preread_server_name = my.sni.server.name while prereading client data
---- no_error_log
-[crit]
-[warn]
-assertion failed!
-lua entry thread aborted

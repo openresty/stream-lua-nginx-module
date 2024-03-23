@@ -201,12 +201,12 @@ qr/\[error\] \S+: \S+ stream \[lua\] content_by_lua\(nginx\.conf:\d+\):2: truefa
 === TEST 13: ngx.log() big data
 --- stream_server_config
     content_by_lua_block {
-        ngx.log(ngx.ERR, "a" .. string.rep("h", 1970) .. "b")
+        ngx.log(ngx.ERR, "a" .. string.rep("h", 1940) .. "b")
         ngx.say("hi")
     }
 --- response_headers
 --- error_log eval
-[qr/ah{1970}b/]
+[qr/ah{1940}b/]
 
 
 

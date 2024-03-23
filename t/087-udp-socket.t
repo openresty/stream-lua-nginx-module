@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (3 * blocks() + 14);
+plan tests => repeat_each() * (3 * blocks() + 16);
 
 our $HtmlDir = html_dir;
 
@@ -912,3 +912,107 @@ sendto: fd:\d+ 3 of 3/
 --- error_log
 cleanup lua udp socket upstream request
 GC cycle done
+
+
+
+=== TEST 20: send via cdata
+--- stream_server_config
+
+    content_by_lua_block {
+        local socket = ngx.socket
+        -- local socket = require "socket"
+
+        local udp = socket.udp()
+
+        local port = $TEST_NGINX_MEMCACHED_PORT
+        udp:settimeout(1000) -- 1 sec
+
+        local ok, err = udp:setpeername("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected")
+
+        local req = "\0\1\0\0\0\1\0\0flush_all\r\n"
+        local ffi = require "ffi"
+        local len = #req
+        local cdata = ffi.new("char[?]", len)
+        ffi.copy(cdata, req, len)
+
+        local ok, err = udp:send_cdata(cdata, len)
+        if not ok then
+            ngx.say("failed to send: ", err)
+            return
+        end
+
+        local data, err = udp:receive()
+        if not data then
+            ngx.say("failed to receive data: ", err)
+            return
+        end
+        ngx.print("received ", #data, " bytes: ", data)
+    }
+
+--- config
+    server_tokens off;
+--- stream_response eval
+"connected\nreceived 12 bytes: \x{00}\x{01}\x{00}\x{00}\x{00}\x{01}\x{00}\x{00}OK\x{0d}\x{0a}"
+--- no_error_log
+[error]
+--- log_level: debug
+--- error_log
+lua udp socket receive buffer size: 8192
+
+
+
+=== TEST 21: send via cdata reference
+--- stream_server_config
+
+    content_by_lua_block {
+        local socket = ngx.socket
+        -- local socket = require "socket"
+
+        local udp = socket.udp()
+
+        local port = $TEST_NGINX_MEMCACHED_PORT
+        udp:settimeout(1000) -- 1 sec
+
+        local ok, err = udp:setpeername("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected")
+
+        local req = "\0\1\0\0\0\1\0\0flush_all\r\n"
+        local buffer = require "string.buffer"
+        local buf = buffer.new()
+        buf:put(req)
+        local cdata, len = buf:ref()
+
+        local ok, err = udp:send_cdata(cdata, len)
+        if not ok then
+            ngx.say("failed to send: ", err)
+            return
+        end
+
+        local data, err = udp:receive()
+        if not data then
+            ngx.say("failed to receive data: ", err)
+            return
+        end
+        ngx.print("received ", #data, " bytes: ", data)
+    }
+
+--- config
+    server_tokens off;
+--- stream_response eval
+"connected\nreceived 12 bytes: \x{00}\x{01}\x{00}\x{00}\x{00}\x{01}\x{00}\x{00}OK\x{0d}\x{0a}"
+--- no_error_log
+[error]
+--- log_level: debug
+--- error_log
+lua udp socket receive buffer size: 8192

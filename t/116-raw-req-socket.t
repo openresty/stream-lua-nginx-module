@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 49;
+plan tests => repeat_each() * 53;
 
 our $HtmlDir = html_dir;
 
@@ -574,3 +574,39 @@ stream lua shutdown socket write direction
 1234567890
 --- error_log
 stream lua shutdown socket write direction
+
+
+
+=== TEST 15: send cdata
+--- stream_server_config
+
+    content_by_lua_block {
+        local sock, err = ngx.req.socket(true)
+        if not sock then
+            ngx.log(ngx.ERR, "server: failed to get raw req socket: ", err)
+            return
+        end
+
+        local data, err = sock:receive(5)
+        if not data then
+            ngx.log(ngx.ERR, "server: failed to receive: ", err)
+            return
+        end
+
+        local buffer = require "string.buffer"
+        local buf = buffer.new()
+        buf:put("1: received: ", data, "\n")
+        local data, len = buf:ref()
+        local bytes, err = sock:send_cdata(data, len)
+        if not bytes then
+            ngx.log(ngx.ERR, "server: failed to send: ", err)
+            return
+        end
+    }
+
+--- stream_request: hello
+--- stream_response
+1: received: hello
+--- no_error_log
+stream lua socket tcp_nodelay
+[error]
