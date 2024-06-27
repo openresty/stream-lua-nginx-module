@@ -768,7 +768,7 @@ ngx_stream_lua_ffi_balancer_set_proxy_bind(ngx_stream_lua_request_t *r,
     }
 
     u = r->session->upstream;
-    if (u == NULL || u->peer == NULL) {
+    if (u == NULL) {
         *err = "no upstream found";
         return NGX_ERROR;
     }
