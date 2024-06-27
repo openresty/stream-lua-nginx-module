@@ -754,7 +754,7 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_lua_request_t *r,
 
 int
 ngx_stream_lua_ffi_balancer_set_proxy_bind(ngx_stream_lua_request_t *r,
-    const u_char *addr, size_t addr_len, char *err)
+    const u_char *addr, size_t addr_len, char **err)
 {
     ngx_int_t                       rc;
     ngx_str_t                       addr_str;
