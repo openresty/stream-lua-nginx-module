@@ -754,8 +754,9 @@ ngx_stream_lua_ffi_balancer_get_last_failure(ngx_stream_lua_request_t *r,
 
 int
 ngx_stream_lua_ffi_balancer_bind_to_local_addr(ngx_stream_lua_request_t *r,
-    const u_char *addr, size_t addr_len, char **err)
+    const u_char *addr, size_t addr_len, u_char *errbuf, size_t *errbuf_size)
 {
+    u_char                         *p;
     ngx_int_t                       rc;
     ngx_str_t                       addr_str;
     ngx_addr_t                     *addr_val;
@@ -763,37 +764,43 @@ ngx_stream_lua_ffi_balancer_bind_to_local_addr(ngx_stream_lua_request_t *r,
     ngx_stream_upstream_t          *u;
 
     if (r == NULL) {
-        *err = "no request found";
+        p = ngx_snprintf(errbuf, *errbuf_size, "no request found");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     u = r->session->upstream;
     if (u == NULL) {
-        *err = "no upstream found";
+        p = ngx_snprintf(errbuf, *errbuf_size, "no upstream found");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        *err = "no ctx found";
+        p = ngx_snprintf(errbuf, *errbuf_size, "no ctx found");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     if ((ctx->context & NGX_STREAM_LUA_CONTEXT_BALANCER) == 0) {
-        *err = "API disabled in the current context";
+        p = ngx_snprintf(errbuf, *errbuf_size, "API disabled in the current context");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     addr_val = ngx_pcalloc(r->pool, sizeof(ngx_addr_t));
     if (addr_val == NULL) {
-        *err = "no memory for addr_val";
+        p = ngx_snprintf(errbuf, *errbuf_size, "no memory for addr_val");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     addr_str.len  = addr_len;
     addr_str.data = ngx_palloc(r->pool, addr_len);
     if (addr_str.data == NULL) {
-        *err = "no memory for addr_str";
+        p = ngx_snprintf(errbuf, *errbuf_size, "no memory for addr_str");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
@@ -801,12 +808,14 @@ ngx_stream_lua_ffi_balancer_bind_to_local_addr(ngx_stream_lua_request_t *r,
 
     rc = ngx_parse_addr_port(r->pool, addr_val, addr_str.data, addr_str.len);
     if (rc == NGX_ERROR) {
-        *err = "parse addr port failed";
+        p = ngx_snprintf(errbuf, *errbuf_size, "parse addr port failed");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
     if (rc != NGX_OK) {
-        *err = "invalid addr";
+        p = ngx_snprintf(errbuf, *errbuf_size, "invalid addr");
+        *errbuf_size = p - errbuf;
         return NGX_ERROR;
     }
 
