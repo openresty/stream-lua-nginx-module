@@ -1594,7 +1594,6 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
         }
 
         if (trusted_chain != NULL) {
-
             for (i = 0; i < sk_X509_num(trusted_chain); i++) {
                 x509 = sk_X509_value(trusted_chain, i);
                 if (x509 == NULL) {
