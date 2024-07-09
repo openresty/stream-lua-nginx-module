@@ -1238,6 +1238,7 @@ lua ssl server name: "test.com"
 [alert]
 
 
+
 === TEST 12: verify client, but server don't trust root ca
 --- stream_config
     server {
@@ -1300,7 +1301,8 @@ FAILED:unable to verify the first certificate
 [alert]
 
 
-=== TEST 12: verify client and server trust root ca
+
+=== TEST 13: verify client and server trust root ca
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
