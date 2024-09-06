@@ -1348,7 +1348,7 @@ ngx_stream_lua_ffi_set_cert(ngx_stream_lua_request_t *r,
 
 #   else
 
-#ifdef OPENSSL_IS_BORINGSSL
+#if defined(OPENSSL_IS_BORINGSSL) || defined(OPENSSL_IS_AWSLC)
     size_t             i;
 #else
     int                i;
@@ -1494,7 +1494,7 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
     X509                        *x509 = NULL;
     X509_NAME                   *subject = NULL;
     X509_STORE                  *ca_store = NULL;
-#ifdef OPENSSL_IS_BORINGSSL
+#if defined(OPENSSL_IS_BORINGSSL) || defined(OPENSSL_IS_AWSLC)
     size_t                      i;
 #else
     int                         i;
