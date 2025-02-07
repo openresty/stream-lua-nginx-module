@@ -8,6 +8,13 @@ repeat_each(2);
 
 plan tests => repeat_each() * (blocks() * 7 + 2);
 
+my $NginxBinary = $ENV{'TEST_NGINX_BINARY'} || 'nginx';
+my $openssl_version = eval { `$NginxBinary -V 2>&1` };
+
+if ($openssl_version =~ m/\bBoringSSL\b/) {
+    $ENV{TEST_NGINX_BORINGSSL} = 1;
+}
+
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
@@ -1142,7 +1149,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "openresty.org"',
-qr/SSL: TLSv1\.2, cipher: "(?:ECDHE-RSA-AES(?:256|128)-GCM-SHA(?:384|256)|ECDHE-(?:RSA|ECDSA)-CHACHA20-POLY1305) TLSv1\.2/,
+qr/SSL: TLSv1\.2, cipher: "(?:ECDHE-RSA-AES(?:256|128)-GCM-SHA(?:384|256)|ECDHE-(?:RSA|ECDSA)-CHACHA20-POLY1305) (TLSv1\.2|Kx=ECDH Au=RSA Enc=AESGCM\(256\) Mac=AEAD)/,
 ]
 --- no_error_log
 SSL reused session
@@ -1159,7 +1166,7 @@ SSL reused session
         server_name         test.com;
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
-        ssl_protocols       TLSv1;
+        ssl_protocols       TLSv1 TLSv1.2;
 
         location / {
             content_by_lua_block {
@@ -1229,7 +1236,8 @@ lua ssl free session: ([0-9A-F]+)
 $/
 --- error_log eval
 ['lua ssl server name: "test.com"',
-qr/SSL: TLSv\d(?:\.\d)?, cipher: "ECDHE-RSA-AES256-SHA (SSLv3|TLSv1)/]
+qr/SSL: TLSv\d(?:\.\d)?, cipher: "ECDHE-RSA-AES256-SHA (SSLv3|TLSv1)?/]
+
 --- no_error_log
 SSL reused session
 [error]
@@ -1245,7 +1253,7 @@ SSL reused session
         server_name         test.com;
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
-        ssl_protocols       TLSv1;
+        ssl_protocols       TLSv1 TLSv1.2;
 
         location / {
             content_by_lua_block {
@@ -1254,7 +1262,7 @@ SSL reused session
         }
     }
 --- stream_server_config
-    lua_ssl_protocols TLSv1;
+    lua_ssl_protocols TLSv1.2;
 
     content_by_lua '
             local sock = ngx.socket.tcp()
@@ -1317,7 +1325,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "test.com"',
-qr/SSL: TLSv1, cipher: "ECDHE-RSA-AES256-SHA (SSLv3|TLSv1)/
+qr/\QTLSv1.2, cipher: "ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH Au=RSA Enc=AESGCM(256) Mac=AEAD"\E/
 ]
 --- no_error_log
 SSL reused session
@@ -1396,6 +1404,8 @@ SSL reused session
 [alert]
 [emerg]
 --- timeout: 5
+--- skip_eval
+8: $ENV{TEST_NGINX_BORINGSSL}
 
 
 
@@ -1850,7 +1860,7 @@ $::TestCertificate"
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
 --- grep_error_log_out
 --- error_log eval
-qr/SSL_do_handshake\(\) failed .*?(unknown protocol|wrong version number)/
+qr/SSL_do_handshake\(\) failed .*?(unknown protocol|wrong version number|.*?routines:OPENSSL_internal:WRONG_VERSION_NUMBER)/
 --- no_error_log
 lua ssl server name:
 SSL reused session
@@ -2469,9 +2479,10 @@ SSL reused session
         collectgarbage()
     }
 
---- stream_response
-connected: 1
-failed to do SSL handshake: 18: self signed certificate
+--- stream_response eval
+qr/connected: 1
+failed to do SSL handshake: 18: self[- ]signed certificate
+/ms
 
 --- user_files eval
 ">>> test.key
@@ -2481,8 +2492,8 @@ $::TestCertificate"
 
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
 --- grep_error_log_out
---- error_log
-lua ssl certificate verify error: (18: self signed certificate)
+--- error_log eval
+qr/lua ssl certificate verify error: \(18: self[- ]signed certificate\)/ms
 --- no_error_log
 SSL reused session
 [alert]
@@ -2569,7 +2580,7 @@ $/
 --- error_log eval
 [
 'lua ssl server name: "test.com"',
-qr/SSL: TLSv1.3, cipher: "TLS_AES_256_GCM_SHA384 TLSv1.3/,
+qr/SSL: TLSv1.3, cipher: "(TLS_AES_256_GCM_SHA384 TLSv1.3|TLS_AES_128_GCM_SHA256 Kx=GENERIC Au=GENERIC Enc=AESGCM\(128\) Mac=AEAD)/,
 ]
 --- no_error_log
 SSL reused session
@@ -2582,6 +2593,7 @@ SSL reused session
 === TEST 33: explicit cipher configuration - TLSv1.3
 --- skip_openssl: 8: < 1.1.1
 --- skip_nginx: 8: < 1.19.4
+--- skip_eval: 8: $ENV{TEST_NGINX_BORINGSSL}
 --- http_config
     server {
         listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -2671,6 +2683,7 @@ SSL reused session
 === TEST 34: explicit cipher configuration not in the default list - TLSv1.3
 --- skip_openssl: 8: < 1.1.1
 --- skip_nginx: 8: < 1.19.4
+--- skip_eval: 8: $ENV{TEST_NGINX_BORINGSSL}
 --- http_config
     server {
         listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -2678,6 +2691,7 @@ SSL reused session
         ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
         ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
         ssl_protocols       TLSv1.3;
+        ssl_conf_command Ciphersuites TLS_AES_128_CCM_SHA256;
 
         location / {
             content_by_lua_block {
@@ -2687,7 +2701,7 @@ SSL reused session
     }
 --- stream_server_config
     lua_ssl_protocols TLSv1.3;
-    lua_ssl_conf_command Ciphersuites TLS_AES_128_CCM_SHA256;
+    lua_ssl_conf_command Ciphersuites TLS_AES_256_GCM_SHA384;
 
     content_by_lua_block {
         local sock = ngx.socket.tcp()

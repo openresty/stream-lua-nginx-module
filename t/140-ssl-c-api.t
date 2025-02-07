@@ -798,8 +798,8 @@ client certificate subject: emailAddress=agentzh@gmail.com,CN=test.com
     proxy_ssl_certificate_key   ../../cert/test.key;
     proxy_ssl_session_reuse     off;
 
---- stream_response
-FAILED:self signed certificate
+--- stream_response eval
+qr/FAILED:self[- ]signed certificate/
 
 --- error_log
 client certificate subject: emailAddress=agentzh@gmail.com,CN=test.com
