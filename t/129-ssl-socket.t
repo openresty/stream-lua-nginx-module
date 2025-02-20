@@ -2764,3 +2764,251 @@ SSL reused session
 [alert]
 [emerg]
 --- timeout: 10
+
+
+
+=== TEST 35: ssl session/ticket reuse CVE
+https://www.cve.org/CVERecord?id=CVE-2025-23419
+--- stream_config
+    server {
+        listen $TEST_NGINX_SERVER_SSL_PORT ssl reuseport default_server;
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        ssl_session_cache builtin:1000;
+        ssl_session_tickets off;
+        ssl_client_certificate ../../cert/test.crt;
+        ssl_verify_client on;
+        server_name test.com;
+
+        ssl_client_hello_by_lua_block {
+            local ssl_clt = require "ngx.ssl.clienthello"
+            local host, err = ssl_clt.get_client_hello_server_name()
+            ngx.log(ngx.INFO, "ssl client hello:", host)
+        }
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()
+            if data == "ping" then
+                sock:send("test.com\n")
+            else
+                ngx.log(ngx.ERR, "unexpect data: ", data)
+            end
+        }
+    }
+
+    server {
+        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        ssl_certificate ../../cert/test2.crt;
+        ssl_certificate_key ../../cert/test2.key;
+        ssl_session_cache builtin:1000;
+        ssl_session_tickets off;
+        ssl_client_certificate ../../cert/test.crt;
+        ssl_verify_client on;
+        server_name test2.com;
+
+        ssl_client_hello_by_lua_block {
+            local ssl_clt = require "ngx.ssl.clienthello"
+            local host, err = ssl_clt.get_client_hello_server_name()
+            ngx.log(ngx.ERR, "ssl client hello:", host)
+        }
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()
+            if data == "ping" then
+                sock:send("test2.com\n")
+            else
+                ngx.log(ngx.ERR, "unexpect data: ", data)
+            end
+        }
+    }
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    lua_ssl_protocols TLSv1.2;
+    lua_ssl_certificate ../../cert/test.crt;
+    lua_ssl_certificate_key ../../cert/test.key;
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            local session
+            for i = 1, 2 do
+                local sock = ngx.socket.tcp()
+                sock:settimeout(2000)
+                local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+                if not ok then
+                    ngx.say("failed to connect: ", err)
+                    return
+                end
+
+                ngx.say("connected: ", ok)
+
+                local server_name = "test.com"
+                if i == 2 then
+                    server_name = "test2.com"
+                end
+
+                session, err = sock:sslhandshake(session, server_name)
+                if not session then
+                    ngx.say("failed to do SSL handshake: ", err)
+                    return
+                end
+
+                ngx.say("ssl handshake: ", type(session))
+
+                local bytes, err = sock:send("ping\n")
+                if not bytes then
+                    ngx.say("failed to send stream request: ", err)
+                    return
+                end
+
+                ngx.say("sent stream request: ", bytes, " bytes.")
+
+                local line, err = sock:receive()
+                if not line then
+                    ngx.say("failed to recieve response status line: ", err)
+                    return
+                end
+
+                ngx.say("received: ", line)
+
+                local ok, err = sock:close()
+                ngx.say("close: ", ok, " ", err)
+            end
+
+        end -- do
+        collectgarbage()
+    }
+
+--- stream_response
+connected: 1
+ssl handshake: userdata
+sent stream request: 5 bytes.
+received: test.com
+close: 1 nil
+connected: 1
+ssl handshake: userdata
+sent stream request: 5 bytes.
+received: test.com
+close: 1 nil
+--- error_log
+SSL reused session
+lua ssl free session
+--- log_level: debug
+--- no_error_log
+[error]
+[alert]
+[crit]
+--- timeout: 5
+--- skip_nginx: 7: < 1.25.4
+
+
+
+=== TEST 36: ssl session/ticket reuse CVE
+https://www.cve.org/CVERecord?id=CVE-2025-23419
+--- main_config
+env PATH;
+--- stream_config
+    server {
+        listen $TEST_NGINX_SERVER_SSL_PORT ssl reuseport default_server;
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        ssl_session_cache builtin:1000;
+        ssl_session_tickets on;
+        ssl_client_certificate ../../cert/test.crt;
+        ssl_verify_client on;
+        server_name test.com;
+
+        ssl_client_hello_by_lua_block {
+            local ssl_clt = require "ngx.ssl.clienthello"
+            local host, err = ssl_clt.get_client_hello_server_name()
+            ngx.log(ngx.INFO, "ssl client hello:", host)
+        }
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()
+            if data == "ping" then
+                sock:send("test.com\n")
+            else
+                ngx.log(ngx.ERR, "unexpect data: ", data)
+            end
+        }
+    }
+
+    server {
+        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        ssl_certificate ../../cert/test2.crt;
+        ssl_certificate_key ../../cert/test2.key;
+        ssl_session_cache builtin:1000;
+        ssl_session_tickets on;
+        ssl_client_certificate ../../cert/test.crt;
+        ssl_verify_client on;
+        server_name test2.com;
+
+        ssl_client_hello_by_lua_block {
+            local ssl_clt = require "ngx.ssl.clienthello"
+            local host, err = ssl_clt.get_client_hello_server_name()
+            ngx.log(ngx.ERR, "ssl client hello:", host)
+        }
+
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data = sock:receive()
+            if data == "ping" then
+                sock:send("test2.com\n")
+            else
+                ngx.log(ngx.ERR, "unexpect data: ", data)
+            end
+        }
+    }
+--- stream_server_config
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    lua_ssl_protocols TLSv1.3;
+    lua_ssl_certificate ../../cert/test.crt;
+    lua_ssl_certificate_key ../../cert/test.key;
+    lua_ssl_trusted_certificate ../../cert/test.crt;
+
+    content_by_lua_block {
+        do
+            -- openssl s_client -cert client_cert.pem -key client_key.pem -servername openresty.org  -connect openresty.org:443 -sess_out sess.pem
+            -- ("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+            -- server_name = "test.com"
+            -- server_name = "test2.com"
+            local prefix = ngx.config.prefix()
+
+            local cmd = [[bash -c "{ sleep 0.3; echo ping; } | /usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test.com -connect 127.0.0.1:$TEST_NGINX_SERVER_SSL_PORT -sess_out sess.pem"]]
+            cmd = string.format(cmd, prefix, prefix)
+            local handle, err = io.popen(cmd)
+            if not handle then
+                ngx.say(err)
+            end
+
+            ngx.sleep(0.2)
+            local cmd = [[/usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test2.com -connect 127.0.0.1:$TEST_NGINX_SERVER_SSL_PORT -sess_in sess.pem]]
+            cmd = string.format(cmd, prefix, prefix)
+            local handle, err = io.popen(cmd)
+            if not handle then
+                ngx.say(err)
+            end
+            ngx.sleep(0.2)
+
+           ngx.say("hi")
+        end -- do
+        collectgarbage()
+    }
+
+--- stream_response
+hi
+--- error_log
+tlsv1 alert access denied
+handshake rejected while SSL handshaking
+
+--- log_level: debug
+--- no_error_log
+[error]
+[alert]
+[crit]
+--- timeout: 5
+--- skip_nginx: 7: < 1.25.4
