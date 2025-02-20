@@ -2901,6 +2901,7 @@ lua ssl free session
 [alert]
 [crit]
 --- timeout: 5
+--- skip_nginx: 7: < 1.25.4
 
 
 
@@ -3010,3 +3011,4 @@ handshake rejected while SSL handshaking
 [alert]
 [crit]
 --- timeout: 5
+--- skip_nginx: 7: < 1.25.4
