@@ -354,6 +354,7 @@ done
 --- stream_server_config
     content_by_lua_block {
     package.loaded.foo = nil
+    collectgarbage()
     local foo = require "foo"
     local m = foo.go()
     ngx.say(m and "matched" or "no")
@@ -379,8 +380,9 @@ function go()
 end
 --- stream_response
 matched
---- error_log
-attempt to use ngx.re.gmatch iterator in a session that did not create it
+matched
+--- no_error_log
+[error]
 
 
 
@@ -467,13 +469,13 @@ matched: []
 --- stream_response
 1234
 1234
-nil
+false
 1234
-nil
+false
 abcd
-nil
+false
 abcd
-nil
+false
 abcd
 
 
@@ -566,8 +568,11 @@ not matched!
             ngx.say("error: ", err)
         end
     }
---- stream_response
-error: pcre_compile() failed: missing ) in "(abc"
+--- stream_response eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+"error: pcre2_compile() failed: missing closing parenthesis in \"(abc\"\n"
+:
+"error: pcre_compile() failed: missing ) in \"(abc\"\n"
 --- no_error_log
 [error]
 
@@ -599,8 +604,11 @@ error: pcre_compile() failed: missing ) in "(abc"
             ngx.say("not matched")
         end
     }
---- stream_response_like chop
-error: pcre_exec\(\) failed: -10
+--- stream_response eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+"error: pcre_exec\(\) failed: -4\n"
+:
+"error: pcre_exec\(\) failed: -10\n"
 
 --- no_error_log
 [error]
@@ -671,7 +679,7 @@ exec opts: 0
 
 === TEST 29: just hit match limit
 --- stream_config
-    lua_regex_match_limit 5600;
+    lua_regex_match_limit 5000;
 --- stream_server_config
     content_by_lua_file html/a.lua;
 
@@ -706,8 +714,14 @@ if not res then
     return
 end
 
---- stream_response
-error: pcre_exec() failed: -8
+--- stream_response eval
+# lua_regex_match_limit uses pcre_extra->match_limit in the PCRE,
+# but PCRE2 replaces this with pcre2_set_match_limit interface,
+# which has different effects.
+$Test::Nginx::Util::PcreVersion == 2 ?
+"failed to match\n"
+:
+"error: pcre_exec() failed: -8\n"
 
 
 

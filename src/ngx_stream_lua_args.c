@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_args.c.tt2
+ */
+
+
+/*
  * Copyright (C) Xiaozhe Wang (chaoslawful)
  * Copyright (C) Yichun Zhang (agentzh)
  */
@@ -13,6 +21,8 @@
 
 #include "ngx_stream_lua_args.h"
 #include "ngx_stream_lua_util.h"
+
+
 
 
 int
@@ -94,10 +104,12 @@ ngx_stream_lua_parse_args(lua_State *L, u_char *buf, u_char *last, int max)
             }
 
             if (max > 0 && ++count == max) {
-                ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
-                               "lua hit query args limit %d", max);
+                lua_pushliteral(L, "truncated");
 
-                return 1;
+                ngx_log_debug1(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                               "stream lua hit query args limit %d",
+                               max);
+                return 2;
             }
 
         } else {
@@ -142,3 +154,8 @@ ngx_stream_lua_parse_args(lua_State *L, u_char *buf, u_char *last, int max)
 
     return 1;
 }
+
+
+
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

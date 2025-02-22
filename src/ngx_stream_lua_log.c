@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_log.c.tt2
+ */
+
+
+/*
  * Copyright (C) Xiaozhe Wang (chaoslawful)
  * Copyright (C) Yichun Zhang (agentzh)
  */
@@ -13,6 +21,8 @@
 
 #include "ngx_stream_lua_log.h"
 #include "ngx_stream_lua_util.h"
+
+#include "ngx_stream_lua_log_ringbuf.h"
 
 
 static int ngx_stream_lua_print(lua_State *L);
@@ -33,14 +43,14 @@ int
 ngx_stream_lua_ngx_log(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_session_t        *s;
+    ngx_stream_lua_request_t    *r;
     const char                  *msg;
     int                          level;
 
-    s = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_req(L);
 
-    if (s && s->connection && s->connection->log) {
-        log = s->connection->log;
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
 
     } else {
         log = ngx_cycle->log;
@@ -70,12 +80,12 @@ int
 ngx_stream_lua_print(lua_State *L)
 {
     ngx_log_t                   *log;
-    ngx_stream_session_t        *s;
+    ngx_stream_lua_request_t    *r;
 
-    s = ngx_stream_lua_get_session(L);
+    r = ngx_stream_lua_get_req(L);
 
-    if (s && s->connection && s->connection->log) {
-        log = s->connection->log;
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
 
     } else {
         log = ngx_cycle->log;
@@ -160,6 +170,16 @@ log_wrapper(ngx_log_t *log, const char *ident, ngx_uint_t level,
 
                 break;
 
+            case LUA_TTABLE:
+                if (!luaL_callmeta(L, i, "__tostring")) {
+                    return luaL_argerror(L, i, "expected table to have "
+                                         "__tostring metamethod");
+                }
+
+                lua_tolstring(L, -1, &len);
+                size += len;
+                break;
+
             case LUA_TLIGHTUSERDATA:
                 if (lua_touserdata(L, i) == NULL) {
                     size += sizeof("null") - 1;
@@ -183,7 +203,7 @@ log_wrapper(ngx_log_t *log, const char *ident, ngx_uint_t level,
     *p++ = ':';
 
     p = ngx_snprintf(p, NGX_INT_T_LEN, "%d",
-                     ar.currentline ? ar.currentline : ar.linedefined);
+                     ar.currentline > 0 ? ar.currentline : ar.linedefined);
 
     *p++ = ':'; *p++ = ' ';
 
@@ -225,6 +245,12 @@ log_wrapper(ngx_log_t *log, const char *ident, ngx_uint_t level,
                     *p++ = 'e';
                 }
 
+                break;
+
+            case LUA_TTABLE:
+                luaL_callmeta(L, i, "__tostring");
+                q = (u_char *) lua_tolstring(L, -1, &len);
+                p = ngx_copy(p, q, len);
                 break;
 
             case LUA_TLIGHTUSERDATA:
@@ -295,6 +321,143 @@ ngx_stream_lua_inject_log_consts(lua_State *L)
     lua_pushinteger(L, NGX_LOG_DEBUG);
     lua_setfield(L, -2, "DEBUG");
     /* }}} */
+}
+
+
+#ifdef HAVE_INTERCEPT_ERROR_LOG_PATCH
+ngx_int_t
+ngx_stream_lua_capture_log_handler(ngx_log_t *log,
+    ngx_uint_t level, u_char *buf, size_t n)
+{
+    ngx_stream_lua_log_ringbuf_t        *ringbuf;
+
+    dd("enter");
+
+    ringbuf = (ngx_stream_lua_log_ringbuf_t  *)
+                    ngx_cycle->intercept_error_log_data;
+
+    if (level > ringbuf->filter_level) {
+        return NGX_OK;
+    }
+
+    ngx_stream_lua_log_ringbuf_write(ringbuf, level, buf, n);
+
+    dd("capture log: %s\n", buf);
+
+    return NGX_OK;
+}
+#endif
+
+
+int
+ngx_stream_lua_ffi_errlog_set_filter_level(int level, u_char *err,
+    size_t *errlen)
+{
+#ifdef HAVE_INTERCEPT_ERROR_LOG_PATCH
+    ngx_stream_lua_log_ringbuf_t           *ringbuf;
+
+    ringbuf = ngx_cycle->intercept_error_log_data;
+
+    if (ringbuf == NULL) {
+        *errlen = ngx_snprintf(err, *errlen,
+                               "directive \"lua_capture_error_log\" is not set")
+                  - err;
+        return NGX_ERROR;
+    }
+
+    if (level > NGX_LOG_DEBUG || level < NGX_LOG_STDERR) {
+        *errlen = ngx_snprintf(err, *errlen, "bad log level: %d", level)
+                  - err;
+        return NGX_ERROR;
+    }
+
+    ringbuf->filter_level = level;
+    return NGX_OK;
+#else
+    *errlen = ngx_snprintf(err, *errlen,
+                           "missing the capture error log patch for nginx")
+              - err;
+    return NGX_ERROR;
+#endif
+}
+
+
+int
+ngx_stream_lua_ffi_errlog_get_msg(char **log, int *loglevel, u_char *err,
+    size_t *errlen, double *log_time)
+{
+#ifdef HAVE_INTERCEPT_ERROR_LOG_PATCH
+    ngx_uint_t           loglen;
+
+    ngx_stream_lua_log_ringbuf_t           *ringbuf;
+
+    ringbuf = ngx_cycle->intercept_error_log_data;
+
+    if (ringbuf == NULL) {
+        *errlen = ngx_snprintf(err, *errlen,
+                               "directive \"lua_capture_error_log\" is not set")
+                  - err;
+        return NGX_ERROR;
+    }
+
+    if (ringbuf->count == 0) {
+        return NGX_DONE;
+    }
+
+    ngx_stream_lua_log_ringbuf_read(ringbuf, loglevel, (void **) log, &loglen,
+                                    log_time);
+    return loglen;
+#else
+    *errlen = ngx_snprintf(err, *errlen,
+                           "missing the capture error log patch for nginx")
+              - err;
+    return NGX_ERROR;
+#endif
+}
+
+
+int
+ngx_stream_lua_ffi_errlog_get_sys_filter_level(ngx_stream_lua_request_t *r)
+{
+    ngx_log_t                   *log;
+    int                          log_level;
+
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
+
+    } else {
+        log = ngx_cycle->log;
+    }
+
+    log_level = log->log_level;
+    if (log_level == NGX_LOG_DEBUG_ALL) {
+        log_level = NGX_LOG_DEBUG;
+    }
+
+    return log_level;
+}
+
+
+int
+ngx_stream_lua_ffi_raw_log(ngx_stream_lua_request_t *r, int level, u_char *s,
+    size_t s_len)
+{
+    ngx_log_t           *log;
+
+    if (level > NGX_LOG_DEBUG || level < NGX_LOG_STDERR) {
+        return NGX_ERROR;
+    }
+
+    if (r && r->connection && r->connection->log) {
+        log = r->connection->log;
+
+    } else {
+        log = ngx_cycle->log;
+    }
+
+    ngx_log_error((unsigned) level, log, 0, "%*s", s_len, s);
+
+    return NGX_OK;
 }
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

@@ -139,4 +139,4 @@ dw==
     content_by_lua_block { ngx.say(ngx.encode_base64("w", 0)) }
 --- stream_response
 --- error_log eval
-qr/bad argument \#2 to 'encode_base64' \(boolean expected, got number\)|\[error\] .*? boolean argument only/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):\d+: bad no_padding: boolean expected, got number/

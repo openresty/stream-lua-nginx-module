@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_config.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -66,3 +74,5 @@ ngx_stream_lua_config_configure(lua_State *L)
     lua_pushliteral(L, NGX_CONFIGURE);
     return 1;
 }
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

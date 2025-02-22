@@ -24,4 +24,3 @@ __DATA__
 ^\s*\-\-[^-]+
 --- no_error_log
 [error]
-

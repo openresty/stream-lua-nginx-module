@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_uthread.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -13,6 +21,7 @@
 #include "ngx_stream_lua_uthread.h"
 #include "ngx_stream_lua_coroutine.h"
 #include "ngx_stream_lua_util.h"
+#include "ngx_stream_lua_probe.h"
 
 
 #if 1
@@ -48,28 +57,29 @@ ngx_stream_lua_inject_uthread_api(ngx_log_t *log, lua_State *L)
 static int
 ngx_stream_lua_uthread_spawn(lua_State *L)
 {
-    int                             n;
-    ngx_stream_session_t           *s;
-    ngx_stream_lua_ctx_t           *ctx;
-    ngx_stream_lua_co_ctx_t        *coctx = NULL;
+    int                              n;
+    ngx_stream_lua_request_t        *r;
+    ngx_stream_lua_ctx_t            *ctx;
+    ngx_stream_lua_co_ctx_t         *coctx = NULL;
 
     n = lua_gettop(L);
 
-    s = ngx_stream_lua_get_session(L);
-    if (s == NULL) {
-        return luaL_error(L, "no session found");
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
     }
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no session ctx found");
+        return luaL_error(L, "no request ctx found");
     }
 
-    ngx_stream_lua_coroutine_create_helper(L, s, ctx, &coctx);
+    ngx_stream_lua_coroutine_create_helper(L, r, ctx, &coctx);
 
     /* anchor the newly created coroutine into the Lua registry */
 
-    lua_pushlightuserdata(L, &ngx_stream_lua_coroutines_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          coroutines_key));
     lua_rawget(L, LUA_REGISTRYINDEX);
     lua_pushvalue(L, -2);
     coctx->co_ref = luaL_ref(L, -2);
@@ -88,17 +98,16 @@ ngx_stream_lua_uthread_spawn(lua_State *L)
 
     ctx->cur_co_ctx->thread_spawn_yielded = 1;
 
-    if (ngx_stream_lua_post_thread(s, ctx, ctx->cur_co_ctx) != NGX_OK) {
+    if (ngx_stream_lua_post_thread(r, ctx, ctx->cur_co_ctx) != NGX_OK) {
         return luaL_error(L, "no memory");
     }
 
     coctx->parent_co_ctx = ctx->cur_co_ctx;
     ctx->cur_co_ctx = coctx;
 
-#if 0
-    /* TODO */
-    ngx_stream_lua_probe_user_thread_spawn(s, L, coctx->co);
-#endif
+    ngx_stream_lua_attach_co_ctx_to_L(coctx->co, coctx);
+
+    ngx_stream_lua_probe_user_thread_spawn(r, L, coctx->co);
 
     dd("yielding with arg %s, top=%d, index-1:%s", luaL_typename(L, -1),
        (int) lua_gettop(L), luaL_typename(L, 1));
@@ -111,22 +120,22 @@ ngx_stream_lua_uthread_wait(lua_State *L)
 {
     int                          i, nargs, nrets;
     lua_State                   *sub_co;
-    ngx_stream_session_t        *s;
-    ngx_stream_lua_ctx_t        *ctx;
-    ngx_stream_lua_co_ctx_t     *coctx, *sub_coctx;
+    ngx_stream_lua_request_t    *r;
 
-    s = ngx_stream_lua_get_session(L);
-    if (s == NULL) {
-        return luaL_error(L, "no session found");
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx, *sub_coctx;
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
     }
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no session ctx found");
+        return luaL_error(L, "no request ctx found");
     }
 
-    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_TIMER);
+    ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_YIELDABLE);
 
     coctx = ctx->cur_co_ctx;
 
@@ -135,7 +144,7 @@ ngx_stream_lua_uthread_wait(lua_State *L)
     for (i = 1; i <= nargs; i++) {
         sub_co = lua_tothread(L, i);
 
-        luaL_argcheck(L, sub_co, i, "stream lua thread expected");
+        luaL_argcheck(L, sub_co, i, "lua thread expected");
 
         sub_coctx = ngx_stream_lua_get_co_ctx(sub_co, ctx);
         if (sub_coctx == NULL) {
@@ -168,7 +177,7 @@ ngx_stream_lua_uthread_wait(lua_State *L)
             }
 
 #if 1
-            ngx_stream_lua_del_thread(s, L, ctx, sub_coctx);
+            ngx_stream_lua_del_thread(r, L, ctx, sub_coctx);
             ctx->uthreads--;
 #endif
 
@@ -194,10 +203,7 @@ ngx_stream_lua_uthread_wait(lua_State *L)
             break;
         }
 
-#if 0
-        /* TODO */
         ngx_stream_lua_probe_user_thread_wait(L, sub_coctx->co);
-#endif
         sub_coctx->waited_by_parent = 1;
     }
 
@@ -208,28 +214,33 @@ ngx_stream_lua_uthread_wait(lua_State *L)
 static int
 ngx_stream_lua_uthread_kill(lua_State *L)
 {
-    lua_State                     *sub_co;
-    ngx_stream_session_t          *s;
-    ngx_stream_lua_ctx_t          *ctx;
-    ngx_stream_lua_co_ctx_t       *coctx, *sub_coctx;
+    lua_State                   *sub_co;
+    ngx_stream_lua_request_t    *r;
 
-    s = ngx_stream_lua_get_session(L);
-    if (s == NULL) {
-        return luaL_error(L, "no session found");
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_stream_lua_co_ctx_t             *coctx, *sub_coctx;
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
     }
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_lua_module);
+    ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
-        return luaL_error(L, "no session ctx found");
+        return luaL_error(L, "no request ctx found");
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_TIMER);
+
+                               | NGX_STREAM_LUA_CONTEXT_PREREAD
+                               | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
+                               | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+                               | NGX_STREAM_LUA_CONTEXT_TIMER);
 
     coctx = ctx->cur_co_ctx;
 
     sub_co = lua_tothread(L, 1);
-    luaL_argcheck(L, sub_co, 1, "stream lua thread expected");
+    luaL_argcheck(L, sub_co, 1, "lua thread expected");
 
     sub_coctx = ngx_stream_lua_get_co_ctx(sub_co, ctx);
 
@@ -249,9 +260,10 @@ ngx_stream_lua_uthread_kill(lua_State *L)
         return 2;
     }
 
+
     switch (sub_coctx->co_status) {
     case NGX_STREAM_LUA_CO_ZOMBIE:
-        ngx_stream_lua_del_thread(s, L, ctx, sub_coctx);
+        ngx_stream_lua_del_thread(r, L, ctx, sub_coctx);
         ctx->uthreads--;
 
         lua_pushnil(L);
@@ -265,12 +277,14 @@ ngx_stream_lua_uthread_kill(lua_State *L)
 
     default:
         ngx_stream_lua_cleanup_pending_operation(sub_coctx);
-        ngx_stream_lua_del_thread(s, L, ctx, sub_coctx);
+        ngx_stream_lua_del_thread(r, L, ctx, sub_coctx);
         ctx->uthreads--;
 
         lua_pushinteger(L, 1);
         return 1;
     }
 
-    /* not reacheable */
+    /* not reachable */
 }
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

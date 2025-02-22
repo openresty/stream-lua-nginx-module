@@ -4,12 +4,13 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 179;
+plan tests => repeat_each() * 224;
 
 our $HtmlDir = html_dir;
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
+$ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 
 #log_level 'warn';
 log_level 'debug';
@@ -144,7 +145,7 @@ closed
 
 
 
-=== TEST 3: no lua_resolver defined
+=== TEST 3: no resolver defined
 --- stream_server_config
     content_by_lua_block {
         local sock = ngx.socket.tcp()
@@ -167,7 +168,7 @@ closed
         ngx.say("request sent: ", bytes)
     }
 --- stream_response
-failed to connect: no lua_resolver defined to resolve "agentzh.org"
+failed to connect: no resolver defined to resolve "agentzh.org"
 connected: nil
 failed to send request: closed
 --- error_log
@@ -178,8 +179,8 @@ attempt to send data on a closed socket:
 === TEST 4: with resolver
 --- timeout: 10
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_resolver_timeout 3s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local port = 80
@@ -219,11 +220,11 @@ attempt to send data on a closed socket:
         end
     }
 
---- stream_response
+--- stream_response_like
 connected: 1
 request sent: 56
-first line received: HTTP/1.1 200 OK
-second line received: Server: openresty
+first line received: HTTP\/1\.1 200 OK
+second line received: (?:Date|Server): .*?
 --- no_error_log
 [error]
 --- timeout: 10
@@ -260,17 +261,17 @@ qr/connect\(\) failed \(\d+: Connection refused\)/
 
 === TEST 6: connection timeout (tcp)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     #lua_socket_connect_timeout 100ms;
     #lua_socket_send_timeout 100ms;
     #lua_socket_read_timeout 100ms;
-    lua_resolver_timeout 3s;
+    resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
 
         sock:settimeout(100)  -- ms
 
-        local ok, err = sock:connect("agentzh.org", 12345)
+        local ok, err = sock:connect("127.0.0.2", 12345)
         ngx.say("connect: ", ok, " ", err)
 
         local bytes
@@ -290,7 +291,7 @@ send: nil closed
 receive: nil closed
 close: nil closed
 --- error_log
-lua tcp socket connect timed out
+lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
 --- timeout: 10
 
 
@@ -316,8 +317,8 @@ connected: 1
 
 === TEST 8: resolver error (host not found)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_resolver_timeout 3s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local port = 80
@@ -352,8 +353,8 @@ attempt to send data on a closed socket
 
 === TEST 9: resolver error (timeout)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_resolver_timeout 1ms;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 1ms;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local port = 80
@@ -947,7 +948,7 @@ close: 1 nil
 
 === TEST 19: cannot survive across request boundary (send)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -997,7 +998,7 @@ received: OK|failed to send request: closed)\$"
 
 === TEST 20: cannot survive across request boundary (receive)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -1063,7 +1064,7 @@ received: OK|failed to receive a line: closed \[nil\])$/
 
 === TEST 21: cannot survive across request boundary (close)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -1123,7 +1124,7 @@ received: OK|failed to close: closed)$/
 
 === TEST 22: cannot survive across request boundary (connect)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -1753,7 +1754,7 @@ close: nil closed
 === TEST 33: reread after a read time out happen (receive -> receive)
 --- stream_server_config
     lua_socket_read_timeout 100ms;
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
@@ -1790,7 +1791,7 @@ lua tcp socket read timed out
 
 === TEST 34: successful reread after a read time out happen (receive -> receive)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
@@ -1863,7 +1864,7 @@ lua tcp socket read timed out
 
 === TEST 35: successful reread after a read time out happen (receive -> receiveuntil)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
@@ -1940,7 +1941,7 @@ lua tcp socket read timed out
 
 === TEST 36: successful reread after a read time out happen (receiveuntil -> receiveuntil)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
@@ -2019,7 +2020,7 @@ lua tcp socket read timed out
 
 === TEST 37: successful reread after a read time out happen (receiveuntil -> receive)
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local sock = ngx.socket.tcp()
         local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
@@ -2247,7 +2248,7 @@ lua clean up the timer for pending ngx.sleep
 
 === TEST 41: bad request tries to connect
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2289,7 +2290,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):14: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):14: bad request/
 
 --- no_error_log
 [alert]
@@ -2298,7 +2299,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):14: bad request/
 
 === TEST 42: bad request tries to receive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2335,7 +2336,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):13: bad request/
 
 --- no_error_log
 [alert]
@@ -2344,7 +2345,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):13: bad request/
 
 === TEST 43: bad request tries to send
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2380,7 +2381,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]
@@ -2389,7 +2390,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 44: bad request tries to close
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2425,7 +2426,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]
@@ -2434,7 +2435,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 45: bad request tries to set keepalive
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2470,7 +2471,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):12: bad request/
 
 --- no_error_log
 [alert]
@@ -2479,7 +2480,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):12: bad request/
 
 === TEST 46: bad request tries to receiveuntil
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     content_by_lua_block {
         local test = require "test"
@@ -2518,7 +2519,7 @@ end
 connected
 
 --- error_log eval
-qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):14: bad request/
+qr/runtime error: content_by_lua\(nginx\.conf:\d+\):14: bad request/
 
 --- no_error_log
 [alert]
@@ -2528,7 +2529,7 @@ qr/runtime error: content_by_lua_block\(nginx\.conf:\d+\):14: bad request/
 === TEST 47: cosocket resolving aborted by coroutine yielding failures (require)
 --- stream_config
     lua_package_path "$prefix/html/?.lua;;";
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
 
 --- stream_server_config
     content_by_lua_block {
@@ -2557,7 +2558,7 @@ runtime error: attempt to yield across C-call boundary
 === TEST 48: cosocket resolving aborted by coroutine yielding failures (xpcall err)
 --- stream_config
     lua_package_path "$prefix/html/?.lua;;";
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
 
 --- stream_server_config
     content_by_lua_block {
@@ -2790,15 +2791,15 @@ close: 1 nil
 === TEST 52: kill a thread with a connecting socket
 --- stream_server_config
     lua_socket_connect_timeout 1s;
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
-    lua_resolver_timeout 3s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
 
     content_by_lua_block {
         local sock
 
         local thr = ngx.thread.spawn(function ()
             sock = ngx.socket.tcp()
-            local ok, err = sock:connect("agentzh.org", 12345)
+            local ok, err = sock:connect("127.0.0.2", 12345)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -2882,7 +2883,7 @@ request sent: 57
 failed to receive a line: closed []
 close: 1 nil
 --- error_log
-stream lua stream cleanup reuse
+lua stream cleanup reuse
 
 
 
@@ -2959,7 +2960,7 @@ stream lua stream cleanup reuse
 --- stream_response
 total_send_bytes: 114
 --- error_log
-stream lua stream cleanup reuse
+lua stream cleanup reuse
 
 
 
@@ -3033,5 +3034,570 @@ stream lua stream cleanup reuse
 
 --- stream_response
 total_send_bytes: 114
+--- no_error_log
+[error]
+
+
+
+=== TEST 56: setkeepalive on socket already shutdown
+--- stream_server_config
+    lua_socket_connect_timeout 1s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("openresty.org", 443)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local ok, err = sock:shutdown('send')
+        if not ok then
+            ngx.log(ngx.ERR, 'failed to shutdown socket: ', err)
+            return
+        end
+
+        local ok, err = sock:setkeepalive()
+        if not ok then
+            ngx.log(ngx.ERR, "failed to setkeepalive: ", err)
+        end
+    }
+
+--- stream_response
+connected: 1
+--- error_log
+stream lua shutdown socket write direction
+failed to setkeepalive: closed
+
+
+
+=== TEST 57: options_table is nil
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port, nil)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+--- stream_response
+connected: 1
+close: 1 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 58: resolver send query failing immediately in connect()
+this case did not clear coctx->cleanup properly and would lead to memory invalid accesses.
+
+this test case requires the following iptables rule to work properly:
+
+sudo iptables -I OUTPUT 1 -p udp --dport 10086 -j REJECT
+
+--- stream_server_config
+    resolver 127.0.0.1:10086 ipv6=off;
+    resolver_timeout 10ms;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+
+        for i = 1, 3 do -- retry
+            local ok, err = sock:connect("www.google.com", 80)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+            end
+        end
+
+        ngx.say("hello!")
+    }
+--- stream_response_body_like
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+failed to connect: www.google.com could not be resolved(?: \(\d+: Operation timed out\))?
+hello!
+--- error_log eval
+qr{\[alert\] .*? send\(\) failed \(\d+: Operation not permitted\) while resolving}
+
+
+
+=== TEST 59: the upper bound of port range should be 2^16 - 1
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.socket.connect("127.0.0.1", 65536)
+        if not sock then
+            ngx.say("failed to connect: ", err)
+        end
+    }
+
+--- stream_response
+failed to connect: bad port number: 65536
+--- no_error_log
+[error]
+
+
+
+=== TEST 60: send boolean and nil
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        local function send(data)
+            local bytes, err = sock:send(data)
+            if not bytes then
+                ngx.say("failed to send request: ", err)
+                return
+            end
+        end
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\nTest: "
+        send(req)
+        send(true)
+        send(false)
+        send(nil)
+        send("\r\n\r\n")
+
+        while true do
+            local line, err, part = sock:receive()
+            if line then
+                ngx.say("received: ", line)
+            else
+                break
+            end
+        end
+
+        ok, err = sock:close()
+    }
+--- config
+    location /foo {
+        server_tokens off;
+        more_clear_headers Date;
+        echo $http_test;
+    }
+--- stream_response
+received: HTTP/1.1 200 OK
+received: Server: nginx
+received: Content-Type: text/plain
+received: Connection: close
+received: 
+received: truefalsenil
+--- no_error_log
+[error]
+
+
+
+=== TEST 61: TCP socket GC'ed in preread phase without Lua content phase
+--- stream_server_config
+    lua_socket_connect_timeout 1s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
+
+    preread_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+            local ok, err = sock:connect("openresty.org", 443)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+        end
+
+        ngx.timer.at(0, function()
+            collectgarbage()
+            ngx.log(ngx.WARN, "GC cycle done")
+        end)
+    }
+
+    return 1;
+
+--- stream_response chomp
+connected: 1
+1
+--- no_error_log
+[error]
+--- error_log
+cleanup lua tcp socket request
+GC cycle done
+
+
+
+=== TEST 62: receiveany method in cosocket
+--- config
+    location = /foo {
+        server_tokens off;
+
+        content_by_lua_block {
+            local resp = {
+                '1',
+                '22',
+                'hello world',
+            }
+
+            local length = 0
+            for _, v in ipairs(resp) do
+                length = length + #v
+            end
+
+            -- flush http header
+            ngx.header['Content-Length'] = length
+            ngx.flush(true)
+            ngx.sleep(0.01)
+
+            -- send http body
+            for _, v in ipairs(resp) do
+                ngx.print(v)
+                ngx.flush(true)
+                ngx.sleep(0.01)
+            end
+        }
+    }
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(500)
+
+        assert(sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT))
+        local req = {
+            'GET /foo HTTP/1.0\r\n',
+            'Host: localhost\r\n',
+            'Connection: close\r\n\r\n',
+        }
+        local ok, err = sock:send(req)
+        if not ok then
+            ngx.say("send request failed: ", err)
+            return
+        end
+
+        -- skip http header
+        while true do
+            local data, err, _ = sock:receive('*l')
+            if err then
+                ngx.say('unexpected error occurs when receiving http head: ', err)
+                return
+            end
+
+            if #data == 0 then -- read last line of head
+                break
+            end
+        end
+
+        -- receive http body
+        while true do
+            local data, err = sock:receiveany(1024)
+            if err then
+                if err ~= 'closed' then
+                    ngx.say('unexpected err: ', err)
+                end
+                break
+            end
+            ngx.say(data)
+        end
+
+        sock:close()
+    }
+--- stream_response
+1
+22
+hello world
+--- no_error_log
+[error]
+--- error_log
+lua tcp socket read any
+
+
+
+=== TEST 63: receiveany send data after read side closed
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(500)
+        assert(sock:connect("127.0.0.1", $TEST_NGINX_RAND_PORT_1))
+
+        while true do
+            local data, err = sock:receiveany(1024)
+            if err then
+                if err ~= 'closed' then
+                    ngx.say('unexpected err: ', err)
+                    break
+                end
+
+                local data = "send data after read side closed"
+                local bytes, err = sock:send(data)
+                if not bytes then
+                    ngx.say(err)
+                end
+
+                break
+            end
+            ngx.say(data)
+        end
+
+        sock:close()
+    }
+--- tcp_listen: $TEST_NGINX_RAND_PORT_1
+--- tcp_shutdown: 1
+--- tcp_query eval: "send data after read side closed"
+--- tcp_query_len: 32
+--- stream_response
+--- no_error_log
+[error]
+
+
+
+=== TEST 64: receiveany with limited, max <= 0
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(500)
+        assert(sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT))
+
+        local function receiveany_say_err(...)
+            local ok, err = pcall(sock.receiveany, sock, ...)
+            if not ok then
+                ngx.say(err)
+            end
+        end
+
+
+        receiveany_say_err(0)
+        receiveany_say_err(-1)
+        receiveany_say_err()
+        receiveany_say_err(nil)
+    }
+--- stream_response
+bad argument #2 to '?' (bad max argument)
+bad argument #2 to '?' (bad max argument)
+expecting 2 arguments (including the object), but got 1
+bad argument #2 to '?' (bad max argument)
+--- no_error_log
+[error]
+
+
+
+=== TEST 65: receiveany with limited, max is larger than data
+--- config
+    location = /foo {
+        server_tokens off;
+
+        content_by_lua_block {
+            local resp = 'hello world'
+            local length = #resp
+
+            ngx.header['Content-Length'] = length
+            ngx.flush(true)
+            ngx.sleep(0.01)
+
+            ngx.print(resp)
+        }
+    }
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(500)
+
+        assert(sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT))
+        local req = {
+            'GET /foo HTTP/1.0\r\n',
+            'Host: localhost\r\n',
+            'Connection: close\r\n\r\n',
+        }
+        local ok, err = sock:send(req)
+        if not ok then
+            ngx.say("send request failed: ", err)
+            return
+        end
+
+        while true do
+            local data, err, _ = sock:receive('*l')
+            if err then
+                ngx.say('unexpected error occurs when receiving http head: ', err)
+                return
+            end
+
+            if #data == 0 then -- read last line of head
+                break
+            end
+        end
+
+        local data, err = sock:receiveany(128)
+        if err then
+            if err ~= 'closed' then
+                ngx.say('unexpected err: ', err)
+            end
+        else
+            ngx.say(data)
+        end
+
+        sock:close()
+    }
+--- stream_response
+hello world
+--- no_error_log
+[error]
+--- error_log
+lua tcp socket calling receiveany() method to read at most 128 bytes
+
+
+
+=== TEST 66: receiveany with limited, max is smaller than data
+--- config
+    location = /foo {
+        server_tokens off;
+
+        content_by_lua_block {
+            local resp = 'hello world'
+            local length = #resp
+
+            ngx.header['Content-Length'] = length
+            ngx.flush(true)
+            ngx.sleep(0.01)
+
+            ngx.print(resp)
+        }
+    }
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(500)
+
+        assert(sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT))
+        local req = {
+            'GET /foo HTTP/1.0\r\n',
+            'Host: localhost\r\n',
+            'Connection: close\r\n\r\n',
+        }
+        local ok, err = sock:send(req)
+        if not ok then
+            ngx.say("send request failed: ", err)
+            return
+        end
+
+        while true do
+            local data, err, _ = sock:receive('*l')
+            if err then
+                ngx.say('unexpected error occurs when receiving http head: ', err)
+                return
+            end
+
+            if #data == 0 then -- read last line of head
+                break
+            end
+        end
+
+        while true do
+            local data, err = sock:receiveany(7)
+            if err then
+                if err ~= 'closed' then
+                    ngx.say('unexpected err: ', err)
+                end
+                break
+
+            else
+                ngx.say(data)
+            end
+        end
+
+        sock:close()
+    }
+--- stream_response
+hello w
+orld
+--- no_error_log
+[error]
+--- error_log
+lua tcp socket calling receiveany() method to read at most 7 bytes
+
+
+
+=== TEST 67: shutdown on a not connected socket correctly throws error
+--- stream_server_config
+    lua_socket_connect_timeout 1s;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver_timeout 3s;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+
+        local ok, err = sock:shutdown('send')
+        ngx.log(ngx.ERR, 'shutdown on a not connected socket: ', err)
+
+    }
+
+--- error_log
+shutdown on a not connected socket: closed
+
+
+
+=== TEST 68: setkeepalive with TLSv1.3
+--- skip_openssl: 3: < 1.1.1
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        ssl_certificate     ../../cert/test_ecdsa.crt;
+        ssl_certificate_key ../../cert/test_ecdsa.key;
+        ssl_protocols TLSv1.3;
+        content_by_lua_block {
+            local sock = assert(ngx.req.socket(true))
+            local data
+            while true do
+                data = assert(sock:receive())
+                assert(data == "hello")
+            end
+        }
+    }
+--- stream_server_config
+    lua_ssl_protocols TLSv1.3;
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(2000)
+        local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+        ngx.say("connected: ", ok)
+        local ok, err = sock:sslhandshake(false, nil, false)
+        if not ok then
+            ngx.say("failed to sslhandshake: ", err)
+            return
+        end
+        local ok, err = sock:send("hello\n")
+        if not ok then
+            ngx.say("failed to send: ", err)
+            return
+        end
+        -- sleep a while to make sure the NewSessionTicket message has arrived
+        ngx.sleep(1)
+        local ok, err = sock:setkeepalive()
+        if not ok then
+            ngx.say("failed to setkeepalive: ", err)
+        else
+            ngx.say("setkeepalive: ", ok)
+        end
+    }
+--- stream_response
+connected: 1
+setkeepalive: 1
 --- no_error_log
 [error]

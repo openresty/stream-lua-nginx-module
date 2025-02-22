@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_uthread.h.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -32,3 +40,5 @@ void ngx_stream_lua_inject_uthread_api(ngx_log_t *log, lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_UTHREAD_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

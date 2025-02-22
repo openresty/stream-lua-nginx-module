@@ -63,7 +63,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -110,7 +110,7 @@ registered timer
 --- error_log eval
 [
 qr/\[lua\] .*? my lua timer handler/,
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -220,7 +220,7 @@ qr/received: Server: \S+/,
 
 === TEST 4: tcp cosocket in timer handler (keep-alive connections)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     content_by_lua_block {
@@ -350,7 +350,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -487,7 +487,7 @@ qr/\[lua\] log_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
 TODO
 --- SKIP
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
         echo hello;
@@ -1025,4 +1025,3 @@ registered timer
 lua ngx.timer expired
 stream lua close fake stream connection
 trace: [m][f][g]
-

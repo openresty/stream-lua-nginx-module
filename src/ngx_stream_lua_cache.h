@@ -1,4 +1,11 @@
 
+/*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_cache.h.tt2
+ */
+
 
 /*
  * Copyright (C) Xiaozhe Wang (chaoslawful)
@@ -21,3 +28,5 @@ ngx_int_t ngx_stream_lua_cache_loadfile(ngx_log_t *log, lua_State *L,
 
 
 #endif /* _NGX_STREAM_LUA_CACHE_H_INCLUDED_ */
+
+/* vi:set ft=c ts=4 sw=4 et fdm=marker: */

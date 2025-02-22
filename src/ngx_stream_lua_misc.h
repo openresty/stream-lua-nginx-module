@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_misc.h.tt2
+ */
+
+
+/*
  * Copyright (C) Xiaozhe Wang (chaoslawful)
  * Copyright (C) Yichun Zhang (agentzh)
  */
@@ -12,7 +20,6 @@
 #include "ngx_stream_lua_common.h"
 
 
-void ngx_stream_lua_inject_misc_api(lua_State *L);
 
 
 #endif /* _NGX_STREAM_LUA_MISC_H_INCLUDED_ */

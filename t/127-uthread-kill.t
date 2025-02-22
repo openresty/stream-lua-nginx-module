@@ -7,7 +7,7 @@ our $StapScript = $t::StapThread::StapScript;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 5 + 2);
+plan tests => repeat_each() * (blocks() * 5 + 1);
 
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= '11211';
@@ -129,11 +129,12 @@ lua clean up the timer for pending ngx.sleep
 
 === TEST 3: kill pending resolver
 --- stream_server_config
-    lua_resolver agentzh.org:12345;
+    resolver 127.0.0.2:12345;
+    resolver_timeout 5ms;
     content_by_lua_block {
         function f()
             local sock = ngx.socket.tcp()
-            sock:connect("some.agentzh.org", 12345)
+            sock:connect("some.agentzh.org", 80)
         end
 
         local t, err = ngx.thread.spawn(f)
@@ -171,13 +172,12 @@ killed
 [error]
 --- error_log
 lua tcp socket abort resolver
-resolve name done: -2
 
 
 
 === TEST 4: kill pending connect
 --- stream_server_config
-    lua_resolver $TEST_NGINX_RESOLVER ipv6=off;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     content_by_lua_block {
         local ready = false
         function f()
@@ -186,7 +186,7 @@ resolve name done: -2
             sock:close()
             ready = true
             sock:settimeout(10000)
-            sock:connect("agentzh.org", 12345)
+            sock:connect("127.0.0.2", 12345)
         end
 
         local t, err = ngx.thread.spawn(f)
@@ -313,4 +313,3 @@ thread created: zombie
 [alert]
 stream lua tcp socket abort resolver
 --- error_log
-

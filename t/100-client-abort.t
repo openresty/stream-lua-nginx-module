@@ -493,7 +493,7 @@ receive stream response error: timeout
 [error]
 [alert]
 --- error_log
-say failed: broken pipe
+say failed: nginx output filter error
 
 
 
@@ -519,7 +519,7 @@ receive stream response error: timeout
 [error]
 [alert]
 --- error_log
-print failed: broken pipe
+print failed: nginx output filter error
 
 
 

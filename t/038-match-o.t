@@ -238,8 +238,11 @@ he
             end
         end
     }
---- stream_response
-error: pcre_compile() failed: missing ) in "(abc"
+--- stream_response eval
+$Test::Nginx::Util::PcreVersion == 2 ?
+"error: pcre2_compile() failed: missing closing parenthesis in \"(abc\"\n"
+:
+"error: pcre_compile() failed: missing ) in \"(abc\"\n"
 --- no_error_log
 [error]
 
@@ -278,7 +281,7 @@ error: pcre_compile() failed: missing ) in "(abc"
     }
 --- stream_response
 hello
-nil
+false
 hello
 
 
@@ -554,8 +557,7 @@ hello-1234
     }
 --- stream_response
 hello
-nil
+false
 hello
-nil
-nil
-
+false
+false

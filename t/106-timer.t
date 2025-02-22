@@ -1,5 +1,6 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use Test::Nginx::Socket::Lua::Stream;use t::StapThread;
+use Test::Nginx::Socket::Lua::Stream;
+use t::StapThread;
 
 our $GCScript = $t::StapThread::GCScript;
 our $StapScript = $t::StapThread::StapScript;
@@ -11,7 +12,7 @@ our $StapScript = $t::StapThread::StapScript;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 8 + 49);
+plan tests => repeat_each() * (blocks() * 8 + 45);
 
 #no_diff();
 no_long_string();
@@ -64,7 +65,7 @@ timer prematurely expired: true
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])\d*, context: ngx\.timer, client: \d+\.\d+\.\d+\.\d+, server: 0\.0\.0\.0:\d+/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])\d*, context: ngx\.timer, client: \d+\.\d+\.\d+\.\d+, server: 0\.0\.0\.0:\d+/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection",
 "timer prematurely expired: false",
@@ -98,7 +99,7 @@ F(ngx_stream_lua_timer_handler) {
 
 --- stream_response
 registered timer
-foo = nil
+foo = 3
 
 --- wait: 0.1
 --- no_error_log
@@ -108,7 +109,7 @@ foo = nil
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -152,7 +153,7 @@ foo = 3
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])/,
 "stream lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -198,7 +199,7 @@ registered timer
 --- error_log eval
 [
 qr/\[lua\] .*? my lua timer handler/,
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-9]|8[0-6])/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -307,7 +308,7 @@ qr/received: Server: \S+/,
 
 === TEST 6: tcp cosocket in timer handler (keep-alive connections)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     content_by_lua_block {
@@ -436,7 +437,7 @@ registered timer
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0(?:[^.]|\.00)/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection"
 ]
@@ -571,7 +572,7 @@ qr/\[lua\] log_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:6[4-9]|7[0-6])/,
 TODO
 --- SKIP
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     log_by_lua_block {
@@ -1713,7 +1714,7 @@ timer prematurely expired: true
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])\d*, context: ngx\.timer/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: 0\.0(?:4[4-9]|5[0-6])\d*, context: ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection",
 "timer prematurely expired: false",
@@ -1752,7 +1753,7 @@ timer prematurely expired: true
 
 --- error_log eval
 [
-qr/\[lua\] content_by_lua_block\(nginx\.conf:\d+\):\d+: elapsed: .*?, context: ngx\.timer/,
+qr/\[lua\] content_by_lua\(nginx\.conf:\d+\):\d+: elapsed: .*?, context: ngx\.timer/,
 "lua ngx.timer expired",
 "stream lua close fake stream connection",
 "timer prematurely expired: false",
@@ -1787,3 +1788,169 @@ ok
 Bad bad bad
 --- skip_nginx: 4: < 1.7.1
 
+
+
+=== TEST 30: log function location when failed to run a timer
+--- stream_config
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local function g()
+            ngx.sleep(0.01)
+        end
+
+        local function f()
+            ngx.sleep(0.01)
+        end
+
+        local ok, err = ngx.timer.at(0, f)
+        if not ok then
+            ngx.say("failed to create timer f: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, g)
+        if not ok then
+            ngx.say("failed to create timer g: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at =content_by_lua\(nginx.conf:\d+\):2: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
+
+
+
+=== TEST 31: log function location when failed to run a timer (anonymous function)
+--- stream_config
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local function f()
+            ngx.sleep(0.01)
+        end
+
+        local ok, err = ngx.timer.at(0, f)
+        if not ok then
+            ngx.say("failed to set timer f: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, function()
+            ngx.sleep(0.01)
+        end)
+
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at =content_by_lua\(nginx.conf:\d+\):12: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
+
+
+
+=== TEST 32: log function location when failed to run a timer (lua file)
+--- user_files
+>>> test.lua
+local _M = {}
+
+function _M.run()
+    ngx.sleep(0.01)
+end
+
+return _M
+--- stream_config
+    lua_package_path '$TEST_NGINX_HTML_DIR/?.lua;./?.lua;;';
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local test = require "test"
+
+        local ok, err = ngx.timer.at(0, test.run)
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, test.run)
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at @.+\/test.lua:3: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]
+
+
+
+=== TEST 33: log function location when failed to run a timer with arg (lua file)
+--- user_files
+>>> test.lua
+local _M = {}
+
+function _M.run()
+    ngx.sleep(0.01)
+end
+
+return _M
+--- stream_config
+    lua_package_path '$TEST_NGINX_HTML_DIR/?.lua;./?.lua;;';
+    lua_max_running_timers 1;
+--- stream_server_config
+    content_by_lua_block {
+        local test = require "test"
+
+        local ok, err = ngx.timer.at(0, test.run, "arg")
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        local ok, err = ngx.timer.at(0, test.run, "arg")
+        if not ok then
+            ngx.say("failed to set timer: ", err)
+            return
+        end
+
+        ngx.say("ok")
+    }
+--- stream_response
+ok
+--- wait: 0.1
+--- error_log eval
+qr/\[alert\] .*? lua failed to run timer with function defined at @.+\/test.lua:3: stream lua: 1 lua_max_running_timers are not enough/
+--- no_error_log
+[emerg]
+[crit]
+[error]
+[warn]

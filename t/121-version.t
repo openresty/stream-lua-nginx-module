@@ -37,4 +37,3 @@ __DATA__
 ^version: \d+$
 --- no_error_log
 [error]
-

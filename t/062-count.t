@@ -30,7 +30,7 @@ __DATA__
         ngx.say("ngx: ", n)
     }
 --- stream_response
-ngx: 56
+ngx: 54
 --- no_error_log
 [error]
 
@@ -43,10 +43,12 @@ ngx: 56
         for k, v in pairs(ngx.req) do
             n = n + 1
         end
+        -- ngx.req.socket
+        -- ngx.req.start_time
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 1
+n = 2
 --- no_error_log
 [error]
 
@@ -62,7 +64,7 @@ n = 1
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 3
+n = 4
 --- no_error_log
 [error]
 
@@ -101,7 +103,7 @@ n = 10
         assert(ngx.say("n = ", n))
     }
 --- stream_response
-n = 5
+n = 9
 --- no_error_log
 [error]
 
@@ -121,7 +123,7 @@ n = 5
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 13
+n = 22
 --- no_error_log
 [error]
 
@@ -137,7 +139,7 @@ n = 13
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 3
+n = 4
 --- no_error_log
 [error]
 
@@ -193,7 +195,7 @@ probe process("$LIBLUA_PATH").function("rehashtab") {
 --- stap_out2
 3
 --- stream_response
-coroutine: 14
+coroutine: 16
 --- no_error_log
 [error]
 
@@ -232,13 +234,30 @@ thread: 3
         ngx.say("worker: ", n)
     }
 --- stream_response
-worker: 4
+worker: 5
 --- no_error_log
 [error]
 
 
 
-=== TEST 13: entries under the metatable of udp sockets
+=== TEST 13: entries under the metatable of tcp sockets
+--- stream_server_config
+    content_by_lua_block {
+        local n = 0
+        local sock = ngx.socket.tcp()
+        for k, v in pairs(getmetatable(sock)) do
+            n = n + 1
+        end
+        ngx.say("n = ", n)
+    }
+--- stream_response
+n = 14
+--- no_error_log
+[error]
+
+
+
+=== TEST 14: entries under the metatable of udp sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -255,7 +274,7 @@ n = 6
 
 
 
-=== TEST 14: entries under the metatable of req raw sockets
+=== TEST 15: entries under the metatable of req raw sockets
 --- stream_server_config
     content_by_lua_block {
         local n = 0
@@ -276,6 +295,6 @@ n = 6
         end
     }
 --- stream_response
-n = 5
+n = 9
 --- no_error_log
 [error]

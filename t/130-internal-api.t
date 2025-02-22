@@ -18,26 +18,17 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: __ngx_req and __ngx_cycle
---- stream_config
-    init_by_lua_block {
-        my_cycle = __ngx_cycle
-    }
-
+=== TEST 1: req
 --- stream_server_config
     content_by_lua_block {
         local ffi = require "ffi"
         local function tonum(ud)
             return tonumber(ffi.cast("uintptr_t", ud))
         end
-        ngx.say(string.format("init: cycle=%#x", tonum(my_cycle)))
-        ngx.say(string.format("content cycle=%#x", tonum(__ngx_cycle)))
-        ngx.say(string.format("content req=%#x", tonum(__ngx_sess)))
+        ngx.say(string.format("content req=%#x", tonum(exdata())))
     }
 --- stream_response_like chop
-^init: cycle=(0x[a-f0-9]{4,})
-content cycle=\1
-content req=0x[a-f0-9]{4,}
+^content req=0x[a-f0-9]{4,}
 $
 --- no_error_log
 [error]

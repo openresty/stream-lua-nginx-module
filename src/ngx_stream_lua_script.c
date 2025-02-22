@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_script.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -41,7 +49,7 @@ ngx_stream_lua_compile_complex_value(
     ngx_uint_t                  i, n, nv;
     ngx_array_t                 lengths, values, *pl, *pv;
 
-    ngx_stream_lua_script_compile_t   sc;
+    ngx_stream_lua_script_compile_t         sc;
 
     v = ccv->value;
 
@@ -106,15 +114,16 @@ ngx_stream_lua_compile_complex_value(
 
 
 ngx_int_t
-ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
+ngx_stream_lua_complex_value(ngx_stream_lua_request_t *r, ngx_str_t *subj,
     size_t offset, ngx_int_t count, int *cap,
     ngx_stream_lua_complex_value_t *val, luaL_Buffer *luabuf)
 {
-    size_t                               len;
-    u_char                              *p;
-    ngx_stream_lua_script_code_pt        code;
-    ngx_stream_lua_script_len_code_pt    lcode;
-    ngx_stream_lua_script_engine_t       e;
+    size_t                            len;
+    u_char                           *p;
+
+    ngx_stream_lua_script_code_pt             code;
+    ngx_stream_lua_script_len_code_pt         lcode;
+    ngx_stream_lua_script_engine_t            e;
 
     if (val->lengths == NULL) {
         luaL_addlstring(luabuf, (char *) &subj->data[offset], cap[0] - offset);
@@ -125,7 +134,7 @@ ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
 
     ngx_memzero(&e, sizeof(ngx_stream_lua_script_engine_t));
 
-    e.log = s->connection->log;
+    e.log = r->connection->log;
     e.ncaptures = count * 2;
     e.captures = cap;
     e.captures_data = subj->data;
@@ -139,7 +148,7 @@ ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
         len += lcode(&e);
     }
 
-    p = ngx_pnalloc(s->connection->pool, len);
+    p = ngx_pnalloc(r->pool, len);
     if (p == NULL) {
         return NGX_ERROR;
     }
@@ -155,7 +164,7 @@ ngx_stream_lua_complex_value(ngx_stream_session_t *s, ngx_str_t *subj,
     luaL_addlstring(luabuf, (char *) &subj->data[offset], cap[0] - offset);
     luaL_addlstring(luabuf, (char *) p, len);
 
-    ngx_pfree(s->connection->pool, p);
+    ngx_pfree(r->pool, p);
 
     return NGX_OK;
 }
@@ -190,7 +199,7 @@ ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc)
                 name.len++;
 
                 if (ngx_stream_lua_script_add_copy_code(sc, &name,
-                                                      (i == sc->source->len))
+                                                        i == sc->source->len)
                     != NGX_OK)
                 {
                     return NGX_ERROR;
@@ -299,7 +308,7 @@ ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc)
         }
 
         if (ngx_stream_lua_script_add_copy_code(sc, &name,
-                                                (i == sc->source->len))
+                                                i == sc->source->len)
             != NGX_OK)
         {
             return NGX_ERROR;
@@ -311,8 +320,8 @@ ngx_stream_lua_script_compile(ngx_stream_lua_script_compile_t *sc)
 invalid_variable:
 
     ngx_log_error(NGX_LOG_ERR, sc->log, 0,
-                  "stream lua script: invalid capturing variable name found "
-                  "in \"%V\"", sc->source);
+                  "lua script: invalid capturing variable name found in \"%V\"",
+                  sc->source);
 
     return NGX_ERROR;
 }
@@ -322,18 +331,19 @@ static ngx_int_t
 ngx_stream_lua_script_add_copy_code(ngx_stream_lua_script_compile_t *sc,
     ngx_str_t *value, ngx_uint_t last)
 {
-    size_t                              size, len;
-    ngx_stream_lua_script_copy_code_t  *code;
+    size_t      size, len;
+
+    ngx_stream_lua_script_copy_code_t        *code;
 
     len = value->len;
 
     code = ngx_stream_lua_script_add_code(*sc->lengths,
-                                    sizeof(ngx_stream_lua_script_copy_code_t));
+                                     sizeof(ngx_stream_lua_script_copy_code_t));
     if (code == NULL) {
         return NGX_ERROR;
     }
 
-    code->code = (ngx_stream_lua_script_code_pt)
+    code->code = (ngx_stream_lua_script_code_pt) (void *)
                  ngx_stream_lua_script_copy_len_code;
     code->len = len;
 
@@ -358,7 +368,7 @@ ngx_stream_lua_script_add_copy_code(ngx_stream_lua_script_compile_t *sc,
 static size_t
 ngx_stream_lua_script_copy_len_code(ngx_stream_lua_script_engine_t *e)
 {
-    ngx_stream_lua_script_copy_code_t  *code;
+    ngx_stream_lua_script_copy_code_t        *code;
 
     code = (ngx_stream_lua_script_copy_code_t *) e->ip;
 
@@ -371,8 +381,9 @@ ngx_stream_lua_script_copy_len_code(ngx_stream_lua_script_engine_t *e)
 static void
 ngx_stream_lua_script_copy_code(ngx_stream_lua_script_engine_t *e)
 {
-    u_char                              *p;
-    ngx_stream_lua_script_copy_code_t   *code;
+    u_char          *p;
+
+    ngx_stream_lua_script_copy_code_t        *code;
 
     code = (ngx_stream_lua_script_copy_code_t *) e->ip;
 
@@ -387,7 +398,7 @@ ngx_stream_lua_script_copy_code(ngx_stream_lua_script_engine_t *e)
           + ((code->len + sizeof(uintptr_t) - 1) & ~(sizeof(uintptr_t) - 1));
 
     ngx_log_debug2(NGX_LOG_DEBUG_STREAM, e->log, 0,
-                   "stream lua script copy: \"%*s\"", e->pos - p, p);
+                   "lua script copy: \"%*s\"", e->pos - p, p);
 }
 
 
@@ -395,7 +406,7 @@ static ngx_int_t
 ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
     ngx_uint_t n)
 {
-    ngx_stream_lua_script_capture_code_t  *code;
+    ngx_stream_lua_script_capture_code_t        *code;
 
     code = ngx_stream_lua_script_add_code(*sc->lengths,
                                   sizeof(ngx_stream_lua_script_capture_code_t));
@@ -403,7 +414,7 @@ ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
         return NGX_ERROR;
     }
 
-    code->code = (ngx_stream_lua_script_code_pt)
+    code->code = (ngx_stream_lua_script_code_pt) (void *)
                  ngx_stream_lua_script_copy_capture_len_code;
     code->n = 2 * n;
 
@@ -423,9 +434,10 @@ ngx_stream_lua_script_add_capture_code(ngx_stream_lua_script_compile_t *sc,
 static size_t
 ngx_stream_lua_script_copy_capture_len_code(ngx_stream_lua_script_engine_t *e)
 {
-    int                                    *cap;
-    ngx_uint_t                              n;
-    ngx_stream_lua_script_capture_code_t   *code;
+    int                         *cap;
+    ngx_uint_t                   n;
+
+    ngx_stream_lua_script_capture_code_t         *code;
 
     code = (ngx_stream_lua_script_capture_code_t *) e->ip;
 
@@ -445,10 +457,11 @@ ngx_stream_lua_script_copy_capture_len_code(ngx_stream_lua_script_engine_t *e)
 static void
 ngx_stream_lua_script_copy_capture_code(ngx_stream_lua_script_engine_t *e)
 {
-    int                                     *cap;
-    u_char                                  *p, *pos;
-    ngx_uint_t                               n;
-    ngx_stream_lua_script_capture_code_t    *code;
+    int                                  *cap;
+    u_char                               *p, *pos;
+    ngx_uint_t                            n;
+
+    ngx_stream_lua_script_capture_code_t         *code;
 
     code = (ngx_stream_lua_script_capture_code_t *) e->ip;
 
@@ -467,7 +480,7 @@ ngx_stream_lua_script_copy_capture_code(ngx_stream_lua_script_engine_t *e)
     }
 
     ngx_log_debug2(NGX_LOG_DEBUG_STREAM, e->log, 0,
-                   "stream lua script capture: \"%*s\"", e->pos - pos, pos);
+                   "lua script capture: \"%*s\"", e->pos - pos, pos);
 }
 
 

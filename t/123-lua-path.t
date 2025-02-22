@@ -12,7 +12,7 @@ repeat_each(2);
 
 plan tests => repeat_each() * (blocks() * 3 + 1);
 
-$ENV{LUA_PATH} = "/foo/bar/baz";
+$ENV{LUA_PATH} = "../lua-resty-core/lib/?.lua;../lua-resty-lrucache/lib/?.lua;/foo/bar/baz";
 $ENV{LUA_CPATH} = "/baz/bar/foo";
 #no_diff();
 #no_long_string();
@@ -33,8 +33,8 @@ env LUA_CPATH;
         ngx.say(package.path)
         ngx.say(package.cpath)
     }
---- stream_response
-/foo/bar/baz
+--- stream_response_like
+(?:\.\.\/lua-resty-core\/lib\/\?\.lua;\.\.\/lua-resty-lrucache\/lib\/\?\.lua;){1,2}\/foo\/bar\/baz
 /baz/bar/foo
 
 --- no_error_log
@@ -53,12 +53,11 @@ env LUA_CPATH;
         ngx.say(package.path)
         ngx.say(package.cpath)
     }
---- stream_response
-/foo/bar/baz
+--- stream_response_like
+(?:\.\.\/lua-resty-core\/lib\/\?\.lua;\.\.\/lua-resty-lrucache\/lib\/\?\.lua;){1,2}\/foo\/bar\/baz
 /baz/bar/foo
 
 --- no_error_log
 [error]
 --- error_log eval
 qr/\[alert\] .*? lua_code_cache is off/
-

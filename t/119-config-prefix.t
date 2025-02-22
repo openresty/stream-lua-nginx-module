@@ -26,4 +26,3 @@ __DATA__
 ^prefix: \/\S+$
 --- no_error_log
 [error]
-

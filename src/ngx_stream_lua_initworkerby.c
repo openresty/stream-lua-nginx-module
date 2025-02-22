@@ -1,5 +1,13 @@
 
 /*
+ * !!! DO NOT EDIT DIRECTLY !!!
+ * This file was automatically generated from the following template:
+ *
+ * src/subsys/ngx_subsys_lua_initworkerby.c.tt2
+ */
+
+
+/*
  * Copyright (C) Yichun Zhang (agentzh)
  */
 
@@ -12,7 +20,9 @@
 
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_util.h"
+
 #include "ngx_stream_lua_contentby.h"
+
 
 
 static u_char *ngx_stream_lua_log_init_worker_error(ngx_log_t *log,
@@ -22,37 +32,73 @@ static u_char *ngx_stream_lua_log_init_worker_error(ngx_log_t *log,
 ngx_int_t
 ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 {
-    char                        *rv;
-    void                        *cur, *prev;
-    ngx_uint_t                   i;
-    ngx_conf_t                   conf;
-    ngx_cycle_t                 *fake_cycle;
-    ngx_conf_file_t              conf_file;
-    ngx_open_file_t             *file, *ofile;
-    ngx_list_part_t             *part;
-    ngx_connection_t            *c = NULL;
-    ngx_stream_module_t         *module;
-    ngx_module_t               **modules;
-    ngx_stream_session_t        *s = NULL;
-    ngx_stream_lua_ctx_t        *ctx;
-    ngx_stream_conf_ctx_t       *conf_ctx, stream_ctx;
-    ngx_stream_lua_srv_conf_t   *lscf, *top_lscf;
-    ngx_stream_lua_main_conf_t  *lmcf;
-    ngx_stream_core_srv_conf_t  *cscf;
+    char                            *rv;
+    void                            *cur, *prev;
+    ngx_uint_t                       i;
+    ngx_conf_t                       conf;
+    ngx_cycle_t                     *fake_cycle;
+    ngx_module_t                   **modules;
+    ngx_open_file_t                 *file, *ofile;
+    ngx_list_part_t                 *part;
+    ngx_connection_t                *c = NULL;
+    ngx_stream_module_t             *module;
+    ngx_stream_lua_request_t        *r = NULL;
+    ngx_stream_lua_ctx_t            *ctx;
+    ngx_stream_conf_ctx_t           *conf_ctx, stream_ctx;
+
+    ngx_stream_lua_main_conf_t          *lmcf;
+
+    ngx_conf_file_t         *conf_file;
+    ngx_stream_session_t    *s;
+
+    ngx_stream_core_srv_conf_t    *cscf, *top_cscf;
+    ngx_stream_lua_srv_conf_t     *lscf, *top_lscf;
 
     lmcf = ngx_stream_cycle_get_module_main_conf(cycle, ngx_stream_lua_module);
 
-    if (lmcf == NULL
-        || lmcf->init_worker_handler == NULL
-        || lmcf->lua == NULL)
+    if (lmcf == NULL || lmcf->lua == NULL) {
+        return NGX_OK;
+    }
+
+    /* lmcf != NULL && lmcf->lua != NULL */
+
+#if !(NGX_WIN32)
+    if (ngx_process == NGX_PROCESS_HELPER
+#   ifdef HAVE_PRIVILEGED_PROCESS_PATCH
+        && !ngx_is_privileged_agent
+#   endif
+       )
     {
+        /* disable init_worker_by_lua* and destroy lua VM in cache processes */
+
+        ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+                       "lua close the global Lua VM %p in the "
+                       "cache helper process %P", lmcf->lua, ngx_pid);
+
+        lmcf->vm_cleanup->handler(lmcf->vm_cleanup->data);
+        lmcf->vm_cleanup->handler = NULL;
+
+        return NGX_OK;
+    }
+
+
+#endif  /* NGX_WIN32 */
+
+#if (NGX_STREAM_LUA_HAVE_SA_RESTART)
+    if (lmcf->set_sa_restart) {
+        ngx_stream_lua_set_sa_restart(ngx_cycle->log);
+    }
+#endif
+
+    if (lmcf->init_worker_handler == NULL) {
         return NGX_OK;
     }
 
     conf_ctx = (ngx_stream_conf_ctx_t *)
-                                     cycle->conf_ctx[ngx_stream_module.index];
+               cycle->conf_ctx[ngx_stream_module.index];
     stream_ctx.main_conf = conf_ctx->main_conf;
 
+    top_cscf = conf_ctx->srv_conf[ngx_stream_core_module.ctx_index];
     top_lscf = conf_ctx->srv_conf[ngx_stream_lua_module.ctx_index];
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
@@ -79,11 +125,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
     ngx_memcpy(fake_cycle, cycle, sizeof(ngx_cycle_t));
 
-#if defined(nginx_version) && nginx_version >= 9007
-
     ngx_queue_init(&fake_cycle->reusable_connections_queue);
-
-#endif
 
     if (ngx_array_init(&fake_cycle->listening, cycle->pool,
                        cycle->listening.nelts || 1,
@@ -93,16 +135,12 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         goto failed;
     }
 
-#if defined(nginx_version) && nginx_version >= 1003007
-
     if (ngx_array_init(&fake_cycle->paths, cycle->pool, cycle->paths.nelts || 1,
                        sizeof(ngx_path_t *))
         != NGX_OK)
     {
         goto failed;
     }
-
-#endif
 
     part = &cycle->open_files.part;
     ofile = part->elts;
@@ -140,16 +178,22 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
         goto failed;
     }
 
+    conf_file = ngx_pcalloc(fake_cycle->pool, sizeof(ngx_conf_file_t));
+    if (conf_file == NULL) {
+        return NGX_ERROR;
+    }
+
+    /* workaround to make ngx_stream_core_create_srv_conf not SEGFAULT */
+    conf_file->file.name.data = (u_char *) "dummy";
+    conf_file->file.name.len = sizeof("dummy") - 1;
+    conf_file->line = 1;
+    conf.conf_file = conf_file;
+
     conf.ctx = &stream_ctx;
     conf.cycle = fake_cycle;
     conf.pool = fake_cycle->pool;
     conf.log = cycle->log;
 
-    conf_file.file.fd = NGX_INVALID_FILE;
-    conf_file.file.name = cycle->conf_file;
-    conf_file.line = 0;
-
-    conf.conf_file = &conf_file;
 
     stream_ctx.srv_conf = ngx_pcalloc(conf.pool,
                                       sizeof(void *) * ngx_stream_max_module);
@@ -178,8 +222,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
 
             stream_ctx.srv_conf[modules[i]->ctx_index] = cur;
 
-            if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index)
-            {
+            if (modules[i]->ctx_index == ngx_stream_core_module.ctx_index) {
                 cscf = cur;
                 /* just to silence the error in
                  * ngx_stream_core_merge_srv_conf */
@@ -187,9 +230,17 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
             }
 
             if (module->merge_srv_conf) {
-                prev = module->create_srv_conf(&conf);
-                if (prev == NULL) {
-                    return NGX_ERROR;
+                if (modules[i] == &ngx_stream_lua_module) {
+                    prev = top_lscf;
+
+                } else if (modules[i] == &ngx_stream_core_module) {
+                    prev = top_cscf;
+
+                } else {
+                    prev = module->create_srv_conf(&conf);
+                    if (prev == NULL) {
+                        return NGX_ERROR;
+                    }
                 }
 
                 rv = module->merge_srv_conf(&conf, prev, cur);
@@ -198,6 +249,7 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
                 }
             }
         }
+
     }
 
     ngx_destroy_pool(conf.temp_pool);
@@ -218,30 +270,40 @@ ngx_stream_lua_init_worker(ngx_cycle_t *cycle)
     s->main_conf = stream_ctx.main_conf;
     s->srv_conf = stream_ctx.srv_conf;
 
-    lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
+    cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
-    if (top_lscf->resolver) {
-        lscf->resolver = top_lscf->resolver;
-    }
+    lscf = ngx_stream_get_module_srv_conf(s, ngx_stream_lua_module);
 
     if (top_lscf->log_socket_errors != NGX_CONF_UNSET) {
         lscf->log_socket_errors = top_lscf->log_socket_errors;
     }
 
-    cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
+    if (top_cscf->resolver != NULL) {
+        cscf->resolver = top_cscf->resolver;
+    }
 
+    if (top_cscf->resolver_timeout != NGX_CONF_UNSET_MSEC) {
+        cscf->resolver_timeout = top_cscf->resolver_timeout;
+    }
+
+#if defined(nginx_version) && nginx_version >= 1009000
     ngx_set_connection_log(s->connection, cscf->error_log);
+
+#else
+#endif
 
     ctx = ngx_stream_lua_create_ctx(s);
     if (ctx == NULL) {
         goto failed;
     }
 
+    r = ctx->request;
+
     ctx->context = NGX_STREAM_LUA_CONTEXT_INIT_WORKER;
     ctx->cur_co_ctx = NULL;
-    ctx->read_event_handler = ngx_stream_lua_block_reading;
+    r->read_event_handler = ngx_stream_lua_block_reading;
 
-    ngx_stream_lua_set_session(lmcf->lua, s);
+    ngx_stream_lua_set_req(lmcf->lua, r);
 
     (void) lmcf->init_worker_handler(cycle->log, lmcf, lmcf->lua);
 

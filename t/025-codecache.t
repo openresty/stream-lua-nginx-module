@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 132;
+plan tests => repeat_each() * 140;
 
 #$ENV{LUA_PATH} = $ENV{HOME} . '/work/JSON4Lua-0.9.30/json/?.lua';
 
@@ -12,6 +12,7 @@ no_long_string();
 
 our $HtmlDir = html_dir;
 
+$ENV{TEST_NGINX_HTML_DIR} = $HtmlDir;
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 
 check_accum_error_log();
@@ -26,7 +27,7 @@ __DATA__
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/test.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/test.lua", "w"))
         f:write("ngx.say(101)")
         f:close()
         ngx.say("updated")
@@ -58,7 +59,7 @@ updated
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/test.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/test.lua", "w"))
         f:write("ngx.say(101)")
         f:close()
         ngx.say("updated")
@@ -88,7 +89,7 @@ updated
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/test.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/test.lua", "w"))
         f:write("ngx.say(101)")
         f:close()
         ngx.say("updated")
@@ -122,7 +123,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/test.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/test.lua", "w"))
         f:write("ngx.say(101)")
         f:close()
         ngx.say("updated")
@@ -155,7 +156,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/test.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/test.lua", "w"))
         f:write("ngx.say(101)")
         f:close()
         ngx.say("updated")
@@ -179,7 +180,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 6: code cache explicitly off (affects require) + content_by_lua
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
     lua_code_cache off;"
 
 --- stream_server_config
@@ -190,7 +191,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/foo.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/foo.lua", "w"))
         f:write("module(..., package.seeall); ngx.say(102);")
         f:close()
         ngx.say("updated")
@@ -216,7 +217,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 7: code cache explicitly off (affects require) + content_by_lua_file
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
     lua_code_cache off;"
 
 --- stream_server_config
@@ -225,7 +226,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 --- stream_server_config2
     content_by_lua_block {
         -- os.execute("(echo HERE; pwd) > /dev/stderr")
-        local f = assert(io.open("t/servroot/html/foo.lua", "w"))
+        local f = assert(io.open("$TEST_NGINX_SERVER_ROOT/html/foo.lua", "w"))
         f:write("module(..., package.seeall); ngx.say(102);")
         f:close()
         ngx.say("updated")
@@ -298,7 +299,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 10: no clear builtin libs (misc)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 
 --- stream_server_config
     lua_code_cache off;
@@ -334,7 +335,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 11: do not skip luarocks
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
      lua_code_cache off;"
 
 --- stream_server_config
@@ -385,7 +386,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 12: do not skip luarocks*
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';
      lua_code_cache off;"
 --- stream_server_config
 
@@ -438,7 +439,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/
 
 === TEST 13: clear _G table
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
@@ -586,7 +587,7 @@ stream lua decrementing the reference count for Lua VM: 3
 --- error_log eval
 [
 "lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 "trace: [m][f][g]",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua close the global Lua VM",
@@ -628,7 +629,7 @@ decrementing the reference count for Lua VM: 3
 --- error_log eval
 [
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua close the global Lua VM",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -688,7 +689,7 @@ registered timer
 [
 "stream lua: 1 lua_max_running_timers are not enough",
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -759,7 +760,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 --- stream_response
 registered timer
 
---- wait: 0.1
+--- wait: 0.2
 --- no_error_log
 [error]
 stream lua decrementing the reference count for Lua VM: 4
@@ -767,7 +768,7 @@ stream lua decrementing the reference count for Lua VM: 4
 --- error_log eval
 [
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 "trace: [m][f][g]",
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",
@@ -780,7 +781,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 
 === TEST 22: cosocket connection pool timeout (after Lua VM destroys)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
@@ -836,14 +837,14 @@ stream lua tcp socket keepalive max idle timeout
 [
 qq{stream lua tcp socket keepalive create connection pool for key "127.0.0.1:$ENV{TEST_NGINX_MEMCACHED_PORT}"},
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
-"stream lua tcp socket keepalive: free connection pool for ",
+qr/\blua tcp socket keepalive: free connection pool [0-9A-F]+ for "127.0.0.1:/,
 ]
 
 
 
 === TEST 23: cosocket connection pool timeout (before Lua VM destroys)
 --- stream_config eval
-    "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
+    "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
     lua_code_cache off;
     content_by_lua_block {
@@ -952,10 +953,167 @@ registered timer
 [
 "stream lua: 1 lua_max_running_timers are not enough",
 "stream lua ngx.timer expired",
-"stream lua close fake stream connection",
+"stream lua finalize fake request",
 qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 "stream lua decrementing the reference count for Lua VM: 3",
 "stream lua decrementing the reference count for Lua VM: 2",
 "stream lua decrementing the reference count for Lua VM: 1",
 "stream lua close the global Lua VM",
 ]
+
+
+
+=== TEST 25: make sure inline code keys are correct
+--- stream_config
+    include ../html/a/proxy.conf;
+    include ../html/b/proxy.conf;
+    include ../html/c/proxy.conf;
+--- stream_server_config
+    content_by_lua_block {
+        for _, n in ipairs({ 1, 2, 1, 3 }) do
+            local sock = ngx.socket.tcp()
+            sock:settimeouts(1000, 1000, 1000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx" .. n .. ".sock")
+            if not ok then
+                ngx.log(ngx.ERR, "could not connect: ", err)
+                return
+            end
+
+            local res, err = sock:receive(11)
+            if not res then
+                ngx.log(ngx.ERR, "could not receive: ", err)
+                return
+            end
+
+            ngx.say(res)
+
+            sock:close()
+        end
+    }
+--- user_files
+>>> a/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx1.sock;
+    content_by_lua_block { ngx.say("1 is called") }
+}
+
+>>> b/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx2.sock;
+    content_by_lua_block { ngx.say("2 is called") }
+}
+
+>>> c/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx3.sock;
+    content_by_lua_block { ngx.say("2 is called") }
+}
+--- stream_response
+1 is called
+2 is called
+1 is called
+2 is called
+--- grep_error_log eval: qr/looking up Lua code cache with key '=content_by_lua\(proxy\.conf:\d+\).*?'/
+--- grep_error_log_out eval
+[
+"looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+",
+"looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_ad58d60a0f20ae31b1a282e74053d356'
+looking up Lua code cache with key '=content_by_lua(proxy.conf:3)nhli_9c867c93f28b91041fe132817b43ad07'
+"]
+--- log_level: debug
+--- no_error_log
+[error]
+
+
+
+=== TEST 26: make sure inline code keys are correct
+--- stream_config
+    include ../html/a/proxy.conf;
+    include ../html/b/proxy.conf;
+    include ../html/c/proxy.conf;
+--- stream_server_config
+    content_by_lua_block {
+        for _, n in ipairs({ 1, 2, 1, 3 }) do
+            local sock = ngx.socket.tcp()
+            sock:settimeouts(1000, 1000, 1000)
+
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx" .. n .. ".sock")
+            if not ok then
+                ngx.log(ngx.ERR, "could not connect: ", err)
+                return
+            end
+
+            local res, err = sock:receive(11)
+            if not res then
+                ngx.log(ngx.ERR, "could not receive: ", err)
+                return
+            end
+
+            ngx.say(res)
+
+            sock:close()
+        end
+    }
+--- user_files
+>>> a.lua
+ngx.say("1 is called")
+
+>>> b.lua
+ngx.say("2 is called")
+
+>>> c.lua
+ngx.say("2 is called")
+
+>>> a/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx1.sock;
+    content_by_lua_file html/a.lua;
+}
+
+>>> b/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx2.sock;
+    content_by_lua_file html/b.lua;
+}
+
+>>> c/proxy.conf
+server {
+    listen unix:$TEST_NGINX_HTML_DIR/nginx3.sock;
+    content_by_lua_file html/c.lua;
+}
+--- stream_response
+1 is called
+2 is called
+1 is called
+2 is called
+--- grep_error_log eval: qr/looking up Lua code cache with key 'nhlf_.*?'/
+--- grep_error_log_out eval
+[
+"looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_68f5f4e946c3efd1cc206452b807e8b6'
+looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_042c9b3a136fbacbbd0e4b9ad10896b7'
+",
+"looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_68f5f4e946c3efd1cc206452b807e8b6'
+looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_042c9b3a136fbacbbd0e4b9ad10896b7'
+looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_68f5f4e946c3efd1cc206452b807e8b6'
+looking up Lua code cache with key 'nhlf_48a9a7def61143c003a7de1644e026e4'
+looking up Lua code cache with key 'nhlf_042c9b3a136fbacbbd0e4b9ad10896b7'
+"]
+--- log_level: debug
+--- no_error_log
+[error]

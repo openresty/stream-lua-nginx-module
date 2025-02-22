@@ -202,7 +202,7 @@ delete thread 1
 --- stream_response
 after
 --- error_log eval
-qr/stream lua user thread aborted: runtime error: content_by_lua_block\(nginx\.conf:\d+\):3: attempt to call field 'blah' \(a nil value\)/
+qr/stream lua user thread aborted: runtime error: content_by_lua\(nginx\.conf:\d+\):3: attempt to call field 'blah' \(a nil value\)/
 
 
 
@@ -817,4 +817,3 @@ delete thread 2
 f
 --- no_error_log
 [error]
-
