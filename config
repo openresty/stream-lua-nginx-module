@@ -223,9 +223,20 @@ ngx_feature_test="lua_State *L = luaL_newstate();
                   luaopen_ffi(L);
                   "
 
-. auto/feature
+ngx_module_incs=
+ngx_module_libs=
+STREAM_LUA_SRCS=
+STREAM_LUA_DEPS=
 
-if [ $ngx_found = no ]; then
+if [ $ngx_found = yes ]; then
+    # this is a hack to persuade nginx's build system to favor
+    # the paths set by our user environments:
+    CFLAGS="$ngx_lua_opt_I $CFLAGS"
+    NGX_LD_OPT="$ngx_lua_opt_L $NGX_LD_OPT"
+
+    ngx_module_incs="$ngx_module_incs $ngx_feature_path"
+    ngx_module_libs="$ngx_module_libs $ngx_feature_libs"
+else
     cat << END
     $0: error: unsupported LuaJIT build; ngx_stream_lua_module requires LuaJIT with FFI enabled.
 END
@@ -235,7 +246,7 @@ fi
 # ----------------------------------------
 
 ngx_addon_name=ngx_stream_lua_module
-STREAM_LUA_SRCS=" \
+STREAM_LUA_SRCS="$STREAM_LUA_SRCS \
                 $ngx_addon_dir/src/ngx_stream_lua_api.c \
                 $ngx_addon_dir/src/ngx_stream_lua_request.c \
                 $ngx_addon_dir/src/ngx_stream_lua_module.c \
@@ -282,7 +293,7 @@ STREAM_LUA_SRCS=" \
                 $ngx_addon_dir/src/ngx_stream_lua_input_filters.c \
                 "
 
-STREAM_LUA_DEPS=" \
+STREAM_LUA_DEPS="$STREAM_LUA_DEPS \
                 $ngx_addon_dir/src/ddebug.h \
                 $ngx_addon_dir/src/ngx_stream_lua_autoconf.h \
                 $ngx_addon_dir/src/api/ngx_stream_lua_api.h \
@@ -326,6 +337,22 @@ STREAM_LUA_DEPS=" \
                 $ngx_addon_dir/src/ngx_stream_lua_input_filters.h \
                 "
 
+ngx_addon_name=ngx_stream_lua_module
+if test -n "$ngx_module_link"; then
+    ngx_module_type=STREAM
+    ngx_module_name="$ngx_addon_name"
+    ngx_module_deps="$STREAM_LUA_DEPS"
+    ngx_module_srcs="$STREAM_LUA_SRCS"
+
+    . auto/module
+else
+    STREAM_MODULES="$STREAM_MODULES $ngx_addon_name"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $STREAM_LUA_SRCS"
+    NGX_ADDON_DEPS="$NGX_ADDON_DEPS $STREAM_LUA_DEPS"
+
+    CORE_INCS="$CORE_INCS $ngx_module_incs"
+    CORE_LIBS="$CORE_LIBS $ngx_module_libs"
+fi
 # ----------------------------------------
 
 ngx_feature="export symbols by default (-E)"

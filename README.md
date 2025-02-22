@@ -599,7 +599,20 @@ make -j4
 make install
 ```
 
-You may use `--without-http` if you do not wish to use this module with the
+Starting from NGINX 1.9.11, you can also compile this module as a dynamic module,
+by using the `--add-dynamic-module=PATH` option instead of `--add-module=PATH` on
+the `./configure` command line above. And then you can explicitly load the module
+in your `nginx.conf` via the [load_module](http://nginx.org/en/docs/ngx_core_module.html#load_module)
+directive, for example,
+
+```nginx
+load_module /path/to/modules/ngx_stream_lua_module.so;
+```
+
+Also, please note, that if you have NginX `stream` module itself built as dynamic
+module too, you MUST load it **before** `stream_lua` module.
+
+Also, you may use `--without-http` if you do not wish to use this module with the
 "http" subsystem. ngx_stream_lua will work perfectly fine without the "http"
 subsystem.
 
