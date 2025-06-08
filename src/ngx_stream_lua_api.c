@@ -42,8 +42,6 @@ ngx_stream_lua_get_global_state(ngx_conf_t *cf)
 }
 
 
-
-
 static ngx_int_t ngx_stream_lua_shared_memory_init(ngx_shm_zone_t *shm_zone,
     void *data);
 
@@ -275,7 +273,9 @@ ngx_stream_lua_ffi_req_dst_addr(ngx_stream_lua_request_t *r, char *buf,
                                "failed to get IPv4 origin addr") - errbuf;
             return NGX_ERROR;
         }
+
 #if (NGX_HAVE_INET6)
+
     } else if (family == AF_INET6) {
         /* IPv6 */
         opt_name = IP6T_SO_ORIGINAL_DST;
@@ -286,6 +286,7 @@ ngx_stream_lua_ffi_req_dst_addr(ngx_stream_lua_request_t *r, char *buf,
             return NGX_ERROR;
         }
 #endif
+
     } else {
         /* Unsupported address family */
         *errbuf_size
