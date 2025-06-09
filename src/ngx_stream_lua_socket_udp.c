@@ -405,6 +405,7 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "stream lua set UDP upstream with IP_TRANSPARENT");
     }
+
     lua_pop(L, 1);
 #endif
 
@@ -628,7 +629,8 @@ ngx_stream_lua_socket_resolve_handler(ngx_resolver_ctx_t *ctx)
         addr.data = text;
 
         for (i = 0; i < ctx->naddrs; i++) {
-            addr.len = ngx_sock_ntop(ur->addrs[i].sockaddr, ur->addrs[i].socklen,
+            addr.len = ngx_sock_ntop(ur->addrs[i].sockaddr,
+                                     ur->addrs[i].socklen,
                                      text, NGX_SOCKADDR_STRLEN, 0);
 
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,

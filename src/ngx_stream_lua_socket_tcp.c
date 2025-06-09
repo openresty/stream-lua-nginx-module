@@ -211,6 +211,7 @@ enum {
     SOCKET_OP_RESUME_CONN
 };
 
+
 enum {
     NGX_STREAM_LUA_SOCKOPT_KEEPALIVE = 1,
     NGX_STREAM_LUA_SOCKOPT_REUSEADDR,
@@ -1793,8 +1794,10 @@ ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L)
                     if (lua_toboolean(L, 5)) {
 #ifdef NGX_STREAM_LUA_USE_OCSP
                         if (SSL_set_tlsext_status_type(c->ssl->connection,
-                                TLSEXT_STATUSTYPE_ocsp) != 1) {
-                            return luaL_error(L, "failed to enable OCSP stapling");
+                            TLSEXT_STATUSTYPE_ocsp) != 1)
+                        {
+                            return luaL_error(L,
+                                              "failed to enable OCSP stapling");
                         }
 #else
                         return luaL_error(L, "no OCSP support");
