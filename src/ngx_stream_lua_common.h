@@ -246,8 +246,6 @@ struct ngx_stream_lua_main_conf_s {
 };
 
 
-
-
 struct ngx_stream_lua_srv_conf_s {
 #if (NGX_STREAM_SSL)
     ngx_ssl_t              *ssl;  /* shared by SSL cosockets */
@@ -330,6 +328,7 @@ struct ngx_stream_lua_srv_conf_s {
 
 };
 
+
 typedef ngx_stream_lua_srv_conf_t ngx_stream_lua_loc_conf_t;
 
 
@@ -358,8 +357,6 @@ struct ngx_stream_lua_posted_thread_s {
     ngx_stream_lua_co_ctx_t                     *co_ctx;
     ngx_stream_lua_posted_thread_t              *next;
 };
-
-
 
 
 struct ngx_stream_lua_co_ctx_s {
@@ -527,10 +524,7 @@ typedef struct ngx_stream_lua_ctx_s {
 } ngx_stream_lua_ctx_t;
 
 
-
-
 extern ngx_module_t ngx_stream_lua_module;
-
 
 
 #endif /* _NGX_STREAM_LUA_COMMON_H_INCLUDED_ */

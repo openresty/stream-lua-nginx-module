@@ -48,7 +48,7 @@ ngx: 54
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 2
+n = 3
 --- no_error_log
 [error]
 

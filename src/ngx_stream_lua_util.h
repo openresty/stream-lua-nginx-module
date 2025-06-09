@@ -473,8 +473,6 @@ ngx_stream_lua_hash_str(u_char *src, size_t n)
 }
 
 
-
-
 static ngx_inline void
 ngx_stream_lua_cleanup_pending_operation(ngx_stream_lua_co_ctx_t *coctx)
 {

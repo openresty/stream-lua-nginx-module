@@ -208,7 +208,7 @@ ngx_stream_lua_regex_compile(ngx_stream_lua_regex_compile_t *rc)
         }
 
         lmcf = ngx_stream_cycle_get_module_main_conf(ngx_cycle,
-                                                   ngx_stream_lua_module);
+                                                     ngx_stream_lua_module);
         if (lmcf && lmcf->regex_match_limit > 0) {
             pcre2_set_match_limit(ngx_regex_match_context,
                                   lmcf->regex_match_limit);
@@ -749,7 +749,7 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
 
     if (rc < 0) {
 #if (NGX_DEBUG)
-    ngx_log_debug4(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
+        ngx_log_debug4(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "pcre2_match failed: flags 0x%05Xd, options 0x%08Xd, rc %d, "
                    "ovecpair %ui", flags, exec_opts, rc, ovecpair);
 #endif
@@ -835,7 +835,8 @@ ngx_stream_lua_ffi_exec_regex(ngx_stream_lua_regex_t *re, int flags,
         int ws[NGX_LUA_RE_DFA_MODE_WORKSPACE_COUNT];
         rc = ngx_stream_lua_regex_dfa_exec(re->regex, sd, &subj,
                                            (int) pos, cap, ovecsize, ws,
-                                           sizeof(ws) / sizeof(ws[0]), exec_opts);
+                                           sizeof(ws) / sizeof(ws[0]),
+                                           exec_opts);
 
 #else
 

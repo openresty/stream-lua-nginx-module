@@ -798,10 +798,6 @@ ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 }
 
 
-
-
-
-
 static void *
 ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 {
@@ -935,14 +931,15 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #ifdef LIBRESSL_VERSION_NUMBER
 
             ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "LibreSSL is not supported by ssl_certificate_by_lua*");
+                        "LibreSSL is not supported by ssl_certificate_by_lua*");
             return NGX_CONF_ERROR;
 
 #else
 
 #   if OPENSSL_VERSION_NUMBER >= 0x1000205fL
 
-            SSL_CTX_set_cert_cb(sscf->ssl.ctx, ngx_stream_lua_ssl_cert_handler, NULL);
+            SSL_CTX_set_cert_cb(sscf->ssl.ctx, ngx_stream_lua_ssl_cert_handler,
+                                NULL);
 
 #   else
 
@@ -1033,8 +1030,6 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 }
 
 
-
-
 #if (NGX_STREAM_SSL)
 
 static ngx_int_t
@@ -1112,12 +1107,15 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
 
 #if (nginx_version >= 1019004)
     if (ngx_ssl_conf_commands(cf, lscf->ssl, lscf->ssl_conf_commands)
-        != NGX_OK) {
+        != NGX_OK)
+    {
         return NGX_ERROR;
     }
 #endif
+
     return NGX_OK;
 }
+
 
 #if (nginx_version >= 1019004)
 static char *

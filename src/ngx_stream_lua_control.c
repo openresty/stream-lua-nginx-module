@@ -40,8 +40,6 @@ ngx_stream_lua_inject_control_api(ngx_log_t *log, lua_State *L)
 }
 
 
-
-
 static int
 ngx_stream_lua_on_abort(lua_State *L)
 {

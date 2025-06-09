@@ -94,6 +94,4 @@ ngx_stream_lua_inject_phase_api(lua_State *L)
 }
 
 
-
-
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
