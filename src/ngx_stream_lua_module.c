@@ -49,6 +49,11 @@ static char *ngx_stream_lua_lowat_check(ngx_conf_t *cf, void *post, void *data);
 #if (NGX_STREAM_SSL)
 static ngx_int_t ngx_stream_lua_set_ssl(ngx_conf_t *cf,
     ngx_stream_lua_loc_conf_t *llcf);
+static void key_log_callback(const ngx_ssl_conn_t *ssl_conn,
+    const char *line);
+static void ngx_stream_lua_ssl_cleanup_key_log(void *data);
+static ngx_int_t ngx_stream_lua_ssl_key_log(ngx_conf_t *cf, ngx_ssl_t *ssl,
+    ngx_str_t *file);
 #if (nginx_version >= 1019004)
 static char *ngx_stream_lua_ssl_conf_command_check(ngx_conf_t *cf, void *post,
     void *data);
@@ -451,6 +456,13 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       ngx_conf_set_str_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, ssl_crl),
+      NULL },
+
+    { ngx_string("lua_ssl_key_log"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_str_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, ssl_key_log),
       NULL },
 
 #if (nginx_version >= 1019004)
@@ -975,6 +987,7 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->ssl_trusted_certificate,
                              prev->ssl_trusted_certificate, "");
     ngx_conf_merge_str_value(conf->ssl_crl, prev->ssl_crl, "");
+    ngx_conf_merge_str_value(conf->ssl_key_log, prev->ssl_key_log, "");
 #if (nginx_version >= 1019004)
     ngx_conf_merge_ptr_value(conf->ssl_conf_commands, prev->ssl_conf_commands,
                              NULL);
@@ -1105,6 +1118,12 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
         return NGX_ERROR;
     }
 
+    if (ngx_stream_lua_ssl_key_log(cf, lscf->ssl, &lscf->ssl_key_log)
+        != NGX_OK)
+    {
+        return NGX_ERROR;
+    }
+
 #if (nginx_version >= 1019004)
     if (ngx_ssl_conf_commands(cf, lscf->ssl, lscf->ssl_conf_commands)
         != NGX_OK)
@@ -1112,6 +1131,101 @@ ngx_stream_lua_set_ssl(ngx_conf_t *cf, ngx_stream_lua_srv_conf_t *lscf)
         return NGX_ERROR;
     }
 #endif
+
+    return NGX_OK;
+}
+
+
+static void
+key_log_callback(const ngx_ssl_conn_t *ssl_conn, const char *line)
+{
+    ngx_stream_lua_ssl_key_log_t  *ssl_key_log;
+    ngx_connection_t              *c;
+
+    ssl_key_log = SSL_CTX_get_ex_data(SSL_get_SSL_CTX(ssl_conn),
+                                      ngx_stream_lua_ssl_key_log_index);
+    if (ssl_key_log == NULL) {
+        c = ngx_ssl_get_connection((ngx_ssl_conn_t *) ssl_conn);
+        ngx_ssl_error(NGX_LOG_DEBUG, c->log, 0, "get ssl key log failed");
+
+        return;
+    }
+
+    (void) ngx_write_fd(ssl_key_log->fd, line, ngx_strlen(line));
+    (void) ngx_write_fd(ssl_key_log->fd, "\n", 1);
+}
+
+
+static void
+ngx_stream_lua_ssl_cleanup_key_log(void *data)
+{
+    ngx_stream_lua_ssl_key_log_t  *ssl_key_log = data;
+
+    if (ngx_close_file(ssl_key_log->fd) == NGX_FILE_ERROR) {
+        ngx_ssl_error(NGX_LOG_ALERT, ssl_key_log->ssl->log, 0,
+                      ngx_close_file_n "(\"%V\") failed", ssl_key_log->name);
+    }
+}
+
+
+static ngx_int_t
+ngx_stream_lua_ssl_key_log(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file)
+{
+    ngx_fd_t                       fd;
+    ngx_stream_lua_ssl_key_log_t  *ssl_key_log;
+    ngx_pool_cleanup_t            *cln;
+
+    if (!file->len) {
+        return NGX_OK;
+    }
+
+    if (ngx_conf_full_name(cf->cycle, file, 1) != NGX_OK) {
+        return NGX_ERROR;
+    }
+
+    if (ngx_stream_lua_ssl_init(cf->log) != NGX_OK) {
+        return NGX_ERROR;
+    }
+
+    /*
+     * append so that existing keylog file contents can be preserved
+     */
+    fd = ngx_open_file(file->data, NGX_FILE_APPEND, NGX_FILE_CREATE_OR_OPEN,
+                       NGX_FILE_DEFAULT_ACCESS);
+    if (fd == NGX_INVALID_FILE) {
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, ngx_open_file_n
+                      "(\"%V\") failed", file);
+        return NGX_ERROR;
+    }
+
+    ssl_key_log = ngx_palloc(cf->pool, sizeof(ngx_stream_lua_ssl_key_log_t));
+    if (ssl_key_log == NULL) {
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "ngx_pcalloc() failed");
+        return NGX_ERROR;
+    }
+
+    ssl_key_log->ssl = ssl;
+    ssl_key_log->fd = fd;
+    ssl_key_log->name = *file;
+
+    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_stream_lua_ssl_key_log_index,
+                            ssl_key_log) == 0)
+    {
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
+                      "SSL_CTX_set_ex_data() failed");
+        return NGX_ERROR;
+    }
+
+    cln = ngx_pool_cleanup_add(cf->pool, 0);
+    if (cln == NULL) {
+        ngx_stream_lua_ssl_cleanup_key_log(ssl_key_log);
+        return NGX_ERROR;
+    }
+
+    cln->handler = ngx_stream_lua_ssl_cleanup_key_log;
+    cln->data = ssl_key_log;
+
+    SSL_CTX_set_keylog_callback(ssl->ctx, key_log_callback);
 
     return NGX_OK;
 }
