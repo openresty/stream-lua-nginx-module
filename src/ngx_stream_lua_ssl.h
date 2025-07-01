@@ -49,10 +49,18 @@ typedef struct {
 } ngx_stream_lua_ssl_ctx_t;
 
 
+typedef struct {
+    ngx_ssl_t     *ssl;
+    ngx_fd_t       fd;
+    ngx_str_t      name;
+} ngx_stream_lua_ssl_key_log_t;
+
+
 ngx_int_t ngx_stream_lua_ssl_init(ngx_log_t *log);
 
 
 extern int ngx_stream_lua_ssl_ctx_index;
+extern int ngx_stream_lua_ssl_key_log_index;
 
 
 #endif
