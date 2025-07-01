@@ -6,7 +6,7 @@ use File::Basename;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 7 + 2);
+plan tests => repeat_each() * (blocks() * 7 + 3);
 
 my $NginxBinary = $ENV{'TEST_NGINX_BINARY'} || 'nginx';
 my $openssl_version = eval { `$NginxBinary -V 2>&1` };
@@ -3012,3 +3012,108 @@ handshake rejected while SSL handshaking
 [crit]
 --- timeout: 5
 --- skip_nginx: 7: < 1.25.4
+
+
+
+=== TEST 37: lua_ssl_key_log directive
+--- skip_openssl: 8: < 1.1.1
+--- http_config
+    server {
+        listen              unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        server_name         test.com;
+        ssl_certificate     $TEST_NGINX_CERT_DIR/cert/test.crt;
+        ssl_certificate_key $TEST_NGINX_CERT_DIR/cert/test.key;
+        ssl_protocols       TLSv1.3;
+
+        location / {
+            content_by_lua_block {
+                ngx.exit(200)
+            }
+        }
+    }
+--- stream_server_config
+    lua_ssl_protocols TLSv1.3;
+    lua_ssl_key_log sslkey.log;
+
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(2000)
+
+        do
+            local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            ngx.say("connected: ", ok)
+
+            local session, err = sock:sslhandshake(nil, "test.com")
+            if not session then
+                ngx.say("failed to do SSL handshake: ", err)
+                return
+            end
+
+            ngx.say("ssl handshake: ", type(session))
+
+            local req = "GET / HTTP/1.1\r\nHost: test.com\r\nConnection: close\r\n\r\n"
+            local bytes, err = sock:send(req)
+            if not bytes then
+                ngx.say("failed to send stream request: ", err)
+                return
+            end
+
+            ngx.say("sent stream request: ", bytes, " bytes.")
+
+            local line, err = sock:receive()
+            if not line then
+                ngx.say("failed to recieve response status line: ", err)
+                return
+            end
+
+            ngx.say("received: ", line)
+
+            local ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+
+            local f, err = io.open("$TEST_NGINX_SERVER_ROOT/conf/sslkey.log", "r")
+            if not f then
+                ngx.log(ngx.ERR, "failed to open sslkey.log: ", err)
+                return
+            end
+
+            local key_log = f:read("*a")
+            ngx.say(key_log)
+            f:close()
+        end  -- do
+        collectgarbage()
+    }
+
+--- stream_response_like
+connected: 1
+ssl handshake: userdata
+sent stream request: 53 bytes.
+received: HTTP/1.1 200 OK
+close: 1 nil
+SERVER_HANDSHAKE_TRAFFIC_SECRET [0-9a-z\s]+
+EXPORTER_SECRET [0-9a-z\s]+
+SERVER_TRAFFIC_SECRET_0 [0-9a-z\s]+
+CLIENT_HANDSHAKE_TRAFFIC_SECRET [0-9a-z\s]+
+CLIENT_TRAFFIC_SECRET_0 [0-9a-z\s]+
+
+--- log_level: debug
+--- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
+--- grep_error_log_out eval
+qr/^lua ssl save session: ([0-9A-F]+)
+lua ssl free session: ([0-9A-F]+)
+$/
+--- error_log eval
+[
+'lua ssl server name: "test.com"',
+qr/SSL: TLSv1.3, cipher: "(TLS_AES_256_GCM_SHA384 TLSv1.3|TLS_AES_128_GCM_SHA256 Kx=GENERIC Au=GENERIC Enc=AESGCM\(128\) Mac=AEAD)/,
+]
+--- no_error_log
+SSL reused session
+[error]
+[alert]
+--- timeout: 10
