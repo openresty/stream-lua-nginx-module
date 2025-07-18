@@ -72,6 +72,9 @@ ffi.cdef[[
     int ngx_stream_lua_ffi_ssl_client_random(ngx_stream_lua_request_t *r,
         unsigned char *out, size_t *outlen, char **err);
 
+    int ngx_stream_lua_ffi_req_shared_ssl_ciphers(void *r, uint16_t *ciphers,
+        uint16_t *nciphers, int filter_grease, char **err);
+
 ]]
 _EOC_
     }
@@ -1370,6 +1373,198 @@ FAILED:unable to verify the first certificate
 
 --- stream_response
 SUCCESS
+
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 14: Get supported ciphers
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        
+        ssl_certificate_by_lua_block {
+            collectgarbage()
+            require "defines"
+            local ffi = require "ffi"
+            local cjson = require "cjson.safe"
+
+            local MAX_CIPHERS = 64
+            local ciphers = ffi.new("uint16_t[?]", MAX_CIPHERS)
+            local nciphers = ffi.new("uint16_t[1]", MAX_CIPHERS)
+            local err = ffi.new("char*[1]")
+
+            local r = require "resty.core.base" .get_request()
+            if not r then
+                ngx.log(ngx.ERR, "no request found")
+                return
+            end
+            local ret = ffi.C.ngx_stream_lua_ffi_req_shared_ssl_ciphers(r, ciphers, nciphers, 0, err)
+
+            if ret ~= 0 then
+                ngx.log(ngx.ERR, "error getting ciphers: ", ffi.string(err[0]))
+            else
+                local res = {}
+                for i = 0, nciphers[0] - 1 do
+                    local cipher_id = string.format("%04x", ciphers[i])
+                    table.insert(res, cipher_id)
+                end
+                ngx.log(ngx.INFO, "supported ciphers: ", cjson.encode(res))
+            end
+        }
+
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        ssl_protocols TLSv1.2;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384;
+
+        return 'cipher test works!\n';
+    }
+--- stream_server_config
+    proxy_pass                  unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl                   on;
+    proxy_ssl_session_reuse     off;
+    proxy_ssl_protocols TLSv1.2;   
+    proxy_ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256;    
+--- stream_response
+cipher test works!
+--- error_log
+supported ciphers: ["c02f","c02b"]
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 15: Get supported ciphers with GREASE filtering
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        
+        ssl_certificate_by_lua_block {
+            collectgarbage()
+            require "defines"
+            local ffi = require "ffi"
+            local cjson = require "cjson.safe"
+            local MAX_CIPHERS = 64
+            local ciphers = ffi.new("uint16_t[?]", MAX_CIPHERS)
+            local nciphers = ffi.new("uint16_t[1]", MAX_CIPHERS)
+            local err = ffi.new("char*[1]")
+
+            local r = require "resty.core.base" .get_request()
+            if not r then
+                ngx.log(ngx.ERR, "no request found")
+                return
+            end
+            
+            -- Test without GREASE filtering
+            local ret = ffi.C.ngx_stream_lua_ffi_req_shared_ssl_ciphers(r, ciphers, nciphers, 0, err)
+            local res_no_filter = {}
+            if ret == 0 then
+                for i = 0, nciphers[0] - 1 do
+                    local cipher_id = string.format("%04x", ciphers[i])
+                    table.insert(res_no_filter, cipher_id)
+                end
+            end
+
+            -- Reset buffer for next test
+            nciphers[0] = MAX_CIPHERS
+            
+            -- Test with GREASE filtering
+            local ret = ffi.C.ngx_stream_lua_ffi_req_shared_ssl_ciphers(r, ciphers, nciphers, 1, err)
+            local res_with_filter = {}
+            if ret == 0 then
+                for i = 0, nciphers[0] - 1 do
+                    local cipher_id = string.format("%04x", ciphers[i])
+                    table.insert(res_with_filter, cipher_id)
+                end
+            end
+
+            ngx.log(ngx.INFO, "without_filter: ", cjson.encode(res_no_filter))
+            ngx.log(ngx.INFO, "with_filter: ", cjson.encode(res_with_filter))
+        }
+
+        ssl_certificate ../../cert/test.crt;
+        ssl_certificate_key ../../cert/test.key;
+        ssl_protocols TLSv1.2;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384;
+
+        return 'grease filter test works!\n';
+    }
+--- stream_server_config
+    proxy_pass                  unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl                   on;
+    proxy_ssl_certificate       ../../cert/mtls_client.crt;
+    proxy_ssl_certificate_key   ../../cert/mtls_client.key;
+    proxy_ssl_session_reuse     off;
+
+--- stream_response
+grease filter test works!
+--- error_log
+without_filter: 
+with_filter: 
+--- no_error_log
+[error]
+[alert]
+
+
+
+=== TEST 16: SSL cipher API error handling (no SSL)
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+        
+        content_by_lua_block {
+            require "defines"
+            local ffi = require "ffi"
+
+            local MAX_CIPHERS = 64
+            local ciphers = ffi.new("uint16_t[?]", MAX_CIPHERS)
+            local nciphers = ffi.new("uint16_t[1]", MAX_CIPHERS)
+            local err = ffi.new("char*[1]")
+
+            local r = require "resty.core.base" .get_request()
+            if not r then
+                ngx.log(ngx.ERR, "no request found")
+                return
+            end
+            local ret = ffi.C.ngx_stream_lua_ffi_req_shared_ssl_ciphers(r, ciphers, nciphers, 0, err)
+
+            if ret ~= 0 then
+                ngx.say("error: ", ffi.string(err[0]))
+            else
+                ngx.say("unexpected success")
+            end
+        }
+    }
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        sock:settimeout(2000)
+
+        local ok, err = sock:connect("unix:$TEST_NGINX_HTML_DIR/nginx.sock")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to connect: ", err)
+            return
+        end
+
+        local line, err = sock:receive()
+        if not line then
+            ngx.log(ngx.ERR, "failed to receive: ", err)
+            return
+        end
+
+        ngx.say("received: ", line)
+
+        local ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- stream_response
+received: error: bad request
+close: 1 nil
 
 --- no_error_log
 [error]
