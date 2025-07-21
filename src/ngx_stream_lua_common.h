@@ -275,33 +275,19 @@ struct ngx_stream_lua_srv_conf_s {
                                                   code cache */
 
     ngx_stream_lua_handler_pt           preread_handler;
+    u_char                             *preread_chunkname;
+    ngx_stream_complex_value_t          preread_src;
+    u_char                             *preread_src_key;
 
     ngx_stream_lua_handler_pt           content_handler;
+    u_char                             *content_chunkname;
+    ngx_stream_complex_value_t          content_src;
+    u_char                             *content_src_key;
+
     ngx_stream_lua_handler_pt           log_handler;
-
-    u_char                      *preread_chunkname;
-    ngx_stream_complex_value_t   preread_src;     /* access_by_lua
-                                                inline script/script
-                                                file path */
-
-    u_char                  *preread_src_key; /* cached key for access_src */
-
-    u_char                  *content_chunkname;
-
-    ngx_stream_complex_value_t       content_src;
-                                                  /* content_by_lua
-                                                   * inline script/script
-                                                   * file path */
-
-    u_char                 *content_src_key; /* cached key for content_src */
-
-    u_char                           *log_chunkname;
-    ngx_stream_complex_value_t        log_src;
-                                              /* log_by_lua inline script/script
-                                               * file path */
-
-    u_char                                 *log_src_key;
-    /* cached key for log_src */
+    u_char                             *log_chunkname;
+    ngx_stream_complex_value_t          log_src;
+    u_char                             *log_src_key;
 
 
     ngx_msec_t                       keepalive_timeout;

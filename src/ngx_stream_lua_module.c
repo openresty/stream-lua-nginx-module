@@ -718,6 +718,8 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
      *      lmcf->shm_zones = NULL;
      *      lmcf->init_handler = NULL;
      *      lmcf->init_src = { 0, NULL };
+     *      lmcf->init_worker_handler = NULL;
+     *      lmcf->init_worker_src = { 0, NULL };
      *      lmcf->shm_zones_inited = 0;
      *      lmcf->shdict_zones = NULL;
      *      lmcf->preload_hooks = NULL;
@@ -817,13 +819,20 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
      *      lscf->srv.ssl_cert_src = { 0, NULL };
      *      lscf->srv.ssl_cert_src_key = NULL;
      *
-     *      lscf->srv.ssl_session_store_handler = NULL;
-     *      lscf->srv.ssl_session_store_src = { 0, NULL };
-     *      lscf->srv.ssl_session_store_src_key = NULL;
+     *      lscf->preread_handler = NULL;
+     *      lscf->preread_chunkname = NULL;
+     *      lscf->preread_src = {{ 0, NULL }, NULL, NULL, NULL};
+     *      lscf->preread_src_key = NULL;
      *
-     *      lscf->srv.ssl_session_fetch_handler = NULL;
-     *      lscf->srv.ssl_session_fetch_src = { 0, NULL };
-     *      lscf->srv.ssl_session_fetch_src_key = NULL;
+     *      lscf->content_handler = NULL;
+     *      lscf->content_chunkname = NULL;
+     *      lscf->content_src = {{ 0, NULL }, NULL, NULL, NULL};
+     *      lscf->content_src_key = NULL;
+
+     *      lscf->log_handler = NULL;
+     *      lscf->log_chunkname = NULL;
+     *      lscf->log_src = {{ 0, NULL }, NULL, NULL, NULL};
+     *      lscf->log_src_key = NULL;
      *
      *      lscf->balancer.handler = NULL;
      *      lscf->balancer.src = { 0, NULL };
