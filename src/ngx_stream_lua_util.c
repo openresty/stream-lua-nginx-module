@@ -1935,6 +1935,10 @@ ngx_stream_lua_req_socket(lua_State *L)
 
     r = ngx_stream_lua_get_req(L);
 
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
+    }
+
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
         return luaL_error(L, "no ctx found");
