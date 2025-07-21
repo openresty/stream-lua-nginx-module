@@ -205,6 +205,7 @@ ngx_stream_lua_coroutine_resume(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_TIMER
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+                                 | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
                                  );
 
@@ -266,6 +267,7 @@ ngx_stream_lua_coroutine_yield(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_TIMER
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+                                 | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
                                  );
 
@@ -426,6 +428,7 @@ ngx_stream_lua_coroutine_status(lua_State *L)
                                  | NGX_STREAM_LUA_CONTEXT_TIMER
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
                                  | NGX_STREAM_LUA_CONTEXT_SSL_CERT
+                                 | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
                                  | NGX_STREAM_LUA_CONTEXT_PREREAD
                                  );
 

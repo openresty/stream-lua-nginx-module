@@ -116,14 +116,16 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
         | NGX_STREAM_LUA_CONTEXT_BALANCER
         | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
         | NGX_STREAM_LUA_CONTEXT_SSL_CERT
-        | NGX_STREAM_LUA_CONTEXT_PREREAD,
+        | NGX_STREAM_LUA_CONTEXT_PREREAD
+        | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY,
         err, errlen) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
     if (ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                        | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO ))
+                        | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
+                        | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY ))
     {
 
 #if (NGX_STREAM_SSL)
