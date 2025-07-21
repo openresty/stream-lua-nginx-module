@@ -448,7 +448,7 @@ failed to do SSL handshake: handshake failed
 
 --- error_log eval
 [
-'lua_client_hello_by_lua: handler return value: -1, client hello cb exit code: 0',
+'ssl_client_hello_by_lua: handler return value: -1, client hello cb exit code: 0',
 qr/\[info\] .*? SSL_do_handshake\(\) failed .*?callback failed/,
 'lua exit with code -1',
 ]
@@ -567,7 +567,7 @@ failed to do SSL handshake: handshake failed
 
 --- error_log eval
 [
-'lua_client_hello_by_lua: client hello cb exit code: 0',
+'ssl_client_hello_by_lua: client hello cb exit code: 0',
 qr/\[info\] .*? SSL_do_handshake\(\) failed .*?callback failed/,
 'lua exit with code -1',
 ]
@@ -627,7 +627,7 @@ failed to do SSL handshake: handshake failed
 --- error_log eval
 [
 'runtime error: ssl_client_hello_by_lua:2: bad bad bad',
-'lua_client_hello_by_lua: handler return value: 500, client hello cb exit code: 0',
+'ssl_client_hello_by_lua: handler return value: 500, client hello cb exit code: 0',
 qr/\[info\] .*? SSL_do_handshake\(\) failed .*?callback failed/,
 qr/context: ssl_client_hello_by_lua\*, client: \d+\.\d+\.\d+\.\d+, server: \d+\.\d+\.\d+\.\d+:\d+/,
 ]
@@ -688,7 +688,7 @@ failed to do SSL handshake: handshake failed
 --- error_log eval
 [
 'runtime error: ssl_client_hello_by_lua:3: bad bad bad',
-'lua_client_hello_by_lua: client hello cb exit code: 0',
+'ssl_client_hello_by_lua: client hello cb exit code: 0',
 qr/\[info\] .*? SSL_do_handshake\(\) failed .*?callback failed/,
 ]
 
