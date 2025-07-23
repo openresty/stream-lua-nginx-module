@@ -1705,6 +1705,24 @@ failed:
 }
 
 
+ngx_ssl_conn_t *
+ngx_stream_lua_ffi_get_req_ssl_pointer(ngx_stream_lua_request_t *r,
+    const char **err)
+{
+    if (r->connection == NULL || r->connection->ssl == NULL) {
+        *err = "bad request";
+        return NULL;
+    }
+
+    if (r->connection->ssl->connection == NULL) {
+        *err = "bad ssl connection";
+        return NULL;
+    }
+
+    return r->connection->ssl->connection;
+}
+
+
 int
 ngx_stream_lua_ffi_ssl_client_random(ngx_stream_lua_request_t *r,
     unsigned char *out, size_t *outlen, char **err)
