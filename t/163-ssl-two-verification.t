@@ -109,6 +109,7 @@ reusable connection: 0
 ssl client hello: connection reusable: 0
 reusable connection: 0
 ssl_client_hello_by_lua:1: ssl client hello by lua is running!,
+ssl_client_hello_by_lua: handler return value: 0,
 reusable connection: 0
 reusable connection: 0
 reusable connection: 0
