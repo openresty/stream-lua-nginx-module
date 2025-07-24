@@ -41,8 +41,8 @@ Version
 =======
 
 This document describes ngx_stream_lua
-[v0.0.13](https://github.com/openresty/stream-lua-nginx-module/tags), which was released
-on 21 May, 2023.
+[v0.0.16](https://github.com/openresty/stream-lua-nginx-module/tags), which was released
+on 17 Jan, 2025.
 
 Synopsis
 ========
@@ -542,6 +542,7 @@ Nginx Compatibility
 
 The latest version of this module is compatible with the following versions of Nginx:
 
+* 1.27.x (last tested: 1.27.1)
 * 1.25.x (last tested: 1.25.1)
 * 1.21.x (last tested: 1.21.4)
 * 1.19.x (last tested: 1.19.3)
