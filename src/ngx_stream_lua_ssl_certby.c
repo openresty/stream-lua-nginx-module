@@ -44,7 +44,9 @@ static u_char *ngx_stream_lua_log_ssl_cert_error(ngx_log_t *log, u_char *buf,
     size_t len);
 static ngx_int_t ngx_stream_lua_ssl_cert_by_chunk(lua_State *L,
     ngx_stream_lua_request_t *r);
+#ifndef OPENSSL_IS_BORINGSSL
 static int ngx_stream_lua_is_grease_cipher(uint16_t cipher_id);
+#endif
 
 
 ngx_int_t
@@ -987,6 +989,7 @@ ngx_stream_lua_ffi_ssl_raw_client_addr(ngx_stream_lua_request_t *r, char **addr,
 }
 
 
+#ifndef OPENSSL_IS_BORINGSSL
 static int
 ngx_stream_lua_is_grease_cipher(uint16_t cipher_id)
 {
@@ -995,6 +998,7 @@ ngx_stream_lua_is_grease_cipher(uint16_t cipher_id)
     /* Check if both bytes follow ?A pattern and high nibbles match */
     return (cipher_id & 0x0F0F) == 0x0A0A;
 }
+#endif
 
 
 int
