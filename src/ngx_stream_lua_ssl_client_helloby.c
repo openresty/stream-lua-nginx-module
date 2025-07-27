@@ -254,7 +254,7 @@ ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn,
 
     cscf = ngx_stream_get_module_srv_conf(fs, ngx_stream_core_module);
 
-#if defined(nginx_version) && nginx_version >= 1009000
+#if defined(nginx_version) && nginx_version >= 1019003
     ngx_set_connection_log(fc, cscf->error_log);
 
 #else
