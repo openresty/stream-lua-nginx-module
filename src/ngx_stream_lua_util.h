@@ -77,7 +77,8 @@ extern char ngx_stream_lua_headers_metatable_key;
                                 | NGX_STREAM_LUA_CONTEXT_CONTENT             \
                                 | NGX_STREAM_LUA_CONTEXT_TIMER               \
                                 | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO    \
-                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT)
+                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT            \
+                                | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY)
 
 
 #define ngx_stream_lua_context_name(c)                                       \
@@ -90,6 +91,8 @@ extern char ngx_stream_lua_headers_metatable_key;
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO ?                      \
                                                  "ssl_client_hello_by_lua*"  \
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"    \
+     : (c) == NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY ?                      \
+                                                 "proxy_ssl_verify_by_lua*"  \
      : "(unknown)")
 
 
