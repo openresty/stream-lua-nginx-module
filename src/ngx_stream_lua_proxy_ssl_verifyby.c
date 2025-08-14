@@ -9,6 +9,7 @@
 
 
 #if (NGX_STREAM_SSL)
+#ifdef HAVE_PROXY_SSL_PATCH
 
 #include "ngx_stream_lua_cache.h"
 #include "ngx_stream_lua_initworkerby.h"
@@ -770,4 +771,5 @@ ngx_stream_lua_ffi_ssl_get_verify_cert(ngx_stream_lua_request_t *r, char **err)
 #endif
 }
 
+#endif /* HAVE_PROXY_SSL_PATCH */
 #endif /* NGX_STREAM_SSL */

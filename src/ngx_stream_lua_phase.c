@@ -66,9 +66,11 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         lua_pushliteral(L, "content");
         break;
 
+#ifdef HAVE_PROXY_SSL_PATCH
     case NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY:
         lua_pushliteral(L, "proxy_ssl_verify");
         break;
+#endif
 
     case NGX_STREAM_LUA_CONTEXT_LOG:
         lua_pushliteral(L, "log");

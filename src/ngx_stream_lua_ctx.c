@@ -97,8 +97,10 @@ ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_lua_request_t *r, int *in_ssl_phase,
     }
 
     *in_ssl_phase = ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                                    | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
-                                    | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY);
+#ifdef HAVE_PROXY_SSL_PATCH
+                                    | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
+#endif
+                                    | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO);
     *ssl_ctx_ref = LUA_NOREF;
 
 #if (NGX_STREAM_SSL)
@@ -132,8 +134,10 @@ ngx_stream_lua_ffi_set_ctx_ref(ngx_stream_lua_request_t *r, int ref)
 
 #if (NGX_STREAM_SSL)
     if (ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
-                        | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
-                        | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY))
+#ifdef HAVE_PROXY_SSL_PATCH
+                        | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
+#endif
+                        | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO))
     {
         ssl_ctx = ngx_stream_lua_ssl_get_ctx(r->connection->ssl->connection);
         if (ssl_ctx == NULL) {
