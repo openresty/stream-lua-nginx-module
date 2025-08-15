@@ -72,6 +72,31 @@ extern char ngx_stream_lua_headers_metatable_key;
     (str)->len = sizeof(text) - 1; (str)->data = (u_char *) text
 #endif
 
+#ifdef HAVE_PROXY_SSL_PATCH
+
+#define NGX_STREAM_LUA_CONTEXT_YIELDABLE (NGX_STREAM_LUA_CONTEXT_PREREAD     \
+                                | NGX_STREAM_LUA_CONTEXT_CONTENT             \
+                                | NGX_STREAM_LUA_CONTEXT_TIMER               \
+                                | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO    \
+                                | NGX_STREAM_LUA_CONTEXT_SSL_CERT            \
+                                | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY)
+
+
+#define ngx_stream_lua_context_name(c)                                       \
+    ((c) == NGX_STREAM_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
+     : (c) == NGX_STREAM_LUA_CONTEXT_LOG ? "log_by_lua*"                     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_TIMER ? "ngx.timer"                     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"     \
+     : (c) == NGX_STREAM_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"           \
+     : (c) == NGX_STREAM_LUA_CONTEXT_PREREAD ? "preread_by_lua*"             \
+     : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO ?                      \
+                                                 "ssl_client_hello_by_lua*"  \
+     : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"    \
+     : (c) == NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY ?                      \
+                                                 "proxy_ssl_verify_by_lua*"  \
+     : "(unknown)")
+
+#else
 
 #define NGX_STREAM_LUA_CONTEXT_YIELDABLE (NGX_STREAM_LUA_CONTEXT_PREREAD     \
                                 | NGX_STREAM_LUA_CONTEXT_CONTENT             \
@@ -91,6 +116,8 @@ extern char ngx_stream_lua_headers_metatable_key;
                                                  "ssl_client_hello_by_lua*"  \
      : (c) == NGX_STREAM_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"    \
      : "(unknown)")
+
+#endif
 
 
 #define ngx_stream_lua_check_context(L, ctx, flags)                          \
