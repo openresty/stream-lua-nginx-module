@@ -887,3 +887,41 @@ qr/\[debug\] .*? SSL_do_handshake: 1/,
 proxy_ssl_verify_by_lua: openssl default verify
 [error]
 [alert]
+
+
+
+=== TEST 22: ngx.ctx to pass data from downstream phase to upstream phase
+--- stream_config
+    server {
+	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate ../../cert/mtls_server.crt;
+        ssl_certificate_key ../../cert/mtls_server.key;
+
+	return 'it works!\n';
+    }
+--- stream_server_config
+    proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl                     on;
+    proxy_ssl_verify              on;
+    proxy_ssl_name                example.com;
+    proxy_ssl_certificate         ../../cert/mtls_client.crt;
+    proxy_ssl_certificate_key     ../../cert/mtls_client.key;
+    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
+    proxy_ssl_session_reuse       off;
+
+    preread_by_lua_block {
+        ngx.ctx.greeting = "I am from preread phase"
+    }
+
+    proxy_ssl_verify_by_lua_block {
+        ngx.log(ngx.INFO, "greeting: ", ngx.ctx.greeting)
+    }
+--- stream_response
+it works!
+--- error_log
+greeting: I am from preread phase
+proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code: 1
+--- no_error_log
+[error]
+[alert]

@@ -97,9 +97,6 @@ ngx_stream_lua_ffi_get_ctx_ref(ngx_stream_lua_request_t *r, int *in_ssl_phase,
     }
 
     *in_ssl_phase = ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
-#ifdef HAVE_PROXY_SSL_PATCH
-                                    | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
-#endif
                                     | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO);
     *ssl_ctx_ref = LUA_NOREF;
 
