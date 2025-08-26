@@ -1305,6 +1305,9 @@ ngx_stream_lua_req_socket_udp_peek(lua_State *L)
                           "(including the object), but got %d", n);
     }
 
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "stream lua udp socket calling peek() method");
+
     luaL_checktype(L, 1, LUA_TTABLE);
 
     lua_rawgeti(L, 1, SOCKET_CTX_INDEX);
@@ -1397,7 +1400,7 @@ ngx_stream_lua_req_socket_udp_peek_resume(ngx_stream_lua_request_t *r)
     ngx_stream_lua_socket_udp_upstream_t            *u;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
-                   "stream lua udp req socket resuming peek");
+                   "stream lua udp socket resuming peek");
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx == NULL) {
