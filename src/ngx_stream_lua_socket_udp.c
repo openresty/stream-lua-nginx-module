@@ -1409,7 +1409,12 @@ ngx_stream_lua_req_socket_udp_peek_resume(ngx_stream_lua_request_t *r)
     vm = ngx_stream_lua_get_lua_vm(r, ctx);
     nreqs = c->requests;
 
-    size = c->buffer->last - c->buffer->pos;
+    if (c->buffer == NULL) {
+        size = 0;
+
+    } else {
+        size = c->buffer->last - c->buffer->pos;
+    }
 
     if (size < u->length) {
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
