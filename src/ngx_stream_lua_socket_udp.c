@@ -1371,7 +1371,7 @@ ngx_stream_lua_req_socket_udp_peek(lua_State *L)
     /* not enough data in the preread buffer; yield */
     coctx = ctx->cur_co_ctx;
     ngx_stream_lua_cleanup_pending_operation(coctx);
-    coctx->cleanup = ngx_stream_lua_coctx_cleanup;
+    coctx->cleanup = ngx_stream_lua_udp_socket_cleanup;
     coctx->data = u;
 
     ctx->downstream = u;
