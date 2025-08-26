@@ -198,6 +198,8 @@ Acts as a `preread` phase handler and executes Lua code string specified in `lua
 (or packet in datagram mode).
 The Lua code may make [API calls](#nginx-api-for-lua) and is executed as a new spawned coroutine in an independent global environment (i.e. a sandbox).
 
+Note: In preread, the raw request socket returned by `ngx.req.socket()` exposes `peek(N)` for both TCP and UDP servers. `peek(N)` returns exactly N bytes from the preread buffer without consuming them, yielding until enough data arrives or timing out according to preread settings.
+
 It is possible to acquire the raw request socket using [ngx.req.socket](https://github.com/openresty/lua-nginx-module#ngxreqsocket)
 and receive data from or send data to the client. However, keep in mind that calling the `receive()` method
 of the request socket will consume the data from the buffer and such consumed data will not be seen by handlers
