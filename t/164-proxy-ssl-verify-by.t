@@ -136,7 +136,7 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 --- stream_response
 it works!
 --- error_log eval
-qr/elapsed in proxy ssl verify by lua: 0.(?:09|1\d)\d+,/,
+qr/elapsed in proxy ssl verify by lua: 0.(?:09|1\d)\d+ while loading proxy ssl verify by lua,/,
 --- no_error_log
 [error]
 [alert]
@@ -644,9 +644,9 @@ it works!
 [alert]
 --- grep_error_log eval: qr/uthread: [^.,]+/
 --- grep_error_log_out
-uthread: thread created: running
-uthread: hello in thread
-uthread: done
+uthread: thread created: running while loading proxy ssl verify by lua
+uthread: hello in thread while loading proxy ssl verify by lua
+uthread: done while loading proxy ssl verify by lua
 
 
 
@@ -703,9 +703,9 @@ it works!
 [emerg]
 --- grep_error_log eval: qr/uthread: [^.,]+/
 --- grep_error_log_out
-uthread: hello from f()
-uthread: killed
-uthread: failed to kill: already waited or killed
+uthread: hello from f() while loading proxy ssl verify by lua
+uthread: killed while loading proxy ssl verify by lua
+uthread: failed to kill: already waited or killed while loading proxy ssl verify by lua
 
 
 

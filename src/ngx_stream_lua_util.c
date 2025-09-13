@@ -3109,11 +3109,44 @@ void
 ngx_stream_lua_finalize_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
 {
     ngx_stream_lua_ctx_t                    *ctx;
+#ifdef HAVE_PROXY_SSL_PATCH
+#if (NGX_STREAM_SSL)
+    ngx_stream_upstream_t                   *u;
+    ngx_connection_t                        *c;
+    ngx_stream_lua_ssl_ctx_t                *cctx;
+#endif
+#endif
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     if (ctx && ctx->cur_co_ctx) {
         ngx_stream_lua_cleanup_pending_operation(ctx->cur_co_ctx);
     }
+
+#ifdef HAVE_PROXY_SSL_PATCH
+#if (NGX_STREAM_SSL)
+    u = r->session->upstream;
+    if (u) {
+        c = u->peer.connection;
+        if (c && c->ssl) {
+            cctx = ngx_stream_lua_ssl_get_ctx(c->ssl->connection);
+            if (cctx && cctx->pool) {
+                if (rc == NGX_ERROR || rc >= NGX_STREAM_BAD_REQUEST) {
+                    cctx->exit_code = 0;
+                }
+
+                if (rc == NGX_DONE) {
+                    return;
+                }
+
+                ngx_destroy_pool(cctx->pool);
+                cctx->pool = NULL;
+
+                return;
+            }
+        }
+    }
+#endif
+#endif
 
     if (r->connection->fd != (ngx_socket_t) -1) {
 

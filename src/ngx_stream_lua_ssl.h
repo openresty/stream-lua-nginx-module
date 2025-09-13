@@ -34,6 +34,7 @@ typedef struct {
 
 #ifdef HAVE_PROXY_SSL_PATCH
     X509_STORE_CTX          *x509_store;
+    ngx_pool_t              *pool;
 #endif
 
     int                      exit_code;  /* exit code for openssl's
