@@ -257,7 +257,6 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
     ngx_pool_cleanup_t                 *cln;
     ngx_stream_lua_srv_conf_t          *lscf;
     ngx_stream_lua_ssl_ctx_t           *cctx;
-    ngx_stream_core_srv_conf_t         *cscf;
     ngx_stream_session_t               *s;
     ngx_ssl_conn_t                     *ssl_conn;
 
@@ -345,16 +344,6 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
     L = ngx_stream_lua_get_lua_vm(r, NULL);
 
     c->log->action = "loading proxy ssl verify by lua";
-
-    if (lscf->ups.proxy_ssl_verify_handler == NULL) {
-        cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
-
-        ngx_log_error(NGX_LOG_ALERT, c->log, 0,
-                      "no proxy_ssl_verify_by_lua* defined in "
-                      "server %s:%ui", &cscf->file_name, &cscf->line);
-
-        goto failed;
-    }
 
     rc = lscf->ups.proxy_ssl_verify_handler(r, lscf, L);
 
