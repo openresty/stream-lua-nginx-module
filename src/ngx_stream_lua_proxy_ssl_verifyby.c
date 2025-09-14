@@ -256,7 +256,6 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
     ngx_stream_lua_request_t           *r = NULL;
     ngx_pool_cleanup_t                 *cln;
     ngx_stream_lua_srv_conf_t          *lscf;
-    ngx_stream_lua_ctx_t               *ctx;
     ngx_stream_lua_ssl_ctx_t           *cctx;
     ngx_stream_core_srv_conf_t         *cscf;
     ngx_stream_session_t               *s;
