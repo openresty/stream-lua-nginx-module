@@ -77,12 +77,12 @@ proxy_ssl_verify_by_lua* should be used with proxy_ssl directive
 === TEST 3: simple logging
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -111,12 +111,12 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 === TEST 4: sleep
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -146,12 +146,12 @@ qr/elapsed in proxy ssl verify by lua: 0.(?:09|1\d)\d+ while loading proxy ssl v
 === TEST 5: timer
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -187,12 +187,12 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 === TEST 6: cosocket
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -243,12 +243,12 @@ received memc reply: OK
 === TEST 7: ngx.exit(0) - no yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -279,12 +279,12 @@ should never reached here
 === TEST 8: ngx.exit(ngx.ERROR) - no yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -318,12 +318,12 @@ should never reached here
 === TEST 9: ngx.exit(0) -  yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -356,12 +356,12 @@ should never reached here
 === TEST 10: ngx.exit(ngx.ERROR) - yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -397,12 +397,12 @@ should never reached here
 === TEST 11: lua exception - no yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -435,12 +435,12 @@ should never reached here
 === TEST 12: lua exception - yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -474,12 +474,12 @@ should never reached here
 === TEST 13: get phase
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -507,12 +507,12 @@ get_phase: proxy_ssl_verify
 === TEST 14: simple logging (by_lua_file)
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -543,12 +543,12 @@ a.lua:1: proxy ssl verify by lua is running!
 === TEST 15: coroutine API
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -597,12 +597,12 @@ co yield: 2
 === TEST 16: simple user thread wait with yielding
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -653,12 +653,12 @@ uthread: done while loading proxy ssl verify by lua
 === TEST 17: uthread (kill)
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -712,12 +712,12 @@ uthread: failed to kill: already waited or killed while loading proxy ssl verify
 === TEST 18: ngx.exit(ngx.OK) - no yield
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -751,12 +751,12 @@ should never reached here
 === TEST 19: proxy_ssl_verify_by_lua* without yield API (simple logic)
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -814,12 +814,12 @@ proxy ssl verify: simple test done
 === TEST 20: lua_upstream_skip_openssl_default_verify default off
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -852,12 +852,12 @@ qr/\[debug\] .*? SSL_do_handshake: 1/,
 === TEST 21: lua_upstream_skip_openssl_default_verify on
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
@@ -893,12 +893,12 @@ proxy_ssl_verify_by_lua: openssl default verify
 === TEST 22: ngx.ctx to pass data from downstream phase to upstream phase
 --- stream_config
     server {
-	listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
 
         ssl_certificate ../../cert/mtls_server.crt;
         ssl_certificate_key ../../cert/mtls_server.key;
 
-	return 'it works!\n';
+        return 'it works!\n';
     }
 --- stream_server_config
     proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
