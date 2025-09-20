@@ -449,10 +449,13 @@ ngx_stream_lua_proxy_ssl_verify_aborted(void *data)
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, cctx->connection->log, 0,
                    "proxy_ssl_verify_by_lua: cert verify callback aborted");
 
-    ngx_stream_lua_finalize_request(cctx->request, NGX_ERROR);
-
     cctx->aborted = 1;
     cctx->connection->ssl = NULL;
+    cctx->exit_code = 0;
+    if (cctx->pool) {
+        ngx_destroy_pool(cctx->pool);
+        cctx->pool = NULL;
+    }
 }
 
 

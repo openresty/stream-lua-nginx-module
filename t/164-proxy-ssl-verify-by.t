@@ -925,3 +925,36 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 --- no_error_log
 [error]
 [alert]
+
+
+
+=== TEST 23: upstream connection aborted
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate ../../cert/mtls_server.crt;
+        ssl_certificate_key ../../cert/mtls_server.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl                     on;
+    proxy_ssl_verify              on;
+    proxy_ssl_name                example.com;
+    proxy_ssl_certificate         ../../cert/mtls_client.crt;
+    proxy_ssl_certificate_key     ../../cert/mtls_client.key;
+    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
+    proxy_ssl_session_reuse       off;
+    proxy_connect_timeout         100ms;
+
+    proxy_ssl_verify_by_lua_block {
+        ngx.sleep(0.2)
+    }
+--- error_log
+proxy_ssl_verify_by_lua: cert verify callback aborted
+--- no_error_log
+[error]
+[alert]
+--- wait: 0.5
