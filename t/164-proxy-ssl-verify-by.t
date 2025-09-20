@@ -184,63 +184,7 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 
 
 
-=== TEST 6: cosocket
---- stream_config
-    server {
-        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
-
-        ssl_certificate ../../cert/mtls_server.crt;
-        ssl_certificate_key ../../cert/mtls_server.key;
-
-        return 'it works!\n';
-    }
---- stream_server_config
-    proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
-    proxy_ssl                     on;
-    proxy_ssl_verify              on;
-    proxy_ssl_name                example.com;
-    proxy_ssl_certificate         ../../cert/mtls_client.crt;
-    proxy_ssl_certificate_key     ../../cert/mtls_client.key;
-    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
-    proxy_ssl_session_reuse       off;
-
-    proxy_ssl_verify_by_lua_block {
-        local sock = ngx.socket.tcp()
-
-        sock:settimeout(2000)
-
-        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
-        if not ok then
-            ngx.log(ngx.ERR, "failed to connect to memc: ", err)
-            return
-        end
-
-        local bytes, err = sock:send("flush_all\r\n")
-        if not bytes then
-            ngx.log(ngx.ERR, "failed to send flush_all command: ", err)
-            return
-        end
-
-        local res, err = sock:receive()
-        if not res then
-            ngx.log(ngx.ERR, "failed to receive memc reply: ", err)
-            return
-        end
-
-        print("received memc reply: ", res)
-    }
---- stream_response
-it works!
---- error_log
-received memc reply: OK
---- no_error_log
-[error]
-[alert]
---- SKIP
-
-
-
-=== TEST 7: ngx.exit(0) - no yield
+=== TEST 6: ngx.exit(0) - no yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -276,7 +220,7 @@ should never reached here
 
 
 
-=== TEST 8: ngx.exit(ngx.ERROR) - no yield
+=== TEST 7: ngx.exit(ngx.ERROR) - no yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -315,7 +259,7 @@ should never reached here
 
 
 
-=== TEST 9: ngx.exit(0) -  yield
+=== TEST 8: ngx.exit(0) -  yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -353,7 +297,7 @@ should never reached here
 
 
 
-=== TEST 10: ngx.exit(ngx.ERROR) - yield
+=== TEST 9: ngx.exit(ngx.ERROR) - yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -394,7 +338,7 @@ should never reached here
 
 
 
-=== TEST 11: lua exception - no yield
+=== TEST 10: lua exception - no yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -432,7 +376,7 @@ should never reached here
 
 
 
-=== TEST 12: lua exception - yield
+=== TEST 11: lua exception - yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -471,7 +415,7 @@ should never reached here
 
 
 
-=== TEST 13: get phase
+=== TEST 12: get phase
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -504,7 +448,7 @@ get_phase: proxy_ssl_verify
 
 
 
-=== TEST 14: simple logging (by_lua_file)
+=== TEST 13: simple logging (by_lua_file)
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -540,7 +484,7 @@ a.lua:1: proxy ssl verify by lua is running!
 
 
 
-=== TEST 15: coroutine API
+=== TEST 14: coroutine API
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -594,7 +538,7 @@ co yield: 2
 
 
 
-=== TEST 16: simple user thread wait with yielding
+=== TEST 15: simple user thread wait with yielding
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -650,7 +594,7 @@ uthread: done while loading proxy ssl verify by lua
 
 
 
-=== TEST 17: uthread (kill)
+=== TEST 16: uthread (kill)
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -709,7 +653,7 @@ uthread: failed to kill: already waited or killed while loading proxy ssl verify
 
 
 
-=== TEST 18: ngx.exit(ngx.OK) - no yield
+=== TEST 17: ngx.exit(ngx.OK) - no yield
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -748,7 +692,7 @@ should never reached here
 
 
 
-=== TEST 19: proxy_ssl_verify_by_lua* without yield API (simple logic)
+=== TEST 18: proxy_ssl_verify_by_lua* without yield API (simple logic)
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -811,7 +755,7 @@ proxy ssl verify: simple test done
 
 
 
-=== TEST 20: lua_upstream_skip_openssl_default_verify default off
+=== TEST 19: lua_upstream_skip_openssl_default_verify default off
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -849,7 +793,7 @@ qr/\[debug\] .*? SSL_do_handshake: 1/,
 
 
 
-=== TEST 21: lua_upstream_skip_openssl_default_verify on
+=== TEST 20: lua_upstream_skip_openssl_default_verify on
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -890,7 +834,7 @@ proxy_ssl_verify_by_lua: openssl default verify
 
 
 
-=== TEST 22: ngx.ctx to pass data from downstream phase to upstream phase
+=== TEST 21: ngx.ctx to pass data from downstream phase to upstream phase
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -928,7 +872,7 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
 
 
 
-=== TEST 23: upstream connection aborted
+=== TEST 22: upstream connection aborted
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -958,3 +902,68 @@ proxy_ssl_verify_by_lua: cert verify callback aborted
 [error]
 [alert]
 --- wait: 0.5
+
+
+
+=== TEST 23: cosocket
+--- stream_config
+    server {
+        listen *:80;
+
+        return "it works!\n";
+    }
+
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+
+        ssl_certificate ../../cert/mtls_server.crt;
+        ssl_certificate_key ../../cert/mtls_server.key;
+
+        return 'it works!\n';
+    }
+--- stream_server_config
+    proxy_pass                    unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl                     on;
+    proxy_ssl_verify              on;
+    proxy_ssl_name                example.com;
+    proxy_ssl_certificate         ../../cert/mtls_client.crt;
+    proxy_ssl_certificate_key     ../../cert/mtls_client.key;
+    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
+    proxy_ssl_session_reuse       off;
+
+    proxy_ssl_verify_by_lua_block {
+        do
+            local sock = ngx.socket.tcp()
+            sock:settimeout(2000)
+
+            local ok, err = sock:connect("127.0.0.1", "80")
+            if not ok then
+                ngx.log(ngx.ERR, "failed to connect: ", err)
+                return
+            end
+
+            ngx.log(ngx.INFO, "connected: ", ok)
+
+            while true do
+                local line, err = sock:receive()
+                if not line then
+                    -- ngx.log(ngx.ERR, "failed to receive response status line: ", err)
+                    break
+                end
+                ngx.log(ngx.INFO, "received: ", line)
+            end
+
+            local ok, err = sock:close()
+            ngx.log(ngx.INFO, "close: ", ok, " ", err)
+        end -- do
+        -- collectgarbage()
+    }
+--- stream_response
+it works!
+--- error_log
+connected: 1
+received: it works!
+close: 1 nil
+--- no_error_log
+[error]
+[alert]
