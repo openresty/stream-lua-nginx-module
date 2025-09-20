@@ -464,7 +464,7 @@ ngx_stream_lua_proxy_ssl_verify_by_chunk(lua_State *L,
     ngx_int_t                        rc;
     lua_State                       *co;
     ngx_stream_lua_ctx_t            *ctx;
-    ngx_stream_lua_cleanup_t        *cln;
+    ngx_pool_cleanup_t              *cln;
     ngx_stream_upstream_t           *u;
     ngx_connection_t                *c;
     ngx_stream_lua_ssl_ctx_t        *cctx;
