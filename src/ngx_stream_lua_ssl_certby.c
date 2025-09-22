@@ -309,15 +309,6 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
 
     c->log->action = "loading SSL certificate by lua";
 
-    if (lscf->srv.ssl_cert_handler == NULL) {
-
-        ngx_log_error(NGX_LOG_ALERT, c->log, 0,
-                      "no ssl_certificate_by_lua* defined in "
-                      "server %s:%ui", &cscf->file_name, &cscf->line);
-
-        goto failed;
-    }
-
     rc = lscf->srv.ssl_cert_handler(r, lscf, L);
 
     if (rc >= NGX_OK || rc == NGX_ERROR) {
