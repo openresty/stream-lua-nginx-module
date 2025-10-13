@@ -2769,6 +2769,37 @@ SSL reused session
 
 === TEST 35: ssl session/ticket reuse CVE
 https://www.cve.org/CVERecord?id=CVE-2025-23419
+
+commit 0373fe5d98c1515640e74fa6f4d32fac1f1d3ab2
+Author: Sergey Kandaurov <pluknet@nginx.com>
+Date:   Tue Jan 28 00:53:15 2025 +0400
+
+    SNI: using the ClientHello callback.
+
+    The change introduces an SNI based virtual server selection during
+    early ClientHello processing.  The callback is available since
+    OpenSSL 1.1.1; for older OpenSSL versions, the previous behaviour
+    is kept.
+
+    Using the ClientHello callback sets a reasonable processing order
+    for the "server_name" TLS extension.  Notably, session resumption
+    decision now happens after applying server configuration chosen by
+    SNI, useful with enabled verification of client certificates, which
+    brings consistency with BoringSSL behaviour.  The change supersedes
+    and reverts a fix made in 46b9f5d38 for TLSv1.3 resumed sessions.
+
+    In addition, since the callback is invoked prior to the protocol
+    version negotiation, this makes it possible to set "ssl_protocols"
+    on a per-virtual server basis.
+
+    To keep the $ssl_server_name variable working with TLSv1.2 resumed
+    sessions, as previously fixed in fd97b2a80, a limited server name
+    callback is preserved in order to acknowledge the extension.
+
+    Note that to allow third-party modules to properly chain the call to
+    ngx_ssl_client_hello_callback(), the servername callback function is
+    passed through exdata.
+--- SKIP
 --- stream_config
     server {
         listen $TEST_NGINX_SERVER_SSL_PORT ssl reuseport default_server;
@@ -2907,6 +2938,8 @@ lua ssl free session
 
 === TEST 36: ssl session/ticket reuse CVE
 https://www.cve.org/CVERecord?id=CVE-2025-23419
+see TEST 35
+--- SKIP
 --- main_config
 env PATH;
 --- stream_config
@@ -3011,7 +3044,6 @@ handshake rejected while SSL handshaking
 [alert]
 [crit]
 --- timeout: 5
---- skip_nginx: 7: < 1.25.4
 
 
 
