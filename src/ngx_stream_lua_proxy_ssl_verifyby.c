@@ -570,7 +570,7 @@ ngx_stream_lua_proxy_ssl_verify_by_chunk(lua_State *L,
  * which can be done using X509_STORE_CTX_set_error.
  */
 int
-ngx_stream_lua_ffi_ssl_set_verify_result(ngx_stream_lua_request_t *r,
+ngx_stream_lua_ffi_proxy_ssl_set_verify_result(ngx_stream_lua_request_t *r,
     int verify_result, char **err)
 {
 #ifdef SSL_ERROR_WANT_RETRY_VERIFY
@@ -622,7 +622,7 @@ ngx_stream_lua_ffi_ssl_set_verify_result(ngx_stream_lua_request_t *r,
 
 
 int
-ngx_stream_lua_ffi_ssl_get_verify_result(ngx_stream_lua_request_t *r,
+ngx_stream_lua_ffi_proxy_ssl_get_verify_result(ngx_stream_lua_request_t *r,
     char **err)
 {
 #ifdef SSL_ERROR_WANT_RETRY_VERIFY
@@ -672,7 +672,7 @@ ngx_stream_lua_ffi_ssl_get_verify_result(ngx_stream_lua_request_t *r,
 
 
 void
-ngx_stream_lua_ffi_ssl_free_verify_cert(void *cdata)
+ngx_stream_lua_ffi_proxy_ssl_free_verify_cert(void *cdata)
 {
     X509  *cert = cdata;
 
@@ -681,7 +681,8 @@ ngx_stream_lua_ffi_ssl_free_verify_cert(void *cdata)
 
 
 void *
-ngx_stream_lua_ffi_ssl_get_verify_cert(ngx_stream_lua_request_t *r, char **err)
+ngx_stream_lua_ffi_proxy_ssl_get_verify_cert(ngx_stream_lua_request_t *r,
+    char **err)
 {
 #ifdef SSL_ERROR_WANT_RETRY_VERIFY
     ngx_stream_upstream_t           *u;
@@ -741,7 +742,7 @@ ngx_stream_lua_ffi_ssl_get_verify_cert(ngx_stream_lua_request_t *r, char **err)
 
 
 int
-ngx_stream_lua_ffi_ssl_set_verify_result(ngx_stream_lua_request_t *r,
+ngx_stream_lua_ffi_proxy_ssl_set_verify_result(ngx_stream_lua_request_t *r,
     int verify_result, char **err)
 {
     *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
@@ -751,7 +752,7 @@ ngx_stream_lua_ffi_ssl_set_verify_result(ngx_stream_lua_request_t *r,
 
 
 int
-ngx_stream_lua_ffi_ssl_get_verify_result(ngx_stream_lua_request_t *r,
+ngx_stream_lua_ffi_proxy_ssl_get_verify_result(ngx_stream_lua_request_t *r,
     char **err)
 {
     *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
@@ -761,13 +762,14 @@ ngx_stream_lua_ffi_ssl_get_verify_result(ngx_stream_lua_request_t *r,
 
 
 void
-ngx_stream_lua_ffi_ssl_free_verify_cert(void *)
+ngx_stream_lua_ffi_proxy_ssl_free_verify_cert(void *)
 {
 }
 
 
 void *
-ngx_stream_lua_ffi_ssl_get_verify_cert(ngx_stream_lua_request_t *r, char **err)
+ngx_stream_lua_ffi_proxy_ssl_get_verify_cert(ngx_stream_lua_request_t *r,
+    char **err)
 {
     *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
 
