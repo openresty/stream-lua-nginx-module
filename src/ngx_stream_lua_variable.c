@@ -49,6 +49,9 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
     if ((r)->connection->fd == (ngx_socket_t) -1) {
         ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
         if (ctx->context & (NGX_STREAM_LUA_CONTEXT_SSL_CERT
+#ifdef HAVE_PROXY_SSL_PATCH
+                            | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
+#endif
                             | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO))
         {
             cctx = ngx_stream_lua_ssl_get_ctx(r->connection->ssl->connection);
