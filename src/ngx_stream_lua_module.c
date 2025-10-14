@@ -30,7 +30,11 @@
 #include "ngx_stream_lua_semaphore.h"
 #include "ngx_stream_lua_ssl_client_helloby.h"
 #include "ngx_stream_lua_ssl_certby.h"
+
+#ifdef HAVE_PROXY_SSL_PATCH
+#include "ngx_stream_lua_proxy_ssl_certby.h"
 #include "ngx_stream_lua_proxy_ssl_verifyby.h"
+#endif
 
 #include "ngx_stream_lua_prereadby.h"
 
@@ -429,8 +433,22 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_ssl_cert_handler_file },
 
-#if HAVE_LUA_PROXY_SSL_VERIFY
+#if HAVE_PROXY_SSL_PATCH
     /* same context as proxy_pass directive */
+    { ngx_string("proxy_ssl_certificate_by_lua_block"),
+      NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_proxy_ssl_cert_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_proxy_ssl_cert_handler_inline },
+
+    { ngx_string("proxy_ssl_certificate_by_lua_file"),
+      NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_proxy_ssl_cert_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_proxy_ssl_cert_handler_file },
+
     { ngx_string("proxy_ssl_verify_by_lua_block"),
       NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
       ngx_stream_lua_proxy_ssl_verify_by_lua_block,
@@ -858,6 +876,10 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
      *      lscf->srv.ssl_client_hello_src = { 0, NULL };
      *      lscf->srv.ssl_client_hello_src_key = NULL;
      *
+     *      lscf->ups.proxy_ssl_cert_handler = NULL;
+     *      lscf->ups.proxy_ssl_cert_src = { 0, NULL };
+     *      lscf->ups.proxy_ssl_cert_src_key = NULL;
+     *
      *      lscf->ups.proxy_ssl_verify_handler = NULL;
      *      lscf->ups.proxy_ssl_verify_src = { 0, NULL };
      *      lscf->ups.proxy_ssl_verify_src_key = NULL;
@@ -1039,7 +1061,19 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                              NULL);
 #endif
 
-#if HAVE_LUA_PROXY_SSL_VERIFY
+#ifdef HAVE_PROXY_SSL_PATCH
+    if (conf->ups.proxy_ssl_cert_src.len == 0) {
+        conf->ups.proxy_ssl_cert_src = prev->ups.proxy_ssl_cert_src;
+        conf->ups.proxy_ssl_cert_handler = prev->ups.proxy_ssl_cert_handler;
+        conf->ups.proxy_ssl_cert_src_key = prev->ups.proxy_ssl_cert_src_key;
+    }
+
+    if (conf->ups.proxy_ssl_cert_src.len) {
+        if (ngx_stream_lua_proxy_ssl_cert_set_callback(cf) != NGX_OK) {
+            return NGX_CONF_ERROR;
+        }
+    }
+
     if (conf->ups.proxy_ssl_verify_src.len == 0) {
         conf->ups.proxy_ssl_verify_src = prev->ups.proxy_ssl_verify_src;
         conf->ups.proxy_ssl_verify_handler = prev->ups.proxy_ssl_verify_handler;

@@ -19,7 +19,7 @@
 #include "ngx_stream_lua_ssl.h"
 #include "ngx_stream_lua_proxy_ssl_verifyby.h"
 
-#if HAVE_LUA_PROXY_SSL_VERIFY
+#if HAVE_PROXY_SSL_PATCH
 
 
 static void ngx_stream_lua_proxy_ssl_verify_done(void *data);
@@ -688,5 +688,5 @@ ngx_stream_lua_ffi_proxy_ssl_get_verify_cert(ngx_stream_lua_request_t *r,
     return x509;
 }
 
-#endif /* HAVE_LUA_PROXY_SSL_VERIFY */
+#endif /* HAVE_PROXY_SSL_PATCH */
 #endif /* NGX_STREAM_SSL */

@@ -53,6 +53,7 @@ typedef struct {
     unsigned                 entered_cert_handler:1;
     unsigned                 entered_sess_fetch_handler:1;
 #ifdef HAVE_PROXY_SSL_PATCH
+    unsigned                 entered_proxy_ssl_cert_handler:1;
     unsigned                 entered_proxy_ssl_verify_handler:1;
 #endif
 } ngx_stream_lua_ssl_ctx_t;
