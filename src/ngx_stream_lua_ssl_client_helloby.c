@@ -218,7 +218,7 @@ ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn,
         return -1;
     }
 
-#if (nginx_version > 1029000)
+#if (nginx_version > 1029001)
     /* see commit 0373fe5d98c1515640 for more details */
     rc = ngx_ssl_client_hello_callback(ssl_conn, al, arg);
 
