@@ -301,15 +301,6 @@ ngx_stream_lua_ssl_client_hello_handler(ngx_ssl_conn_t *ssl_conn,
 
     c->log->action = "loading SSL client hello by lua";
 
-    if (lscf->srv.ssl_client_hello_handler == NULL) {
-
-        ngx_log_error(NGX_LOG_ALERT, c->log, 0,
-                      "no ssl_client_hello_by_lua* defined in "
-                      "server %s:%ui", &cscf->file_name, &cscf->line);
-
-        goto failed;
-    }
-
     rc = lscf->srv.ssl_client_hello_handler(r, lscf, L);
 
     if (rc >= NGX_OK || rc == NGX_ERROR) {
