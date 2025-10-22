@@ -1737,7 +1737,9 @@ ngx_stream_lua_udp_connect(ngx_stream_lua_socket_udp_upstream_t *u)
         }
     }
 
+#if (NGX_STREAM_LUA_HAVE_SO_PASSCRED)
 connect:
+#endif
 
     ngx_log_debug3(NGX_LOG_DEBUG_EVENT, &uc->log, 0,
                    "connect to %V, fd:%d #%d", &uc->server, s, c->number);
