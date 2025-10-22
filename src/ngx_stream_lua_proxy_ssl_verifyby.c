@@ -52,7 +52,7 @@ ngx_stream_lua_proxy_ssl_verify_set_callback(ngx_conf_t *cf)
 
     ngx_flag_t           proxy_ssl = 0;
     ngx_pool_cleanup_t  *cln;
-    ngx_ssl_t           *ssl;
+    ngx_ssl_t           *ssl = NULL;
     void                *pscf;
 
     /*
@@ -93,6 +93,12 @@ ngx_stream_lua_proxy_ssl_verify_set_callback(ngx_conf_t *cf)
     return NGX_ERROR;
 
 #else
+
+    if (ssl == NULL) {
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "proxy_ssl_verify_by_lua* "
+                      "should be used with proxy_ssl directive");
+        return NGX_ERROR;
+    }
 
     SSL_CTX_set_cert_verify_callback(ssl->ctx,
                                      ngx_stream_lua_proxy_ssl_verify_handler,

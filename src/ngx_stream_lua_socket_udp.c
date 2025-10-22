@@ -1831,7 +1831,9 @@ ngx_stream_lua_socket_udp_setoption(lua_State *L)
 {
     ngx_stream_lua_ctx_t   *ctx;
     int                     n;
+#if (NGX_HAVE_TRANSPARENT_PROXY)
     int                     ip_transparent;
+#endif
     size_t                  len;
     u_char                 *option;
 
