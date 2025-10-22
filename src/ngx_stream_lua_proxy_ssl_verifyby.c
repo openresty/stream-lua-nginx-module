@@ -22,8 +22,10 @@
 #include "ngx_stream_lua_proxy_ssl_verifyby.h"
 
 
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER >= 0x30000020uL)
 static void ngx_stream_lua_proxy_ssl_verify_done(void *data);
 static void ngx_stream_lua_proxy_ssl_verify_aborted(void *data);
+#endif
 static ngx_int_t ngx_stream_lua_proxy_ssl_verify_by_chunk(lua_State *L,
     ngx_stream_lua_request_t *r);
 
@@ -82,7 +84,7 @@ ngx_stream_lua_proxy_ssl_verify_set_callback(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-#if (!defined SSL_ERROR_WANT_RETRY_VERIFY \
+#if (!defined SSL_ERROR_WANT_RETRY_VERIFY                                    \
      || OPENSSL_VERSION_NUMBER < 0x30000020L)
 
     ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "OpenSSL too old to support "
@@ -184,8 +186,8 @@ ngx_stream_lua_proxy_ssl_verify_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 
 #else
 
-#if (!defined SSL_ERROR_WANT_RETRY_VERIFY \
-     || OPENSSL_VERSION_NUMBER < 0x30000020L)
+#if !defined(SSL_ERROR_WANT_RETRY_VERIFY)                                    \
+    || (OPENSSL_VERSION_NUMBER < 0x30000020L)
 
     /* SSL_set_retry_verify() was added in OpenSSL 3.0.2 */
     ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
@@ -286,6 +288,13 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
         "BoringSSL does not support by proxy_ssl_verify_by_lua*");
+
+    return 1;
+
+#elif defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER < 0x30000020uL)
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0,
+        "OpenSSL(< 3.0.2) does not support by proxy_ssl_verify_by_lua*");
 
     return 1;
 
@@ -397,7 +406,8 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
 
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, c->log, 0,
                        "proxy_ssl_verify_by_lua: handler return value: %i, "
-                       "cert verify callback exit code: %d", rc, cctx->exit_code);
+                       "cert verify callback exit code: %d",
+                       rc, cctx->exit_code);
 
         c->log->action = "proxy pass SSL handshaking";
         return cctx->exit_code;
@@ -441,6 +451,7 @@ failed:
 }
 
 
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER >= 0x30000020uL)
 static void
 ngx_stream_lua_proxy_ssl_verify_done(void *data)
 {
@@ -500,6 +511,7 @@ ngx_stream_lua_proxy_ssl_verify_aborted(void *data)
         cctx->pool = NULL;
     }
 }
+#endif
 
 
 static ngx_int_t

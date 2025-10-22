@@ -12,7 +12,9 @@
 #if (NGX_STREAM_SSL)
 #ifdef HAVE_PROXY_SSL_PATCH
 
-/* do not introduce ngx_stream_proxy_module to pollute ngx_stream_lua_module.c */
+/* do not introduce ngx_stream_proxy_module
+ * to pollute ngx_stream_lua_module.c
+ */
 extern ngx_module_t  ngx_stream_proxy_module;
 
 ngx_int_t ngx_stream_lua_proxy_ssl_verify_handler_inline(
