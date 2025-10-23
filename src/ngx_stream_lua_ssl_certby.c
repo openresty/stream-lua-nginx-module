@@ -400,7 +400,7 @@ ngx_stream_lua_ssl_cert_aborted(void *data)
 {
     ngx_stream_lua_ssl_ctx_t            *cctx = data;
 
-    dd("lua ssl cert done");
+    dd("lua ssl cert aborted");
 
     if (cctx->done) {
         /* completed successfully already */
