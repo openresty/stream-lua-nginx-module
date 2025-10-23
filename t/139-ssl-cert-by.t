@@ -96,6 +96,7 @@ reusable connection: 0
 ssl cert: connection reusable: 0
 reusable connection: 0
 ssl_certificate_by_lua:1: ssl cert by lua is running!,
+ssl_certificate_by_lua: handler return value: 0,
 reusable connection: 0
 reusable connection: 0
 reusable connection: 0
