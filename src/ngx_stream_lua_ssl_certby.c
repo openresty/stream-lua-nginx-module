@@ -224,7 +224,7 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
 
         if (cctx->done) {
             ngx_log_debug1(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                           "stream lua_certificate_by_lua:"
+                           "stream ssl_certificate_by_lua:"
                            " cert cb exit code: %d",
                            cctx->exit_code);
 
@@ -319,7 +319,7 @@ ngx_stream_lua_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data)
         }
 
         ngx_log_debug2(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                       "stream lua_certificate_by_lua:"
+                       "stream ssl_certificate_by_lua:"
                        " handler return value: %i, "
                        "cert cb exit code: %d", rc, cctx->exit_code);
 
@@ -400,7 +400,7 @@ ngx_stream_lua_ssl_cert_aborted(void *data)
 {
     ngx_stream_lua_ssl_ctx_t            *cctx = data;
 
-    dd("lua ssl cert done");
+    dd("lua ssl cert aborted");
 
     if (cctx->done) {
         /* completed successfully already */
@@ -408,7 +408,7 @@ ngx_stream_lua_ssl_cert_aborted(void *data)
     }
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, cctx->connection->log, 0,
-                   "stream lua_certificate_by_lua: cert cb aborted");
+                   "stream ssl_certificate_by_lua: cert cb aborted");
 
     cctx->aborted = 1;
     cctx->request->connection->ssl = NULL;
