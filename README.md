@@ -151,6 +151,8 @@ behavior.
 * [ssl_client_hello_by_lua_file](https://github.com/openresty/lua-nginx-module#ssl_client_hello_by_lua_file)
 * [ssl_certificate_by_lua_block](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_block)
 * [ssl_certificate_by_lua_file](https://github.com/openresty/lua-nginx-module#ssl_certificate_by_lua_file)
+* [proxy_ssl_certificate_by_lua_block](https://github.com/openresty/lua-nginx-module#proxy_ssl_certificate_by_lua_block)
+* [proxy_ssl_certificate_by_lua_file](https://github.com/openresty/lua-nginx-module#proxy_ssl_certificate_by_lua_file)
 * [proxy_ssl_verify_by_lua_block](https://github.com/openresty/lua-nginx-module#proxy_ssl_verify_by_lua_block)
 * [proxy_ssl_verify_by_lua_file](https://github.com/openresty/lua-nginx-module#proxy_ssl_verify_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
