@@ -18,6 +18,7 @@
 #include "ddebug.h"
 
 #if (NGX_LINUX)
+#include <linux/if.h>
 #include <linux/netfilter_ipv4.h>
 #if (NGX_HAVE_INET6)
 #include <linux/netfilter_ipv6.h>
