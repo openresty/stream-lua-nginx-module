@@ -275,7 +275,7 @@ ngx_stream_lua_ffi_req_dst_addr(ngx_stream_lua_request_t *r, char *buf,
             return NGX_ERROR;
         }
 
-#if (NGX_HAVE_INET6)
+#if (NGX_HAVE_INET6) && defined(IP6T_SO_ORIGINAL_DST)
 
     } else if (family == AF_INET6) {
         /* IPv6 */
