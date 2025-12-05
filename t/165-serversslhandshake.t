@@ -60,5 +60,3 @@ method exists: false
 --- no_error_log
 [error]
 [alert]
-
-

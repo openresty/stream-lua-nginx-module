@@ -2155,7 +2155,8 @@ ngx_stream_lua_socket_tcp_serversslhandshake(lua_State *L)
         ngx_add_timer(c->read, u->read_timeout);
 
         u->conn_waiting = 1;
-        u->write_prepare_retvals = ngx_stream_lua_server_ssl_handshake_retval_handler;
+        u->write_prepare_retvals
+            = ngx_stream_lua_server_ssl_handshake_retval_handler;
 
         ngx_stream_lua_cleanup_pending_operation(coctx);
         coctx->cleanup = ngx_stream_lua_coctx_cleanup;
