@@ -72,7 +72,8 @@ ngx_stream_lua_ffi_get_upstream_ssl_pointer(ngx_stream_lua_request_t *r,
     }
 
     if (r->session->upstream == NULL
-        || r->session->upstream->peer.connection == NULL) {
+        || r->session->upstream->peer.connection == NULL)
+    {
         *err = "not upstream";
         return NULL;
     }
