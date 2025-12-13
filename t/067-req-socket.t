@@ -1000,3 +1000,38 @@ bad argument #2 to '?' (bad max argument)
 send data after read side timeout
 --- error_log
 receiveany unexpected err: timeout
+
+
+
+=== TEST 17: getfd()
+--- stream_server_config
+    content_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if sock then
+            ngx.say("got the request socket")
+        else
+            ngx.say("failed to get the request socket: ", err)
+            return
+        end
+
+        ngx.say("fd: ", sock:getfd())
+        for i = 1, 3 do
+            local data, err, part = sock:receive(5)
+            if data then
+                ngx.say("received: ", data)
+            else
+                ngx.say("failed to receive: ", err, " [", part, "]")
+            end
+        end
+    }
+--- stream_request chomp
+hello world! my
+--- stream_response eval
+qr/got the request socket
+fd: \d+
+received: hello
+received:  worl
+received: d! my
+/
+--- no_error_log
+[error]

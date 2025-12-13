@@ -4,7 +4,7 @@ use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 224;
+plan tests => repeat_each() * 227;
 
 our $HtmlDir = html_dir;
 
@@ -3599,5 +3599,71 @@ shutdown on a not connected socket: closed
 --- stream_response
 connected: 1
 setkeepalive: 1
+--- no_error_log
+[error]
+
+
+
+=== TEST 69: getfd()
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+        ngx.say("fd: ", sock:getfd())
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+        -- req = "OK"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+
+        ngx.say("request sent: ", bytes)
+
+        while true do
+            local line, err, part = sock:receive()
+            if line then
+                ngx.say("received: ", line)
+
+            else
+                ngx.say("failed to receive a line: ", err, " [", part, "]")
+                break
+            end
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+
+    location /foo {
+        content_by_lua_block { ngx.say("foo") }
+        more_clear_headers Date;
+    }
+
+--- stream_response eval
+qr{connected: 1
+fd: \d+
+request sent: 57
+received: HTTP/1.1 200 OK
+received: Server: nginx
+received: Content-Type: text/plain
+received: Content-Length: 4
+received: Connection: close
+received: 
+received: foo
+failed to receive a line: closed \[\]
+close: 1 nil
+}
 --- no_error_log
 [error]

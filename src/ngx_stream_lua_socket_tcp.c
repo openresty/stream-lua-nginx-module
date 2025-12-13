@@ -271,6 +271,8 @@ static char ngx_stream_lua_ssl_session_metatable_key;
 #endif
 
 #define ngx_stream_lua_tcp_socket_metatable_literal_key  "__tcp_cosocket_mt"
+#define ngx_stream_lua_raw_req_socket_metatable_literal_key                  \
+    "__tcp_raw_req_cosocket_mt"
 
 
 void
@@ -308,7 +310,7 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     /* {{{raw req socket object metatable */
     lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
                           raw_req_socket_metatable_key));
-    lua_createtable(L, 0 /* narr */, 9 /* nrec */);
+    lua_createtable(L, 0 /* narr */, 10 /* nrec */);
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_receive);
     lua_setfield(L, -2, "receive");
@@ -344,6 +346,12 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
 
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    lua_pushliteral(L, ngx_stream_lua_raw_req_socket_metatable_literal_key);
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          raw_req_socket_metatable_key));
+    lua_rawget(L, LUA_REGISTRYINDEX);
     lua_rawset(L, LUA_REGISTRYINDEX);
     /* }}} */
 
@@ -6757,6 +6765,28 @@ ngx_stream_lua_cleanup_conn_pools(lua_State *L)
     }
 
     lua_pop(L, 1);
+}
+
+
+int
+ngx_stream_lua_ffi_socket_tcp_getfd(ngx_stream_lua_request_t *r,
+ngx_stream_lua_socket_tcp_upstream_t *u, const char **errmsg)
+{
+    int fd;
+
+    *errmsg = NULL;
+
+    if (u == NULL  || u->peer.connection == NULL) {
+        *errmsg = "closed";
+        return -1;
+    }
+
+    fd = u->peer.connection->fd;
+    if (fd == -1) {
+        *errmsg = "faked connection";
+    }
+
+    return fd;
 }
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */
