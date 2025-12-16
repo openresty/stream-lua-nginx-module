@@ -103,7 +103,7 @@ n = 10
         assert(ngx.say("n = ", n))
     }
 --- stream_response
-n = 9
+n = 13
 --- no_error_log
 [error]
 
@@ -251,7 +251,7 @@ worker: 5
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 17
+n = 18
 --- no_error_log
 [error]
 
@@ -295,7 +295,7 @@ n = 8
         end
     }
 --- stream_response
-n = 9
+n = 13
 --- no_error_log
 [error]
 
@@ -312,6 +312,6 @@ n = 9
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 17
+n = 18
 --- no_error_log
 [error]
