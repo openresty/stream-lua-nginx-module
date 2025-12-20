@@ -2981,7 +2981,15 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
 
         size = b->last - b->pos;
 
-        if (size || u->eof) {
+        /*
+         * ngx_shutdown_timer_handler() will set the c->close and c->error
+         * flag to 1, indicating the connection needs to be closed.
+         *
+         * Call the u->input_filter callback function of the request object
+         * to trigger the filtering logic. Enable Nginx to exit quickly during
+         * the nginx exiting phase.
+         */
+        if (size || u->eof || (c->close && c->error)) {
 
             rc = u->input_filter(u->input_filter_ctx, size);
 
