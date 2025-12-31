@@ -33,6 +33,7 @@ static int ngx_stream_lua_socket_tcp_connect(lua_State *L);
 #if (NGX_STREAM_SSL)
 static int ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L);
 static int ngx_stream_lua_socket_tcp_serversslhandshake(lua_State *L);
+static int ngx_stream_lua_socket_tcp_get_ssl_session(lua_State *L);
 #endif
 static int ngx_stream_lua_socket_tcp_receive(lua_State *L);
 static int ngx_stream_lua_socket_tcp_receiveany(lua_State *L);
@@ -372,6 +373,9 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_sslhandshake);
     lua_setfield(L, -2, "sslhandshake");
+
+    lua_pushcfunction(L,  ngx_stream_lua_socket_tcp_get_ssl_session);
+    lua_setfield(L, -2, "getsslsession");
 
 #endif
 
@@ -1659,6 +1663,82 @@ ngx_stream_lua_socket_conn_error_retval_handler(ngx_stream_lua_request_t *r,
 
 
 #if (NGX_STREAM_SSL)
+static int
+ngx_stream_lua_socket_tcp_get_ssl_session(lua_State *L)
+{
+    int    n;
+
+    ngx_connection_t                     *c;
+    ngx_ssl_session_t                    *ssl_session, **ud;
+    ngx_stream_lua_request_t             *r;
+    ngx_stream_lua_socket_tcp_upstream_t *u;
+
+
+    n = lua_gettop(L);
+    if (n < 1) {
+        return luaL_error(L, "getsslsession: expecting 1 "
+                          "argument, but seen %d", n);
+    }
+
+    r = ngx_stream_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request found");
+    }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "stream lua tcp socket getsslsession");
+
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    lua_rawgeti(L, 1, SOCKET_CTX_INDEX);
+    u = lua_touserdata(L, -1);
+
+    if (u == NULL
+        || u->peer.connection == NULL
+        || u->read_closed
+        || u->write_closed)
+    {
+        lua_pushnil(L);
+        lua_pushliteral(L, "closed");
+        return 2;
+    }
+
+    if (u->request != r) {
+        return luaL_error(L, "bad request");
+    }
+
+    c = u->peer.connection;
+    if (c == NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "connection not found");
+        return 2;
+    }
+
+    ssl_session = ngx_ssl_get_session(c);
+    if (ssl_session == NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "no session");
+        return 2;
+    }
+
+    if (!SSL_SESSION_is_resumable(ssl_session)) {
+        ngx_ssl_free_session(ssl_session);
+        lua_pushnil(L);
+        lua_pushliteral(L, "not resumable session");
+        return 2;
+    }
+
+    ud = lua_newuserdata(L, sizeof(ngx_ssl_session_t *));
+    *ud = ssl_session;
+    /* set up the __gc metamethod */
+    lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
+                          ssl_session_metatable_key));
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    lua_setmetatable(L, -2);
+
+    return 1;
+}
+
 
 static int
 ngx_stream_lua_socket_tcp_sslhandshake(lua_State *L)
