@@ -374,9 +374,8 @@ ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L)
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_sslhandshake);
     lua_setfield(L, -2, "sslhandshake");
 
-    lua_pushcfunction(L,  ngx_stream_lua_socket_tcp_get_ssl_session);
+    lua_pushcfunction(L, ngx_stream_lua_socket_tcp_get_ssl_session);
     lua_setfield(L, -2, "getsslsession");
-
 #endif
 
     lua_pushcfunction(L, ngx_stream_lua_socket_tcp_receive);
@@ -1663,6 +1662,94 @@ ngx_stream_lua_socket_conn_error_retval_handler(ngx_stream_lua_request_t *r,
 
 
 #if (NGX_STREAM_SSL)
+int
+ngx_stream_lua_ffi_socket_tcp_get_ssl_pointer(
+    ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_tcp_upstream_t *u,
+    void **pssl, char **errmsg)
+{
+    ngx_connection_t                     *c;
+
+    *pssl = NULL;
+    if (r == NULL) {
+        *errmsg = "no request";
+        return NGX_ERROR;
+    }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "stream lua tcp socket getsslpointer");
+
+    if (u == NULL
+        || u->peer.connection == NULL
+        || u->read_closed
+        || u->write_closed)
+    {
+        *errmsg = "closed";
+        return NGX_ERROR;
+    }
+
+    if (u->request != r) {
+        *errmsg = "bad request";
+        return NGX_ERROR;
+    }
+
+    c = u->peer.connection;
+    if (c == NULL || c->ssl == NULL || c->ssl->connection == NULL) {
+        *errmsg = "no ssl connection";
+        return NGX_ERROR;
+    }
+
+    *pssl = c->ssl->connection;
+
+    return NGX_OK;
+}
+
+
+int
+ngx_stream_lua_ffi_socket_tcp_get_ssl_ctx(
+    ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_tcp_upstream_t *u,
+    void **pctx, char **errmsg)
+{
+    ngx_connection_t                     *c;
+
+    *pctx = NULL;
+    if (r == NULL) {
+        *errmsg = "no request";
+        return NGX_ERROR;
+    }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                   "stream lua tcp socket getsslpointer");
+
+    if (u == NULL
+        || u->peer.connection == NULL
+        || u->read_closed
+        || u->write_closed)
+    {
+        *errmsg = "closed";
+        return NGX_ERROR;
+    }
+
+    if (u->request != r) {
+        *errmsg = "bad request";
+        return NGX_ERROR;
+    }
+
+    c = u->peer.connection;
+    if (c == NULL || c->ssl == NULL || c->ssl->session_ctx == NULL) {
+        *errmsg = "no ssl connection";
+        return NGX_ERROR;
+    }
+
+    *pctx = c->ssl->session_ctx;
+
+    return NGX_OK;
+}
+
+
+
+
 static int
 ngx_stream_lua_socket_tcp_get_ssl_session(lua_State *L)
 {
