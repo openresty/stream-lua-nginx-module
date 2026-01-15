@@ -51,7 +51,7 @@ timeout
 --- stream_response
 timeout
 --- error_log
-stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
+stream lua tcp socket connect timed out, upstream: 127.0.0.2:12345(127.0.0.2)
 
 
 

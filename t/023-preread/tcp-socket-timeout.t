@@ -69,7 +69,7 @@ __DATA__
 failed to connect: timeout
 --- error_log
 lua tcp socket connect timeout: 100
-stream lua tcp socket connect timed out, when connecting to 127.0.0.2:12345
+stream lua tcp socket connect timed out, upstream: 127.0.0.2:12345(127.0.0.2)
 --- timeout: 10
 
 

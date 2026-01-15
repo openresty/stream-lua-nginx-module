@@ -18,6 +18,12 @@
 
 #include "ngx_stream_lua_common.h"
 
+/* max cosocket host length, just for logging,
+ * length greater are omitted
+ */
+#ifndef COSOCKET_HOST_LEN
+#define COSOCKET_HOST_LEN  32
+#endif
 
 typedef struct ngx_stream_lua_socket_udp_upstream_s
     ngx_stream_lua_socket_udp_upstream_t;
@@ -64,6 +70,8 @@ struct ngx_stream_lua_socket_udp_upstream_s {
     size_t                                   recv_buf_size;
 
     ngx_stream_lua_co_ctx_t                 *co_ctx;
+    ngx_str_t                                host;
+    in_port_t                                port;
 
     unsigned                                 waiting:1;
 

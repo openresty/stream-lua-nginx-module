@@ -33,6 +33,14 @@
 #define NGX_STREAM_LUA_SOCKET_OPTION_TRANSPARENT    1
 #endif
 
+/* max cosocket host length, just for logging,
+ * length greater are omitted
+ */
+#ifndef COSOCKET_HOST_LEN
+#define COSOCKET_HOST_LEN  32
+#endif
+
+
 typedef struct ngx_stream_lua_socket_tcp_upstream_s
         ngx_stream_lua_socket_tcp_upstream_t;
 
@@ -96,6 +104,9 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     ngx_stream_lua_cleanup_pt               *cleanup;
     ngx_stream_lua_request_t                *request;
 
+    struct sockaddr_storage          sockaddr;
+    socklen_t                        socklen;
+    ngx_log_t                        log;
     ngx_peer_connection_t            peer;
 
     ngx_msec_t                       read_timeout;
@@ -124,6 +135,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
 
     ngx_uint_t                       reused;
 
+    char                             host[COSOCKET_HOST_LEN];
 #if (NGX_STREAM_SSL)
     ngx_str_t                        ssl_name;
 #endif
@@ -176,6 +188,7 @@ typedef struct {
 
     socklen_t                        socklen;
     struct sockaddr_storage          sockaddr;
+    char                             host[COSOCKET_HOST_LEN];
 
     ngx_uint_t                       reused;
 

@@ -1676,7 +1676,7 @@ continue to handle cosocket
         ngx.say("ok")
     }
 --- error_log
-lua tcp socket connect timed out, when connecting to
+stream lua tcp socket connect timed out, upstream: 127.0.0.2:12345(127.0.0.2)
 --- stream_response
 timeout
 ok
@@ -2072,7 +2072,7 @@ connected in uthread
 ok
 --- error_log
 queue connect operation for connection pool "test"
-lua tcp socket connect timed out, when connecting to
+stream lua tcp socket connect timed out, upstream: 127.0.0.2:12345(127.0.0.2)
 
 
 
