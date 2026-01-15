@@ -251,7 +251,7 @@ worker: 5
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 19
+n = 21
 --- no_error_log
 [error]
 
@@ -312,6 +312,6 @@ n = 13
         ngx.say("n = ", n)
     }
 --- stream_response
-n = 19
+n = 21
 --- no_error_log
 [error]
