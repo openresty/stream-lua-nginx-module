@@ -1772,8 +1772,6 @@ ngx_stream_lua_ffi_socket_tcp_get_ssl_ctx(
 }
 
 
-
-
 static int
 ngx_stream_lua_socket_tcp_get_ssl_session(lua_State *L)
 {
