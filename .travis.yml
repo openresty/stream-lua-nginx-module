@@ -50,7 +50,7 @@ services:
 
 before_install:
   - echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-  - sudo service dnsmasq restart
+  - sudo systemctl restart dnsmasq
   - wget -O - https://openresty.org/package/pubkey.gpg | sudo apt-key add -
   - echo "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/openresty.list
   - sudo apt-get update
