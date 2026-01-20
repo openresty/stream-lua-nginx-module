@@ -31,7 +31,7 @@
 #include "ngx_stream_lua_ssl_client_helloby.h"
 #include "ngx_stream_lua_ssl_certby.h"
 
-#ifdef HAVE_PROXY_SSL_PATCH
+#ifdef HAVE_LUA_PROXY_SSL
 #include "ngx_stream_lua_proxy_ssl_certby.h"
 #include "ngx_stream_lua_proxy_ssl_verifyby.h"
 #endif
@@ -433,7 +433,7 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_ssl_cert_handler_file },
 
-#if HAVE_PROXY_SSL_PATCH
+#if HAVE_LUA_PROXY_SSL
     /* same context as proxy_pass directive */
     { ngx_string("proxy_ssl_certificate_by_lua_block"),
       NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -921,13 +921,11 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 
     conf->log_socket_errors = NGX_CONF_UNSET;
 
-#if (NGX_STREAM_SSL)
+#ifdef HAVE_LUA_PROXY_SSL
     conf->ssl_verify_depth = NGX_CONF_UNSET_UINT;
     conf->ssl_certificates = NGX_CONF_UNSET_PTR;
     conf->ssl_certificate_keys = NGX_CONF_UNSET_PTR;
-#ifdef HAVE_PROXY_SSL_PATCH
     conf->ups.upstream_skip_openssl_default_verify = NGX_CONF_UNSET;
-#endif
 #endif
 
     return conf;
@@ -1061,7 +1059,7 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                              NULL);
 #endif
 
-#ifdef HAVE_PROXY_SSL_PATCH
+#ifdef HAVE_LUA_PROXY_SSL
     if (conf->ups.proxy_ssl_cert_src.len == 0) {
         conf->ups.proxy_ssl_cert_src = prev->ups.proxy_ssl_cert_src;
         conf->ups.proxy_ssl_cert_handler = prev->ups.proxy_ssl_cert_handler;

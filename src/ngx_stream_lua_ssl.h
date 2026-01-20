@@ -32,7 +32,7 @@ typedef struct {
 
     ngx_str_t                session_id;
 
-#ifdef HAVE_PROXY_SSL_PATCH
+#ifdef HAVE_LUA_PROXY_SSL
     X509_STORE_CTX          *x509_store;
     ngx_pool_t              *pool;
 #endif
@@ -52,7 +52,7 @@ typedef struct {
     unsigned                 entered_client_hello_handler:1;
     unsigned                 entered_cert_handler:1;
     unsigned                 entered_sess_fetch_handler:1;
-#ifdef HAVE_PROXY_SSL_PATCH
+#ifdef HAVE_LUA_PROXY_SSL
     unsigned                 entered_proxy_ssl_cert_handler:1;
     unsigned                 entered_proxy_ssl_verify_handler:1;
 #endif

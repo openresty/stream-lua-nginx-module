@@ -5,11 +5,11 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
+
 #include "ddebug.h"
+#include "ngx_stream_lua_proxy_ssl_certby.h"
 
-
-#if (NGX_STREAM_SSL)
-
+#ifdef HAVE_LUA_PROXY_SSL
 #include "ngx_stream_lua_cache.h"
 #include "ngx_stream_lua_initworkerby.h"
 #include "ngx_stream_lua_util.h"
@@ -17,9 +17,6 @@
 #include "ngx_stream_lua_contentby.h"
 #include "ngx_stream_lua_directive.h"
 #include "ngx_stream_lua_ssl.h"
-
-#ifdef HAVE_PROXY_SSL_PATCH
-#include "ngx_stream_lua_proxy_ssl_certby.h"
 
 
 static void ngx_stream_lua_proxy_ssl_cert_done(void *data);
@@ -31,16 +28,6 @@ static ngx_int_t ngx_stream_lua_proxy_ssl_cert_by_chunk(lua_State *L,
 ngx_int_t
 ngx_stream_lua_proxy_ssl_cert_set_callback(ngx_conf_t *cf)
 {
-
-#ifdef LIBRESSL_VERSION_NUMBER
-
-    ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                  "LibreSSL does not support by proxy_ssl_certificate_by_lua*");
-
-    return NGX_ERROR;
-
-#else
-
     ngx_flag_t           proxy_ssl = 0;
     ngx_pool_cleanup_t  *cln;
     ngx_ssl_t           *ssl;
@@ -76,22 +63,9 @@ ngx_stream_lua_proxy_ssl_cert_set_callback(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000205fL
-
     SSL_CTX_set_cert_cb(ssl->ctx, ngx_stream_lua_proxy_ssl_cert_handler, NULL);
 
     return NGX_OK;
-
-#else
-
-    ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "OpenSSL too old to support "
-                  "proxy_ssl_certificate_by_lua*");
-
-    return NGX_ERROR;
-
-#endif
-
-#endif
 }
 
 
@@ -160,16 +134,6 @@ char *
 ngx_stream_lua_proxy_ssl_cert_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf)
 {
-#if OPENSSL_VERSION_NUMBER < 0x1000205fL
-
-    ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                  "at least OpenSSL 1.0.2e required but found "
-                  OPENSSL_VERSION_TEXT);
-
-    return NGX_CONF_ERROR;
-
-#else
-
     u_char                           *p;
     u_char                           *name;
     ngx_str_t                        *value;
@@ -239,8 +203,6 @@ ngx_stream_lua_proxy_ssl_cert_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     return NGX_CONF_OK;
-
-#endif  /* OPENSSL_VERSION_NUMBER < 0x1000205fL */
 }
 
 
@@ -582,20 +544,6 @@ int
 ngx_stream_lua_ffi_proxy_ssl_clear_certs(ngx_stream_lua_request_t *r,
     char **err)
 {
-#ifdef LIBRESSL_VERSION_NUMBER
-
-    *err = "LibreSSL not supported";
-    return NGX_ERROR;
-
-#else
-
-#   if OPENSSL_VERSION_NUMBER < 0x1000205fL
-
-    *err = "at least OpenSSL 1.0.2e required but found " OPENSSL_VERSION_TEXT;
-    return NGX_ERROR;
-
-#   else
-
     ngx_stream_upstream_t           *u;
     ngx_ssl_conn_t                  *ssl_conn;
     ngx_connection_t                *c;
@@ -620,9 +568,6 @@ ngx_stream_lua_ffi_proxy_ssl_clear_certs(ngx_stream_lua_request_t *r,
 
     SSL_certs_clear(ssl_conn);
     return NGX_OK;
-
-#   endif  /* OPENSSL_VERSION_NUMBER < 0x1000205fL */
-#endif
 }
 
 
@@ -630,20 +575,6 @@ int
 ngx_stream_lua_ffi_proxy_ssl_set_der_certificate(ngx_stream_lua_request_t *r,
     const char *data, size_t len, char **err)
 {
-#ifdef LIBRESSL_VERSION_NUMBER
-
-    *err = "LibreSSL not supported";
-    return NGX_ERROR;
-
-#else
-
-#   if OPENSSL_VERSION_NUMBER < 0x1000205fL
-
-    *err = "at least OpenSSL 1.0.2e required but found " OPENSSL_VERSION_TEXT;
-    return NGX_ERROR;
-
-#   else
-
     ngx_stream_upstream_t           *u;
     ngx_ssl_conn_t                  *ssl_conn;
     ngx_connection_t                *c;
@@ -722,9 +653,6 @@ failed:
     ERR_clear_error();
 
     return NGX_ERROR;
-
-#   endif  /* OPENSSL_VERSION_NUMBER < 0x1000205fL */
-#endif
 }
 
 
@@ -798,20 +726,6 @@ int
 ngx_stream_lua_ffi_proxy_ssl_set_cert(ngx_stream_lua_request_t *r,
     void *cdata, char **err)
 {
-#ifdef LIBRESSL_VERSION_NUMBER
-
-    *err = "LibreSSL not supported";
-    return NGX_ERROR;
-
-#else
-
-#   if OPENSSL_VERSION_NUMBER < 0x1000205fL
-
-    *err = "at least OpenSSL 1.0.2e required but found " OPENSSL_VERSION_TEXT;
-    return NGX_ERROR;
-
-#   else
-
 #ifdef OPENSSL_IS_BORINGSSL
     size_t             i;
 #else
@@ -883,9 +797,6 @@ failed:
     ERR_clear_error();
 
     return NGX_ERROR;
-
-#   endif  /* OPENSSL_VERSION_NUMBER < 0x1000205fL */
-#endif
 }
 
 
@@ -936,69 +847,4 @@ failed:
     return NGX_ERROR;
 }
 
-
-#else  /* HAVE_PROXY_SSL_PATCH */
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_get_tls1_version(ngx_stream_lua_request_t *r,
-    char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_clear_certs(ngx_stream_lua_request_t *r,
-    char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_set_der_certificate(ngx_stream_lua_request_t *r,
-    const char *data, size_t len, char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_set_der_private_key(ngx_stream_lua_request_t *r,
-    const char *data, size_t len, char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_set_cert(ngx_stream_lua_request_t *r,
-    void *cdata, char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-int
-ngx_stream_lua_ffi_proxy_ssl_set_priv_key(ngx_stream_lua_request_t *r,
-    void *cdata, char **err)
-{
-    *err = "Does not have HAVE_PROXY_SSL_PATCH to support this function";
-
-    return NGX_ERROR;
-}
-
-
-#endif /* HAVE_PROXY_SSL_PATCH */
-#endif /* NGX_STREAM_SSL */
+#endif /* HAVE_LUA_PROXY_SSL */

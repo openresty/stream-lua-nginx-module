@@ -9,19 +9,7 @@
 #include "ngx_stream_lua_common.h"
 
 
-#if (NGX_STREAM_SSL)
-#ifdef HAVE_PROXY_SSL_PATCH
-
-#if defined(LIBRESSL_VERSION_NUMBER)
-#define  HAVE_PROXY_SSL_PATCH 0
-#elif defined(OPENSSL_IS_BORINGSSL)
-#define  HAVE_PROXY_SSL_PATCH 0
-#elif defined(SSL_ERROR_WANT_RETRY_VERIFY) &&                                \
-    OPENSSL_VERSION_NUMBER >= 0x30000020uL
-#define  HAVE_PROXY_SSL_PATCH 1
-#else
-#define  HAVE_PROXY_SSL_PATCH 0
-#endif
+#ifdef HAVE_LUA_PROXY_SSL
 
 /* do not introduce ngx_stream_proxy_module
  * to pollute ngx_stream_lua_module.c
@@ -45,8 +33,7 @@ int ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store,
 
 ngx_int_t ngx_stream_lua_proxy_ssl_verify_set_callback(ngx_conf_t *cf);
 
-#endif  /* HAVE_PROXY_SSL_PATCH */
-#endif  /* NGX_STREAM_SSL */
+#endif  /* HAVE_LUA_PROXY_SSL */
 #endif /* _NGX_STREAM_LUA_PROXY_SSL_VERIFYBY_H_INCLUDED_ */
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

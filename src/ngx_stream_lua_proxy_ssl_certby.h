@@ -9,8 +9,7 @@
 #include "ngx_stream_lua_common.h"
 
 
-#if (NGX_STREAM_SSL)
-#ifdef HAVE_PROXY_SSL_PATCH
+#ifdef HAVE_LUA_PROXY_SSL
 
 /* do not introduce ngx_stream_proxy_module
  * to pollute ngx_stream_lua_module.c
@@ -33,8 +32,7 @@ int ngx_stream_lua_proxy_ssl_cert_handler(ngx_ssl_conn_t *ssl_conn, void *data);
 
 ngx_int_t ngx_stream_lua_proxy_ssl_cert_set_callback(ngx_conf_t *cf);
 
-#endif  /* HAVE_PROXY_SSL_PATCH */
-#endif  /* NGX_STREAM_SSL */
+#endif  /* HAVE_LUA_PROXY_SSL */
 #endif /* _NGX_STREAM_LUA_PROXY_SSL_CERTBY_H_INCLUDED_ */
 
 /* vi:set ft=c ts=4 sw=4 et fdm=marker: */

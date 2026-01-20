@@ -31,6 +31,23 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#if (NGX_STREAM_SSL)
+
+#include <openssl/ssl.h>
+
+#ifdef HAVE_PROXY_SSL_PATCH
+
+#if defined(LIBRESSL_VERSION_NUMBER)
+/* do nothing */
+#elif defined(OPENSSL_IS_BORINGSSL)
+/* do nothing */
+#elif defined(SSL_ERROR_WANT_RETRY_VERIFY) &&                                \
+    OPENSSL_VERSION_NUMBER >= 0x30000020uL
+#define  HAVE_LUA_PROXY_SSL 1
+#endif
+
+#endif /* HAVE_PROXY_SSL_PATCH */
+#endif /* NGX_STREAM_SSL */
 
 #include "ngx_stream_lua_request.h"
 
