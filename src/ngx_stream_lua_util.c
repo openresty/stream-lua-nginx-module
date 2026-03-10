@@ -1051,8 +1051,10 @@ ngx_stream_lua_run_thread(lua_State *L, ngx_stream_lua_request_t *r,
                         return NGX_AGAIN;
                     }
 
-                    ngx_stream_lua_del_thread(r, L, ctx, ctx->cur_co_ctx);
-                    ctx->uthreads--;
+                    if (ctx->cur_co_ctx->co_ref != LUA_NOREF) {
+                        ngx_stream_lua_del_thread(r, L, ctx, ctx->cur_co_ctx);
+                        ctx->uthreads--;
+                    }
 
                     if (ctx->uthreads == 0) {
                         if (ngx_stream_lua_entry_thread_alive(ctx)) {
@@ -1090,7 +1092,9 @@ user_co_done:
                     lua_xmove(ctx->cur_co_ctx->co, next_co, nrets);
                 }
 
-                if (ctx->cur_co_ctx->is_uthread) {
+                if (ctx->cur_co_ctx->is_uthread
+                    && ctx->cur_co_ctx->co_ref != LUA_NOREF)
+                {
                     ngx_stream_lua_del_thread(r, L, ctx, ctx->cur_co_ctx);
                     ctx->uthreads--;
                 }
@@ -1201,8 +1205,10 @@ propagate_error:
                     return NGX_AGAIN;
                 }
 
-                ngx_stream_lua_del_thread(r, L, ctx, ctx->cur_co_ctx);
-                ctx->uthreads--;
+                if (ctx->cur_co_ctx->co_ref != LUA_NOREF) {
+                    ngx_stream_lua_del_thread(r, L, ctx, ctx->cur_co_ctx);
+                    ctx->uthreads--;
+                }
 
                 if (ctx->uthreads == 0) {
                     if (ngx_stream_lua_entry_thread_alive(ctx)) {

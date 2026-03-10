@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 5 + 1);
 
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= '11211';
+$ENV{TEST_NGINX_REDIS_PORT} ||= '6379';
 
 #no_shuffle();
 no_long_string();
@@ -313,3 +314,83 @@ thread created: zombie
 [alert]
 stream lua tcp socket abort resolver
 --- error_log
+
+
+
+=== TEST 7: no phantom uthreads decrement after killing parent uthread
+--- stream_server_config
+    content_by_lua_block {
+        local redis_port = $TEST_NGINX_REDIS_PORT
+        local dns_threads = {}
+
+        dns_threads[1] = ngx.thread.spawn(function()
+            local sock = ngx.socket.tcp()
+            sock:settimeout(2000)
+            local ok, err = sock:connect("127.0.0.1", redis_port)
+            if not ok then
+                return nil, err
+            end
+
+            sock:send("PING\r\n")
+            local line = sock:receive()
+            sock:setkeepalive()
+            return line
+        end)
+
+        dns_threads[2] = ngx.thread.spawn(function()
+            local child = coroutine.create(function()
+                local sock = ngx.socket.tcp()
+                sock:settimeout(2000)
+                local ok, err = sock:connect("127.0.0.1", redis_port)
+                if not ok then
+                    return nil, err
+                end
+
+                sock:send("PING\r\n")
+                local line = sock:receive()
+                sock:setkeepalive()
+                return line
+            end)
+
+            local ok, res = coroutine.resume(child)
+            return res
+        end)
+
+        ngx.thread.wait(dns_threads[1], dns_threads[2])
+
+        for _, t in ipairs(dns_threads) do
+            ngx.thread.kill(t)
+        end
+
+        local probe_threads = {}
+        for i = 1, 10 do
+            probe_threads[i] = ngx.thread.spawn(function()
+                local sock = ngx.socket.tcp()
+                sock:settimeout(2000)
+                local ok, err = sock:connect("127.0.0.1", redis_port)
+                if not ok then
+                    return nil, err
+                end
+
+                sock:send("PING\r\n")
+                local line = sock:receive()
+                sock:setkeepalive()
+                return line
+            end)
+        end
+
+        local ok_count = 0
+        for i = 1, #probe_threads do
+            local ok, res = ngx.thread.wait(probe_threads[i])
+            if ok and res then
+                ok_count = ok_count + 1
+            end
+        end
+
+        ngx.say("ok_count=", ok_count)
+    }
+--- stream_response
+ok_count=10
+--- no_error_log
+[error]
+[alert]
