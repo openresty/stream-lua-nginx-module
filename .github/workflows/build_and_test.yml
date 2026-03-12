@@ -1,0 +1,150 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "nginx 1.29.4 + OpenSSL"
+            NGINX_VERSION: "1.29.4"
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    env:
+      JOBS: 3
+      NGX_BUILD_JOBS: 3
+      CC: gcc
+      LUAJIT_PREFIX: /opt/luajit21
+      LUAJIT_LIB: /opt/luajit21/lib
+      LUAJIT_INC: /opt/luajit21/include/luajit-2.1
+      LUA_INCLUDE_DIR: /opt/luajit21/include/luajit-2.1
+      PCRE2_PREFIX: /usr/local/openresty/pcre2
+      PCRE2_LIB: /usr/local/openresty/pcre2/lib
+      PCRE2_INC: /usr/local/openresty/pcre2/include
+      OPENSSL_PREFIX: /usr/local/openresty/openssl3
+      OPENSSL_LIB: /usr/local/openresty/openssl3/lib
+      OPENSSL_INC: /usr/local/openresty/openssl3/include
+      LIBDRIZZLE_LIB: /opt/drizzle/lib
+      TEST_NGINX_SLEEP: "0.006"
+      TEST_NGINX_SKIP_COSOCKET_LOG_TEST: "1"
+      MALLOC_PERTURB_: "9"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update -q
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            axel cpanminus \
+            libtest-base-perl libtext-diff-perl liburi-perl libwww-perl \
+            libtest-longstring-perl liblist-moreutils-perl \
+            libgd-dev wget \
+            lsb-release gnupg ca-certificates dnsutils
+
+      - name: Install Perl test modules
+        run: |
+          /usr/bin/env perl $(command -v cpanm) --sudo --notest \
+            Test::Nginx IPC::Run Test2::Util > build.log 2>&1 || (cat build.log && exit 1)
+
+      - name: Add OpenResty apt repository
+        run: |
+          wget -qO- https://openresty.org/package/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/openresty.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/openresty.gpg] https://openresty.org/package/ubuntu $(lsb_release -sc) main" \
+            | sudo tee /etc/apt/sources.list.d/openresty.list
+          sudo apt-get update -q
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            openresty-pcre2 openresty-openssl3 openresty-pcre2-dev openresty-openssl3-dev
+
+      - name: Source code style check
+        run: |
+          ! grep -n -P '(?<=.{80}).+' --color $(find src -name '*.c') $(find . -name '*.h') \
+            || (echo "ERROR: Found C source lines exceeding 80 columns." >&2; exit 1)
+          ! grep -n -P '\t+' --color $(find src -name '*.c') $(find . -name '*.h') \
+            || (echo "ERROR: Cannot use tabs." >&2; exit 1)
+
+      - name: Clone dependency repositories
+        run: |
+          # Sibling repos — build scripts reference them via $root/../<name>
+          git clone --depth=1 https://github.com/openresty/openresty.git             ../openresty
+          git clone --depth=1 https://github.com/openresty/no-pool-nginx.git         ../no-pool-nginx
+          git clone --depth=1 https://github.com/simpl/ngx_devel_kit.git             ../ndk-nginx-module
+          git clone --depth=1 https://github.com/openresty/lua-nginx-module.git      ../lua-nginx-module
+          git clone --depth=1 https://github.com/openresty/echo-nginx-module.git     ../echo-nginx-module
+          git clone --depth=1 https://github.com/openresty/memc-nginx-module.git     ../memc-nginx-module
+          git clone --depth=1 https://github.com/openresty/headers-more-nginx-module.git ../headers-more-nginx-module
+          git clone --depth=1 https://github.com/openresty/lua-resty-core.git        ../lua-resty-core
+          git clone --depth=1 https://github.com/openresty/lua-resty-lrucache.git    ../lua-resty-lrucache
+
+          # Local repos — used directly from the working directory
+          git clone --depth=1 https://github.com/openresty/test-nginx.git
+          git clone --depth=1 https://github.com/openresty/openresty-devel-utils.git
+          git clone --depth=1 https://github.com/openresty/mockeagain.git
+          git clone --depth=1 https://github.com/openresty/lua-cjson.git lua-cjson
+          git clone -b v2.1-agentzh --depth=1 https://github.com/openresty/luajit2.git luajit2
+
+      - name: Start memcached (native, UDP enabled)
+        run: |
+          sudo apt-get install -y --no-install-recommends memcached
+          sudo systemctl stop memcached
+          # Ubuntu's default /etc/memcached.conf has "-U 0" which disables UDP.
+          # Start manually with UDP on port 11211 so udp-socket tests pass.
+          memcached -d -l 127.0.0.1 -p 11211 -U 11211 -m 64
+          sudo ss -lntup | grep 11211
+
+      - name: Set up network rules
+        run: |
+          sudo iptables -I OUTPUT 1 -p udp --dport 10086 -j REJECT
+          sudo iptables -I OUTPUT   -p tcp --dst 127.0.0.2 --dport 12345 -j DROP
+          sudo iptables -I OUTPUT   -p udp --dst 127.0.0.2 --dport 12345 -j DROP
+          sudo ip addr add 10.254.254.1/24 dev lo
+          sudo ip addr add 10.254.254.2/24 dev lo
+          sudo ip route add prohibit 0.0.0.1/32
+          sudo sysctl -w kernel.pid_max=10000
+
+      - name: Build LuaJIT
+        run: |
+          cd luajit2
+          make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC \
+            XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT -msse4.2' \
+            > build.log 2>&1 || (cat build.log && exit 1)
+          sudo make install PREFIX=$LUAJIT_PREFIX > build.log 2>&1 || (cat build.log && exit 1)
+
+      - name: Build mockeagain
+        run: cd mockeagain && make CC=$CC -j$JOBS
+
+      - name: Build lua-cjson
+        run: cd lua-cjson && make -j$JOBS && sudo make install
+
+      - name: Build nginx
+        run: |
+          export LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
+          export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
+          export NGX_BUILD_CC=$CC
+          sh util/build.sh ${{ matrix.NGINX_VERSION }} > build.log 2>&1 || (cat build.log && exit 1)
+          nginx -V
+          ldd $(which nginx) | grep -E 'luajit|ssl|pcre'
+
+      - name: Run tests
+        run: |
+          export LD_LIBRARY_PATH=$LUAJIT_LIB:$PWD/mockeagain:$LD_LIBRARY_PATH
+          export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
+          export LD_PRELOAD=$PWD/mockeagain/mockeagain.so
+          export TEST_NGINX_RESOLVER=8.8.4.4
+          dig +short @$TEST_NGINX_RESOLVER openresty.org || exit 0
+          dig +short @$TEST_NGINX_RESOLVER agentzh.org || exit 0
+          /usr/bin/env perl $(command -v prove) -I. -Itest-nginx/lib -r t/
