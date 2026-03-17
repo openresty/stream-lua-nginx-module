@@ -28,7 +28,6 @@ static ngx_int_t ngx_stream_lua_proxy_ssl_cert_by_chunk(lua_State *L,
 ngx_int_t
 ngx_stream_lua_proxy_ssl_cert_set_callback(ngx_conf_t *cf)
 {
-    ngx_flag_t           proxy_ssl = 0;
     ngx_pool_cleanup_t  *cln;
     ngx_ssl_t           *ssl;
     void                *pscf;
@@ -49,23 +48,17 @@ ngx_stream_lua_proxy_ssl_cert_set_callback(ngx_conf_t *cf)
         pscf = ngx_stream_conf_get_module_srv_conf(cf, ngx_stream_proxy_module);
         if (pscf == ngx_ssl_get_server_conf(ssl->ctx)) {
             /* here we make sure that ssl is pscf->ssl */
-            proxy_ssl = 1;
-
-            break;
+            SSL_CTX_set_cert_cb(ssl->ctx,
+                                ngx_stream_lua_proxy_ssl_cert_handler, NULL);
+            return NGX_OK;
         }
     }
 
-    if (!proxy_ssl) {
-        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "proxy_ssl_certificate_by_lua* should be used with "
-                      "proxy_ssl directive");
+    ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                  "proxy_ssl_certificate_by_lua* should be used with "
+                  "proxy_ssl directive");
 
-        return NGX_ERROR;
-    }
-
-    SSL_CTX_set_cert_cb(ssl->ctx, ngx_stream_lua_proxy_ssl_cert_handler, NULL);
-
-    return NGX_OK;
+    return NGX_ERROR;
 }
 
 
