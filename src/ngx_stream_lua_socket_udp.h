@@ -44,7 +44,10 @@ typedef struct {
     struct sockaddr          *sockaddr;
     socklen_t                 socklen;
 #if (NGX_HAVE_TRANSPARENT_PROXY)
-    unsigned                   transparent:1;
+    unsigned                  transparent:1;
+#endif
+#if (NGX_HAVE_REUSEPORT)
+    unsigned                  reuseport:1;
 #endif
     ngx_str_t                 server;
     ngx_log_t                 log;

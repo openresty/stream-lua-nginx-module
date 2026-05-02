@@ -80,6 +80,10 @@ static ssize_t ngx_stream_lua_udp_sendmsg(ngx_connection_t *c,
 static ngx_int_t ngx_stream_lua_udp_connect_set_transparent(
      ngx_stream_lua_udp_connection_t *uc, ngx_socket_t s);
 #endif
+#if (NGX_HAVE_REUSEPORT)
+static ngx_int_t ngx_stream_lua_udp_connect_set_reuseport(
+     ngx_stream_lua_udp_connection_t *uc, ngx_socket_t s);
+#endif
 static int ngx_stream_lua_socket_udp_setoption(lua_State *L);
 
 
@@ -87,7 +91,8 @@ enum {
     SOCKET_CTX_INDEX = 1,
     SOCKET_TIMEOUT_INDEX = 2,
     SOCKET_BIND_INDEX = 3,   /* only in upstream cosocket */
-    SOCKET_IP_TRANSPARENT_INDEX = 4
+    SOCKET_IP_TRANSPARENT_INDEX = 4,
+    SOCKET_REUSEPORT_INDEX = 5,
 };
 
 
@@ -449,6 +454,18 @@ ngx_stream_lua_socket_udp_setpeername(lua_State *L)
         uc->transparent = 1;
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                        "stream lua set UDP upstream with IP_TRANSPARENT");
+    }
+
+    lua_pop(L, 1);
+#endif
+
+
+#if (NGX_HAVE_REUSEPORT)
+    lua_rawgeti(L, 1, SOCKET_REUSEPORT_INDEX);
+    if (lua_toboolean(L, -1)) {
+        uc->reuseport = 1;
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
+                       "stream lua set UDP upstream with REUSEPORT");
     }
 
     lua_pop(L, 1);
@@ -1640,7 +1657,29 @@ ngx_stream_lua_udp_connect_set_transparent(ngx_stream_lua_udp_connection_t *uc,
 
 #endif /* SO_BINDANY */
 
-return NGX_OK;
+    return NGX_OK;
+}
+#endif
+
+
+#if (NGX_HAVE_REUSEPORT)
+static ngx_int_t
+ngx_stream_lua_udp_connect_set_reuseport(ngx_stream_lua_udp_connection_t *uc,
+    ngx_socket_t s)
+{
+    int  value;
+
+    value = 1;
+
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEPORT,
+                   (const void *) &value, sizeof(int)) == -1)
+    {
+        ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno,
+                      "setsockopt(SO_REUSEPORT) failed");
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
 }
 #endif
 
@@ -1736,6 +1775,14 @@ ngx_stream_lua_udp_connect(ngx_stream_lua_socket_udp_upstream_t *u)
 #if (NGX_HAVE_TRANSPARENT_PROXY)
         if (uc->transparent) {
             if (ngx_stream_lua_udp_connect_set_transparent(uc, s) != NGX_OK) {
+                return NGX_ERROR;
+            }
+        }
+#endif
+
+#if (NGX_HAVE_REUSEPORT)
+        if (uc->reuseport) {
+            if (ngx_stream_lua_udp_connect_set_reuseport(uc, s) != NGX_OK) {
                 return NGX_ERROR;
             }
         }
@@ -1930,6 +1977,20 @@ ngx_stream_lua_socket_udp_setoption(lua_State *L)
         ip_transparent = lua_toboolean(L, 3);
         lua_rawseti(L, 1, SOCKET_IP_TRANSPARENT_INDEX);
         lua_pushboolean(L, ip_transparent);
+#endif
+        lua_pushnumber(L, 0);
+        return 1;
+    }
+
+    if (len == sizeof("reuseport") - 1
+        && memcmp(option, "reuseport", len) == 0)
+    {
+#if (NGX_HAVE_REUSEPORT)
+        int  reuseport;
+
+        reuseport = lua_toboolean(L, 3);
+        lua_rawseti(L, 1, SOCKET_REUSEPORT_INDEX);
+        lua_pushboolean(L, reuseport);
 #endif
         lua_pushnumber(L, 0);
         return 1;
