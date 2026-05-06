@@ -138,6 +138,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     char                             host[COSOCKET_HOST_LEN];
 #if (NGX_STREAM_SSL)
     ngx_str_t                        ssl_name;
+    X509_STORE                      *ssl_trusted_store;
 #endif
 
     unsigned                         ft_type:16;

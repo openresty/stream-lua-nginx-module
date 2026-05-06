@@ -2066,6 +2066,21 @@ new_ssl_name:
 #endif
 #endif
 
+    if (u->ssl_trusted_store) {
+        if (SSL_set1_verify_cert_store(c->ssl->connection,
+                                       u->ssl_trusted_store)
+            == 0)
+        {
+            ERR_clear_error();
+
+            lua_pushnil(L);
+            lua_pushliteral(L, "SSL_set1_verify_cert_store() failed");
+            return 2;
+        }
+
+        u->ssl_trusted_store = NULL;
+    }
+
     rc = ngx_ssl_handshake(c);
 
     dd("ngx_ssl_handshake returned %d", (int) rc);
@@ -2504,6 +2519,31 @@ ngx_stream_lua_server_ssl_handshake_retval_handler(ngx_stream_lua_request_t *r,
 
     return 1;
 }
+
+
+int
+ngx_stream_lua_ffi_socket_tcp_settrustedstore(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_tcp_upstream_t *u, void *store, char **errmsg)
+{
+    if (u == NULL
+        || u->peer.connection == NULL
+        || u->read_closed
+        || u->write_closed)
+    {
+        *errmsg = "closed";
+        return NGX_ERROR;
+    }
+
+    if (u->request != r) {
+        *errmsg = "bad request";
+        return NGX_ERROR;
+    }
+
+    u->ssl_trusted_store = store;
+
+    return NGX_OK;
+}
+
 
 #endif  /* NGX_STREAM_SSL */
 
