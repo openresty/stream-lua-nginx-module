@@ -32,9 +32,13 @@ __DATA__
             return
         end
 
-        ngx.say("method exists: ", type(sock.serversslhandshake) == "function")
+        local method_exists = type(sock.serversslhandshake) == "function"
 
+        -- Do not write to the downstream before the handshake, otherwise
+        -- the buffered output would trip the "socket busy writing" guard.
         local session, err = sock:serversslhandshake()
+
+        ngx.say("method exists: ", method_exists)
         ngx.say("error: ", err or "unexpected success")
     }
 
