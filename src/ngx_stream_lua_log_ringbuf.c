@@ -104,6 +104,9 @@ ngx_stream_lua_log_ringbuf_append(ngx_stream_lua_log_ringbuf_t *rb,
     head->time = tp->sec + tp->msec / 1000.0L;
 
     rb->tail += HEADER_LEN;
+    if ((size_t)(rb->data + rb->size - rb->tail) < (size_t) n) {
+        return;
+    }
     ngx_memcpy(rb->tail, buf, n);
     rb->tail += n;
     rb->count++;
