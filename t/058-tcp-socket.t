@@ -3559,9 +3559,12 @@ shutdown on a not connected socket: closed
         ssl_protocols TLSv1.3;
         content_by_lua_block {
             local sock = assert(ngx.req.socket(true))
-            local data
+            local data, err
             while true do
-                data = assert(sock:receive())
+                data, err = sock:receive()
+                if not data then
+                    break
+                end
                 assert(data == "hello")
             end
         }
