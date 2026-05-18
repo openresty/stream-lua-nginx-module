@@ -493,11 +493,11 @@ ngx_stream_lua_socket_tcp_log_error(ngx_log_t *log, u_char *buf, size_t len)
     len -= p - buf;
     if (u->peer.sockaddr != NULL) {
         int    addr_text_len;
-        u_char addr_text[NGX_UNIX_ADDRSTRLEN];
+        u_char addr_text[NGX_SOCKADDR_STRLEN];
 
         buf = p;
         addr_text_len = ngx_sock_ntop(u->peer.sockaddr, u->peer.socklen,
-                                      addr_text, NGX_UNIX_ADDRSTRLEN, 0);
+                                      addr_text, NGX_SOCKADDR_STRLEN, 0);
         p = ngx_snprintf(buf, len, "(%*s)", addr_text_len, addr_text);
         len -= p - buf;
     }
