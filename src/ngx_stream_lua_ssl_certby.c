@@ -1666,8 +1666,13 @@ ngx_stream_lua_ffi_ssl_verify_client(ngx_stream_lua_request_t *r,
                 }
             }
 
-            /* clean subject name list, and set it for send to client */
+            /* clean subject name list, and set it for send to client.
+             * ownership of name_chain is transferred to ssl_conn here, so
+             * clear our reference to avoid a double-free on the failed: path
+             * if a later step (trusted_chain loop or set0_verify_cert_store)
+             * fails. */
             SSL_set_client_CA_list(ssl_conn, name_chain);
+            name_chain = NULL;
         }
 
         if (trusted_chain != NULL) {

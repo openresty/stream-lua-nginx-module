@@ -201,10 +201,16 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
                 break;
 
             case LUA_TLIGHTUSERDATA:
-                *b->last++ = 'n';
-                *b->last++ = 'u';
-                *b->last++ = 'l';
-                *b->last++ = 'l';
+                /* must mirror the size pass above: only NULL lightuserdata
+                 * (ngx.null) reserves space for "null"; non-NULL reserves
+                 * nothing, so write nothing here to avoid overflowing the
+                 * buffer. */
+                if (lua_touserdata(L, i) == NULL) {
+                    *b->last++ = 'n';
+                    *b->last++ = 'u';
+                    *b->last++ = 'l';
+                    *b->last++ = 'l';
+                }
                 break;
 
             default:
@@ -426,10 +432,15 @@ ngx_stream_lua_copy_str_in_table(lua_State *L, int index, u_char *dst)
 
             case LUA_TLIGHTUSERDATA:
 
-                *dst++ = 'n';
-                *dst++ = 'u';
-                *dst++ = 'l';
-                *dst++ = 'l';
+                /* must mirror ngx_stream_lua_calc_strlen_in_table: only NULL
+                 * lightuserdata (ngx.null) reserves space for "null"; non-NULL
+                 * reserves nothing, so write nothing here. */
+                if (lua_touserdata(L, -1) == NULL) {
+                    *dst++ = 'n';
+                    *dst++ = 'u';
+                    *dst++ = 'l';
+                    *dst++ = 'l';
+                }
                 break;
 
             default:
