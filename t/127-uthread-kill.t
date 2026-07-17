@@ -7,7 +7,7 @@ our $StapScript = $t::StapThread::StapScript;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 5 + 1) - 2;
+plan tests => repeat_each() * (blocks() * 5 - 1) - 2;
 
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= '11211';
@@ -393,4 +393,80 @@ stream lua tcp socket abort resolver
 ok_count=10
 --- no_error_log
 [error]
+[alert]
+
+
+
+=== TEST 8: kill uthread with child coroutine pending cosocket read after GC
+--- stream_config
+    server {
+        listen 127.0.0.1:$TEST_NGINX_RAND_PORT_1;
+
+        content_by_lua_block {
+            local body = string.rep("x", 8192)
+
+            ngx.print(body:sub(1, 64))
+            ngx.flush(true)
+            ngx.sleep(0.2)
+            ngx.print(body:sub(65))
+        }
+    }
+--- stream_server_config
+    lua_socket_log_errors off;
+
+    content_by_lua_block {
+        local port = $TEST_NGINX_RAND_PORT_1
+        local pinned_sockets = {}
+        local slow_read_pending = false
+
+        local fast = ngx.thread.spawn(function()
+            for _ = 1, 1000 do
+                if slow_read_pending then
+                    break
+                end
+                ngx.sleep(0.001)
+            end
+
+            return "ok"
+        end)
+
+        local slow = ngx.thread.spawn(function()
+            local child = coroutine.create(function()
+                local sock = ngx.socket.tcp()
+                pinned_sockets[#pinned_sockets + 1] = sock
+
+                sock:settimeout(10000)
+                local ok, err = sock:connect("127.0.0.1", port)
+                if not ok then
+                    return nil, err
+                end
+
+                slow_read_pending = true
+                return sock:receive(8192)
+            end)
+
+            local ok, body, err = coroutine.resume(child)
+            if not ok then
+                return nil, body
+            end
+
+            return body, err
+        end)
+
+        ngx.thread.wait(fast, slow)
+        ngx.thread.kill(fast)
+        ngx.thread.kill(slow)
+
+        fast = nil
+        slow = nil
+        collectgarbage("collect")
+        collectgarbage("collect")
+
+        ngx.sleep(0.3)
+
+        ngx.say("survived pinned=", #pinned_sockets)
+    }
+--- stream_response
+survived pinned=1
+--- no_error_log
 [alert]
