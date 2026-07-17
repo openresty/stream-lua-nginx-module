@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: "nginx 1.31.1 + OpenSSL"
-            NGINX_VERSION: "1.31.1"
+          - name: "nginx 1.31.3 + OpenSSL"
+            NGINX_VERSION: "1.31.3"
 
     services:
       redis:
