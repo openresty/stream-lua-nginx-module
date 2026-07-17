@@ -82,7 +82,7 @@ jobs:
           # Sibling repos — build scripts reference them via $root/../<name>
           git clone --depth=1 https://github.com/openresty/openresty.git             ../openresty
           git clone --depth=1 https://github.com/openresty/no-pool-nginx.git         ../no-pool-nginx
-          git clone --depth=1 https://github.com/simpl/ngx_devel_kit.git             ../ndk-nginx-module
+          git clone --depth=1 https://github.com/openresty/ngx_devel_kit.git             ../ndk-nginx-module
           git clone --depth=1 https://github.com/openresty/lua-nginx-module.git      ../lua-nginx-module
           git clone --depth=1 https://github.com/openresty/echo-nginx-module.git     ../echo-nginx-module
           git clone --depth=1 https://github.com/openresty/memc-nginx-module.git     ../memc-nginx-module
