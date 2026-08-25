@@ -1,12 +1,4 @@
 
-/*
- * !!! DO NOT EDIT DIRECTLY !!!
- * This file was automatically generated from the following template:
- *
- * src/subsys/ngx_subsys_lua_log_ringbuf.c.tt2
- */
-
-
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
