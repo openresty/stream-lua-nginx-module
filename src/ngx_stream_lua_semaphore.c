@@ -534,6 +534,7 @@ ngx_stream_lua_sema_timeout_handler(ngx_event_t *ev)
     sem->wait_count--;
 
     r = ngx_stream_lua_get_req(wait_co_ctx->co);
+    ngx_stream_lua_assert(r != NULL);
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
     ngx_stream_lua_assert(ctx != NULL);
