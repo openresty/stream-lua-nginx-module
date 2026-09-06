@@ -139,6 +139,8 @@ behavior.
 * [init_by_lua_file](https://github.com/openresty/lua-nginx-module#init_by_lua_file)
 * [init_worker_by_lua_block](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_block)
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
+* [lua_init_worker_timeout](https://github.com/openresty/lua-nginx-module#lua_init_worker_timeout)
+* [lua_init_worker_abort_on_error](https://github.com/openresty/lua-nginx-module#lua_init_worker_abort_on_error)
 * [preread_by_lua_block](#preread_by_lua_block)
 * [preread_by_lua_file](#preread_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
@@ -178,6 +180,19 @@ behavior.
 * [lua_add_variable](#lua_add_variable)
 * [lua_capture_error_log](https://github.com/openresty/lua-nginx-module#lua_capture_error_log)
 * [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)
+
+Cosockets (and other yieldable APIs) are supported in `init_worker_by_lua*`.
+When a cosocket operation yields (for example, during a `connect` or
+`receive` call), the module runs a lightweight event pump that drives the
+Nginx event loop until the operation completes. See
+[lua_init_worker_timeout](https://github.com/openresty/lua-nginx-module#lua_init_worker_timeout)
+and
+[lua_init_worker_abort_on_error](https://github.com/openresty/lua-nginx-module#lua_init_worker_abort_on_error)
+in ngx_http_lua for the directives that bound how long the init code may
+block worker startup and how Lua runtime errors are handled.
+
+Note that `ngx.timer.at` callbacks registered during `init_worker_by_lua*`
+are deferred: they will not run until the init code finishes.
 
 The [send_timeout](https://nginx.org/r/send_timeout) directive in the Nginx
 "http" subsystem is missing in the "stream" subsystem. As such,

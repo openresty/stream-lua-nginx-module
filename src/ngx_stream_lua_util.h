@@ -72,7 +72,7 @@ extern char ngx_stream_lua_headers_metatable_key;
     (str)->len = sizeof(text) - 1; (str)->data = (u_char *) text
 #endif
 
-#define NGX_STREAM_LUA_CONTEXT_YIELDABLE (NGX_STREAM_LUA_CONTEXT_PREREAD     \
+#define NGX_STREAM_LUA_CONTEXT_YIELDABLE (NGX_STREAM_LUA_CONTEXT_INIT_WORKER     \
                                 | NGX_STREAM_LUA_CONTEXT_CONTENT             \
                                 | NGX_STREAM_LUA_CONTEXT_TIMER               \
                                 | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO    \
