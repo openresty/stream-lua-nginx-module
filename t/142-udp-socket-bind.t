@@ -272,3 +272,40 @@ server {
 
 --- no_error_log
 [error]
+
+
+
+=== TEST 6: upstream sockets bind 0.0.0.0 (wildcard, regression for INADDR_NONE bug)
+--- stream_config
+server {
+   listen 127.0.1.2:2986 udp;
+   content_by_lua_block {
+     ngx.log(ngx.INFO, "udp bind address: " .. ngx.var.remote_addr)
+   }
+}
+--- stream_server_config
+  content_by_lua_block {
+      local sock = ngx.socket.udp()
+
+      local ok, err = sock:bind("0.0.0.0")
+      if not ok then
+          ngx.log(ngx.ERR, "bind failed: ", err)
+          return
+      end
+
+      local ok, err = sock:setpeername("127.0.1.2", 2986)
+      if not ok then
+          ngx.log(ngx.ERR, "setpeername failed: ", err)
+          return
+      end
+
+      local ok, err = sock:send("trigger")
+      if not ok then
+          ngx.log(ngx.ERR, err)
+      end
+  }
+
+--- no_error_log
+[error]
+--- error_log
+udp bind address: 127.0.0.1

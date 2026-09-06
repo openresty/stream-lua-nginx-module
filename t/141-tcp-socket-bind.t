@@ -224,3 +224,42 @@ server {
 127.0.0.1
 --- no_error_log
 [error]
+
+
+
+=== TEST 6: upstream sockets bind 0.0.0.0 (wildcard, regression for INADDR_NONE bug)
+--- stream_config
+server {
+   listen 127.0.1.2:2986;
+   content_by_lua_block {
+     ngx.say(ngx.var.remote_addr)
+   }
+}
+--- stream_server_config
+  content_by_lua_block {
+      local sock = ngx.socket.tcp()
+
+      local ok, err = sock:bind("0.0.0.0")
+      if not ok then
+          ngx.log(ngx.ERR, "bind failed: ", err)
+          return
+      end
+
+      local ok, err = sock:connect("127.0.1.2", 2986)
+      if not ok then
+          ngx.log(ngx.ERR, "connect failed: ", err)
+          return
+      end
+
+      local line, err, part = sock:receive()
+      if line then
+          ngx.say(line)
+      else
+          ngx.log(ngx.ERR, err)
+      end
+  }
+
+--- stream_response
+127.0.0.1
+--- no_error_log
+[error]
