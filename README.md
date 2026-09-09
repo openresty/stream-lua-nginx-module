@@ -194,6 +194,16 @@ block worker startup and how Lua runtime errors are handled.
 Note that `ngx.timer.at` callbacks registered during `init_worker_by_lua*`
 are deferred: they will not run until the init code finishes.
 
+Note that the error log prefix for a runtime error in `init_worker_by_lua*`
+has changed: it is now `lua entry thread aborted:` (followed by a full Lua
+traceback), whereas before this release it was `init_worker_by_lua error:`.
+Alert rules matching the old string must be updated.
+
+When `lua_init_worker_timeout` expires, the running chunk coroutine is killed
+without being unwound. An `ngx.timer.at` callback that captures locals of the
+`init_worker_by_lua*` chunk will read `nil` for those upvalues when it runs
+later; use `ngx.shared`, `_G`, or the Lua registry instead.
+
 The [send_timeout](https://nginx.org/r/send_timeout) directive in the Nginx
 "http" subsystem is missing in the "stream" subsystem. As such,
 ngx_stream_lua_module uses the `lua_socket_send_timeout` directive for this

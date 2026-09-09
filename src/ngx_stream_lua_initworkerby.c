@@ -95,6 +95,11 @@ ngx_stream_lua_init_worker_toggle_accept(ngx_cycle_t *cycle, ngx_uint_t arm)
 
     for (i = 0; i < cycle->listening.nelts; i++) {
 
+        /* disarm every listener, not just stream ones: any pending
+         * connection on an armed level-triggered listen fd would make the
+         * pump spin at 100% CPU (see t/176), and re-arming is faithful for
+         * all subsystems since nginx arms all listeners via the same
+         * subsystem-independent path in ngx_event.c */
 #if (NGX_HAVE_REUSEPORT)
         if (ls[i].reuseport && ls[i].worker != ngx_worker) {
             /* other workers' sockets: ls[i].connection is NULL here */
