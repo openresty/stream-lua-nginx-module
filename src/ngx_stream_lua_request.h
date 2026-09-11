@@ -32,6 +32,8 @@ struct ngx_stream_lua_request_s {
 
     ngx_stream_lua_event_handler_pt       read_event_handler;
     ngx_stream_lua_event_handler_pt       write_event_handler;
+
+    ngx_int_t                             finalize_rc;
 };
 
 

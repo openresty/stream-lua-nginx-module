@@ -208,10 +208,6 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
         rc = NGX_STREAM_INTERNAL_SERVER_ERROR;
     }
 
-    if (rc == NGX_DECLINED || rc == NGX_STREAM_INTERNAL_SERVER_ERROR) {
-        goto done;
-    }
-
     if (rc == NGX_DONE) {
         return;
     }
@@ -220,7 +216,11 @@ ngx_stream_lua_finalize_real_request(ngx_stream_lua_request_t *r, ngx_int_t rc)
         rc = NGX_STREAM_OK;
     }
 
-    if (r->connection->buffered) {
+    if (r->connection->buffered
+        && r->write_event_handler != ngx_stream_lua_writer)
+    {
+        r->finalize_rc = rc;
+
         if (ngx_stream_lua_set_write_handler(r) != NGX_OK) {
             goto done;
         }
@@ -304,7 +304,7 @@ ngx_stream_lua_writer(ngx_stream_lua_request_t *r)
 
     r->write_event_handler = ngx_stream_lua_request_empty_handler;
 
-    ngx_stream_lua_finalize_real_request(r, rc);
+    ngx_stream_lua_finalize_real_request(r, r->finalize_rc);
 }
 
 
