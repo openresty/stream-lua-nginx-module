@@ -362,6 +362,19 @@ ngx_stream_lua_ngx_timer_helper(lua_State *L, int every)
 
     lmcf->pending_timers++;
 
+    if (ctx->context == NGX_STREAM_LUA_CONTEXT_INIT_WORKER) {
+        /*
+         * Freeze: user timers registered during init_worker are deferred
+         * until the runner flushes them at exit. ev->timer.key stores the
+         * absolute expiry (now + delay), matching ngx_add_timer's convention.
+         */
+        ev->timer.key = ngx_current_msec + delay;
+        ngx_queue_insert_tail(&lmcf->deferred_timers, &ev->queue);
+
+        lua_pushinteger(L, 1);
+        return 1;
+    }
+
     ngx_add_timer(ev, delay);
 
     ngx_log_debug2(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,

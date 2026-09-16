@@ -139,6 +139,8 @@ behavior.
 * [init_by_lua_file](https://github.com/openresty/lua-nginx-module#init_by_lua_file)
 * [init_worker_by_lua_block](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_block)
 * [init_worker_by_lua_file](https://github.com/openresty/lua-nginx-module#init_worker_by_lua_file)
+* [lua_init_worker_timeout](https://github.com/openresty/lua-nginx-module#lua_init_worker_timeout)
+* [lua_init_worker_abort_on_error](https://github.com/openresty/lua-nginx-module#lua_init_worker_abort_on_error)
 * [preread_by_lua_block](#preread_by_lua_block)
 * [preread_by_lua_file](#preread_by_lua_file)
 * [content_by_lua_block](https://github.com/openresty/lua-nginx-module#content_by_lua_block)
@@ -178,6 +180,29 @@ behavior.
 * [lua_add_variable](#lua_add_variable)
 * [lua_capture_error_log](https://github.com/openresty/lua-nginx-module#lua_capture_error_log)
 * [preread_by_lua_no_postpone](#preread_by_lua_no_postpone)
+
+Cosockets (and other yieldable APIs) are supported in `init_worker_by_lua*`.
+When a cosocket operation yields (for example, during a `connect` or
+`receive` call), the module runs a lightweight event pump that drives the
+Nginx event loop until the operation completes. See
+[lua_init_worker_timeout](https://github.com/openresty/lua-nginx-module#lua_init_worker_timeout)
+and
+[lua_init_worker_abort_on_error](https://github.com/openresty/lua-nginx-module#lua_init_worker_abort_on_error)
+in ngx_http_lua for the directives that bound how long the init code may
+block worker startup and how Lua runtime errors are handled.
+
+Note that `ngx.timer.at` callbacks registered during `init_worker_by_lua*`
+are deferred: they will not run until the init code finishes.
+
+Note that the error log prefix for a runtime error in `init_worker_by_lua*`
+has changed: it is now `lua entry thread aborted:` (followed by a full Lua
+traceback), whereas before this release it was `init_worker_by_lua error:`.
+Alert rules matching the old string must be updated.
+
+When `lua_init_worker_timeout` expires, the running chunk coroutine is killed
+without being unwound. An `ngx.timer.at` callback that captures locals of the
+`init_worker_by_lua*` chunk will read `nil` for those upvalues when it runs
+later; use `ngx.shared`, `_G`, or the Lua registry instead.
 
 The [send_timeout](https://nginx.org/r/send_timeout) directive in the Nginx
 "http" subsystem is missing in the "stream" subsystem. As such,
