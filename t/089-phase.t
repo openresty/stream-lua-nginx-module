@@ -28,12 +28,13 @@ init
 
 
 === TEST 2: get_phase in access_by_lua
-TODO
---- SKIP
 --- stream_server_config
     access_by_lua_block {
         ngx.say(ngx.get_phase())
         ngx.exit(200)
+    }
+    content_by_lua_block {
+        return;
     }
 --- stream_response
 access
