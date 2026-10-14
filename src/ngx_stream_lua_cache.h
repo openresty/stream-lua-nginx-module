@@ -1,13 +1,5 @@
 
 /*
- * !!! DO NOT EDIT DIRECTLY !!!
- * This file was automatically generated from the following template:
- *
- * src/subsys/ngx_subsys_lua_cache.h.tt2
- */
-
-
-/*
  * Copyright (C) Xiaozhe Wang (chaoslawful)
  * Copyright (C) Yichun Zhang (agentzh)
  */
