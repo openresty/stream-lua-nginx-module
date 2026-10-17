@@ -30,6 +30,7 @@
 #include "ngx_stream_lua_semaphore.h"
 #include "ngx_stream_lua_ssl_client_helloby.h"
 #include "ngx_stream_lua_ssl_certby.h"
+#include "ngx_stream_lua_ssl_verifyby.h"
 
 #ifdef HAVE_LUA_PROXY_SSL
 #include "ngx_stream_lua_proxy_ssl_certby.h"
@@ -432,6 +433,27 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       NGX_STREAM_SRV_CONF_OFFSET,
       0,
       (void *) ngx_stream_lua_ssl_cert_handler_file },
+
+    { ngx_string("ssl_verify_by_lua_block"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_stream_lua_ssl_verify_by_lua_block,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_ssl_verify_handler_inline },
+
+    { ngx_string("ssl_verify_by_lua_file"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_stream_lua_ssl_verify_by_lua,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      0,
+      (void *) ngx_stream_lua_ssl_verify_handler_file },
+
+    { ngx_string("lua_skip_openssl_default_verify"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, srv.skip_openssl_default_verify),
+      NULL },
 
 #if HAVE_LUA_PROXY_SSL
     /* same context as proxy_pass directive */
@@ -876,6 +898,10 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
      *      lscf->srv.ssl_client_hello_src = { 0, NULL };
      *      lscf->srv.ssl_client_hello_src_key = NULL;
      *
+     *      lscf->srv.ssl_verify_handler = NULL;
+     *      lscf->srv.ssl_verify_src = { 0, NULL };
+     *      lscf->srv.ssl_verify_src_key = NULL;
+     *
      *      lscf->ups.proxy_ssl_cert_handler = NULL;
      *      lscf->ups.proxy_ssl_cert_src = { 0, NULL };
      *      lscf->ups.proxy_ssl_cert_src_key = NULL;
@@ -921,11 +947,17 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 
     conf->log_socket_errors = NGX_CONF_UNSET;
 
-#ifdef HAVE_LUA_PROXY_SSL
+#if (NGX_STREAM_SSL)
+
     conf->ssl_verify_depth = NGX_CONF_UNSET_UINT;
     conf->ssl_certificates = NGX_CONF_UNSET_PTR;
     conf->ssl_certificate_keys = NGX_CONF_UNSET_PTR;
+    conf->srv.skip_openssl_default_verify = NGX_CONF_UNSET;
+
+#ifdef HAVE_LUA_PROXY_SSL
     conf->ups.upstream_skip_openssl_default_verify = NGX_CONF_UNSET;
+#endif
+
 #endif
 
     return conf;
@@ -1030,8 +1062,57 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
 #endif
         }
+
     }
 
+    if (conf->srv.ssl_verify_src.len == 0) {
+        conf->srv.ssl_verify_src = prev->srv.ssl_verify_src;
+        conf->srv.ssl_verify_src_key = prev->srv.ssl_verify_src_key;
+        conf->srv.ssl_verify_handler = prev->srv.ssl_verify_handler;
+    }
+
+    if (conf->srv.ssl_verify_src.len) {
+        if (sscf == NULL || sscf->ssl.ctx == NULL) {
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                          "no ssl configured for the server");
+
+            return NGX_CONF_ERROR;
+        }
+
+        if (sscf->verify == 0) {
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                    "ssl_verify_client can't be off "
+                    "when using ssl_verify_by_lua*");
+
+            return NGX_CONF_ERROR;
+        }
+
+#ifdef LIBRESSL_VERSION_NUMBER
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      "LibreSSL does not support by ssl_verify_by_lua*");
+        return NGX_CONF_ERROR;
+
+#else
+
+#if defined(SSL_ERROR_WANT_RETRY_VERIFY) &&                                  \
+        OPENSSL_VERSION_NUMBER >= 0x40100000L
+
+        SSL_CTX_set_cert_verify_callback(sscf->ssl.ctx,
+                                         ngx_stream_lua_ssl_verify_handler,
+                                         NULL);
+
+#else
+
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      "OpenSSL too old to support ssl_verify_by_lua*");
+        return NGX_CONF_ERROR;
+
+#endif
+#endif
+    }
+
+    ngx_conf_merge_value(conf->srv.skip_openssl_default_verify,
+                         prev->srv.skip_openssl_default_verify, 0);
 
 #endif  /* NGX_STREAM_SSL */
 
