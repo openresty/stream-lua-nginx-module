@@ -120,7 +120,8 @@ ngx_stream_lua_ffi_exit(ngx_stream_lua_request_t *r, int status, u_char *err,
         | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_CERT
         | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
 #endif
-        | NGX_STREAM_LUA_CONTEXT_PREREAD,
+        | NGX_STREAM_LUA_CONTEXT_PREREAD
+        | NGX_STREAM_LUA_CONTEXT_ACCESS,
         err, errlen) != NGX_OK)
     {
         return NGX_ERROR;

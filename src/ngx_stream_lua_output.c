@@ -76,7 +76,8 @@ ngx_stream_lua_ngx_echo(lua_State *L, unsigned newline)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS);
 
 
     if (ctx->eof) {
@@ -496,7 +497,8 @@ ngx_stream_lua_ngx_flush(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS);
 
 
     coctx = ctx->cur_co_ctx;
@@ -619,7 +621,8 @@ ngx_stream_lua_ngx_eof(lua_State *L)
     }
 
     ngx_stream_lua_check_context(L, ctx, NGX_STREAM_LUA_CONTEXT_CONTENT
-                                 | NGX_STREAM_LUA_CONTEXT_PREREAD);
+                                 | NGX_STREAM_LUA_CONTEXT_PREREAD
+                                 | NGX_STREAM_LUA_CONTEXT_ACCESS);
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "lua send eof");
