@@ -52,6 +52,7 @@ typedef struct {
     unsigned                 entered_client_hello_handler:1;
     unsigned                 entered_cert_handler:1;
     unsigned                 entered_sess_fetch_handler:1;
+    unsigned                 entered_ssl_verify_handler:1;
 #ifdef HAVE_LUA_PROXY_SSL
     unsigned                 entered_proxy_ssl_cert_handler:1;
     unsigned                 entered_proxy_ssl_verify_handler:1;
