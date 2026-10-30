@@ -2492,3 +2492,53 @@ qr/\Qbad argument #2 to 'setkeepalive' (number expected, got string)\E/
 --- no_error_log 
 [crit]
 --- timeout: 4
+
+
+
+=== TEST 55: conn queuing: slots freed in the same cycle each resume a queued connect
+--- stream_server_config
+    content_by_lua_block {
+        local port = $TEST_NGINX_MEMCACHED_PORT
+        local opts = {pool = "same_cycle", pool_size = 2, backlog = 2}
+
+        local sock1 = assert(ngx.socket.connect("127.0.0.1", port, opts))
+        local sock2 = assert(ngx.socket.connect("127.0.0.1", port, opts))
+
+        local function waiter(name)
+            return ngx.thread.spawn(function()
+                local sock = ngx.socket.tcp()
+                sock:settimeouts(500, 500, 500)
+
+                local ok, err = sock:connect("127.0.0.1", port, opts)
+                if not ok then
+                    return name .. ": " .. err
+                end
+
+                -- keep the slot past the other waiter's connect timeout,
+                -- so only a resumption can let it connect
+                ngx.sleep(1)
+                sock:close()
+                return name .. ": connected"
+            end)
+        end
+
+        local w1 = waiter("w1")
+        local w2 = waiter("w2")
+
+        -- release both connections in the same cycle
+        assert(sock1:setkeepalive())
+        assert(sock2:setkeepalive())
+
+        local _, res1 = ngx.thread.wait(w1)
+        local _, res2 = ngx.thread.wait(w2)
+        ngx.say(res1)
+        ngx.say(res2)
+    }
+--- stream_response
+w1: connected
+w2: connected
+--- error_log
+stream lua tcp socket queue connect operation for connection pool "same_cycle"
+--- no_error_log
+[error]
+--- timeout: 4

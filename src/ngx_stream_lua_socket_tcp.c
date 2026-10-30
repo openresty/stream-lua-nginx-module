@@ -4946,10 +4946,30 @@ ngx_stream_lua_socket_tcp_resume_conn_op(
         return;
     }
 
-    q = ngx_queue_head(&spool->wait_connect_op);
-    conn_op_ctx = ngx_queue_data(q,
-                                 ngx_stream_lua_socket_tcp_conn_op_ctx_t,
-                                 queue);
+    /* each freed slot must resume its own queued connect operation.
+     * A resumed operation stays in wait_connect_op until its posted event
+     * runs, so when several slots are freed in the same cycle, picking the
+     * head every time re-posts the same event, which ngx_post_event()
+     * ignores, and the extra slots are lost while the queue still counts
+     * them as busy. Resume the first operation not posted yet instead.
+     */
+    for (q = ngx_queue_head(&spool->wait_connect_op);
+         q != ngx_queue_sentinel(&spool->wait_connect_op);
+         q = ngx_queue_next(q))
+    {
+        conn_op_ctx = ngx_queue_data(q,
+                                     ngx_stream_lua_socket_tcp_conn_op_ctx_t,
+                                     queue);
+
+        if (!conn_op_ctx->event.posted) {
+            break;
+        }
+    }
+
+    if (q == ngx_queue_sentinel(&spool->wait_connect_op)) {
+        return;
+    }
+
     ngx_log_debug4(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua tcp socket post connect operation "
                    "resumption u: %p, ctx: %p for connection pool \"%s\", "
@@ -4988,7 +5008,6 @@ ngx_stream_lua_socket_tcp_conn_op_ctx_cleanup(void *data)
 static void
 ngx_stream_lua_socket_tcp_conn_op_resume_handler(ngx_event_t *ev)
 {
-    ngx_queue_t                                     *q;
     ngx_stream_lua_request_t                        *r;
     ngx_stream_lua_cleanup_t                        *cln;
     ngx_stream_lua_ctx_t                            *ctx;
@@ -5021,8 +5040,9 @@ ngx_stream_lua_socket_tcp_conn_op_resume_handler(ngx_event_t *ev)
         return;
     }
 
-    q = ngx_queue_head(&spool->wait_connect_op);
-    ngx_queue_remove(q);
+    /* several operations can be posted at once, so remove this one
+     * rather than the queue head */
+    ngx_queue_remove(&conn_op_ctx->queue);
 
     coctx = u->write_co_ctx;
     coctx->cleanup = NULL;
@@ -6550,6 +6570,12 @@ ngx_stream_lua_socket_shutdown_pool_helper(
 
         if (conn_op_ctx->event.timer_set) {
             ngx_del_timer(&conn_op_ctx->event);
+        }
+
+        /* more than one queued operation can be posted for
+         * resumption now, do not free one with its event still posted */
+        if (conn_op_ctx->event.posted) {
+            ngx_delete_posted_event(&conn_op_ctx->event);
         }
 
         ngx_stream_lua_socket_tcp_free_conn_op_ctx(conn_op_ctx);
