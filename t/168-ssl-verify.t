@@ -899,7 +899,7 @@ ssl verify: simple test done
 
 
 
-=== TEST 21: lua_skip_openssl_default_verify default off
+=== TEST 21: lua_downstream_skip_openssl_default_verify default off
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -935,7 +935,7 @@ ssl_verify_by_lua: openssl default verify
 
 
 
-=== TEST 22: lua_skip_openssl_default_verify on
+=== TEST 22: lua_downstream_skip_openssl_default_verify on
 --- stream_config
     server {
         listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
@@ -946,7 +946,7 @@ ssl_verify_by_lua: openssl default verify
         ssl_certificate_key    ../../cert/mtls_server.key;
         ssl_client_certificate ../../cert/mtls_ca.crt;
 
-        lua_skip_openssl_default_verify on;
+        lua_downstream_skip_openssl_default_verify on;
 
         ssl_verify_by_lua_block {
             ngx.log(ngx.INFO, "ssl verify by lua is running!")
@@ -964,7 +964,7 @@ ssl_verify_by_lua: openssl default verify
     proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
     proxy_ssl_session_reuse       off;
 
-    lua_skip_openssl_default_verify on;
+    lua_downstream_skip_openssl_default_verify on;
 --- stream_response
 it works!
 --- error_log

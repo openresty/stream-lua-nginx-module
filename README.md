@@ -158,7 +158,7 @@ behavior.
 * [proxy_ssl_verify_by_lua_block](https://github.com/openresty/lua-nginx-module#proxy_ssl_verify_by_lua_block)
 * [proxy_ssl_verify_by_lua_file](https://github.com/openresty/lua-nginx-module#proxy_ssl_verify_by_lua_file)
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
-* [lua_skip_openssl_default_verify](https://github.com/openresty/lua-nginx-module#lua_skip_openssl_default_verify)
+* [lua_downstream_skip_openssl_default_verify](https://github.com/openresty/lua-nginx-module#lua_downstream_skip_openssl_default_verify)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
 * [lua_socket_pool_size](https://github.com/openresty/lua-nginx-module#lua_socket_pool_size)
