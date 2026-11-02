@@ -921,10 +921,13 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
 
     conf->log_socket_errors = NGX_CONF_UNSET;
 
-#ifdef HAVE_LUA_PROXY_SSL
+#if (NGX_STREAM_SSL)
     conf->ssl_verify_depth = NGX_CONF_UNSET_UINT;
     conf->ssl_certificates = NGX_CONF_UNSET_PTR;
     conf->ssl_certificate_keys = NGX_CONF_UNSET_PTR;
+#endif
+
+#ifdef HAVE_LUA_PROXY_SSL
     conf->ups.upstream_skip_openssl_default_verify = NGX_CONF_UNSET;
 #endif
 
