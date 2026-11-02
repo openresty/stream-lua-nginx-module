@@ -3115,8 +3115,21 @@ handshake rejected while SSL handshaking
             end
 
             local key_log = f:read("*a")
-            ngx.say(key_log)
             f:close()
+
+            -- the log is appended to on each request, so keep the secrets
+            -- of the last handshake only, identified by its client random;
+            -- SSL libraries log them in different orders
+            local random = key_log:match("(%x+) %x+\n$")
+            local lines = {}
+            for line in key_log:gmatch("[^\n]+") do
+                if line:find(" " .. random .. " ", 1, true) then
+                    lines[#lines + 1] = line
+                end
+            end
+
+            table.sort(lines)
+            ngx.say(table.concat(lines, "\n"))
         end  -- do
         collectgarbage()
     }
@@ -3127,11 +3140,11 @@ ssl handshake: userdata
 sent stream request: 53 bytes.
 received: HTTP/1.1 200 OK
 close: 1 nil
-SERVER_HANDSHAKE_TRAFFIC_SECRET [0-9a-z\s]+
-EXPORTER_SECRET [0-9a-z\s]+
-SERVER_TRAFFIC_SECRET_0 [0-9a-z\s]+
 CLIENT_HANDSHAKE_TRAFFIC_SECRET [0-9a-z\s]+
 CLIENT_TRAFFIC_SECRET_0 [0-9a-z\s]+
+EXPORTER_SECRET [0-9a-z\s]+
+SERVER_HANDSHAKE_TRAFFIC_SECRET [0-9a-z\s]+
+SERVER_TRAFFIC_SECRET_0 [0-9a-z\s]+
 
 --- log_level: debug
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
