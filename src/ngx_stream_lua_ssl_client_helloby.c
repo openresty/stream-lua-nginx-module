@@ -743,6 +743,9 @@ ngx_stream_lua_ffi_ssl_set_ciphers(ngx_stream_lua_request_t *r,
 
     if (prefer_server_ciphers) {
         SSL_set_options(ssl_conn, SSL_OP_CIPHER_SERVER_PREFERENCE);
+
+    } else {
+        SSL_clear_options(ssl_conn, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
 
     return NGX_OK;
@@ -779,6 +782,9 @@ ngx_stream_lua_ffi_ssl_set_ciphersuites(ngx_stream_lua_request_t *r,
 
     if (prefer_server_ciphers) {
         SSL_set_options(ssl_conn, SSL_OP_CIPHER_SERVER_PREFERENCE);
+
+    } else {
+        SSL_clear_options(ssl_conn, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
 
     return NGX_OK;
