@@ -87,6 +87,8 @@ typedef struct {
 
     ngx_int_t                          backlog;
 
+    ngx_queue_t                       *next_connect_op;
+
     u_char                             key[1];
 
 } ngx_stream_lua_socket_pool_t;

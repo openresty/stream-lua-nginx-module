@@ -607,6 +607,7 @@ ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
 
     ngx_queue_init(&sp->cache_connect_op);
     ngx_queue_init(&sp->wait_connect_op);
+    sp->next_connect_op = ngx_queue_sentinel(&sp->wait_connect_op);
     ngx_queue_init(&sp->cache);
     ngx_queue_init(&sp->free);
 
@@ -748,6 +749,12 @@ ngx_stream_lua_socket_tcp_connect_helper(lua_State *L,
 
                 ngx_queue_insert_tail(&spool->wait_connect_op,
                                       &conn_op_ctx->queue);
+
+                if (spool->next_connect_op
+                    == ngx_queue_sentinel(&spool->wait_connect_op))
+                {
+                    spool->next_connect_op = &conn_op_ctx->queue;
+                }
 
                 ngx_log_debug3(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                                "stream lua tcp socket queued connect "
@@ -4854,9 +4861,14 @@ ngx_stream_lua_socket_tcp_conn_op_timeout_handler(ngx_event_t *ev)
     ngx_stream_lua_socket_tcp_conn_op_ctx_t         *conn_op_ctx;
 
     conn_op_ctx = ev->data;
+    u = conn_op_ctx->u;
+
+    if (u->socket_pool->next_connect_op == &conn_op_ctx->queue) {
+        u->socket_pool->next_connect_op = ngx_queue_next(&conn_op_ctx->queue);
+    }
+
     ngx_queue_remove(&conn_op_ctx->queue);
 
-    u = conn_op_ctx->u;
     r = u->request;
 
     coctx = u->write_co_ctx;
@@ -4942,34 +4954,17 @@ ngx_stream_lua_socket_tcp_resume_conn_op(
      * operation resumption, so that there is no resumption happens when Nginx
      * is exiting.
      */
-    if (ngx_queue_empty(&spool->wait_connect_op)) {
-        return;
-    }
-
-    /* each freed slot must resume its own queued connect operation.
-     * A resumed operation stays in wait_connect_op until its posted event
-     * runs, so when several slots are freed in the same cycle, picking the
-     * head every time re-posts the same event, which ngx_post_event()
-     * ignores, and the extra slots are lost while the queue still counts
-     * them as busy. Resume the first operation not posted yet instead.
-     */
-    for (q = ngx_queue_head(&spool->wait_connect_op);
-         q != ngx_queue_sentinel(&spool->wait_connect_op);
-         q = ngx_queue_next(q))
-    {
-        conn_op_ctx = ngx_queue_data(q,
-                                     ngx_stream_lua_socket_tcp_conn_op_ctx_t,
-                                     queue);
-
-        if (!conn_op_ctx->event.posted) {
-            break;
-        }
-    }
-
+    q = spool->next_connect_op;
     if (q == ngx_queue_sentinel(&spool->wait_connect_op)) {
         return;
     }
 
+    /* advance before posting so each slot resumes a distinct waiter */
+    spool->next_connect_op = ngx_queue_next(q);
+
+    conn_op_ctx = ngx_queue_data(q,
+                                 ngx_stream_lua_socket_tcp_conn_op_ctx_t,
+                                 queue);
     ngx_log_debug4(NGX_LOG_DEBUG_STREAM, ngx_cycle->log, 0,
                    "stream lua tcp socket post connect operation "
                    "resumption u: %p, ctx: %p for connection pool \"%s\", "
@@ -5021,27 +5016,6 @@ ngx_stream_lua_socket_tcp_conn_op_resume_handler(ngx_event_t *ev)
     r = u->request;
     spool = u->socket_pool;
 
-    if (ngx_queue_empty(&spool->wait_connect_op)) {
-#if (NGX_DEBUG)
-        ngx_stream_lua_assert(!(spool->backlog >= 0
-                              && spool->connections > spool->size));
-
-#else
-        if (spool->backlog >= 0 && spool->connections > spool->size) {
-            ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                          "stream lua tcp socket connections count "
-                          "mismatched for connection pool \"%s\", connections: "
-                          "%i, size: %i",
-                          spool->key, spool->connections, spool->size);
-            spool->connections = spool->size;
-        }
-#endif
-
-        return;
-    }
-
-    /* several operations can be posted at once, so remove this one
-     * rather than the queue head */
     ngx_queue_remove(&conn_op_ctx->queue);
 
     coctx = u->write_co_ctx;
@@ -6542,6 +6516,8 @@ ngx_stream_lua_socket_shutdown_pool_helper(
     ngx_stream_lua_socket_pool_item_t               *item;
     ngx_stream_lua_socket_tcp_conn_op_ctx_t         *conn_op_ctx;
 
+    spool->next_connect_op = ngx_queue_sentinel(&spool->wait_connect_op);
+
     while (!ngx_queue_empty(&spool->cache)) {
         q = ngx_queue_head(&spool->cache);
 
@@ -6572,8 +6548,6 @@ ngx_stream_lua_socket_shutdown_pool_helper(
             ngx_del_timer(&conn_op_ctx->event);
         }
 
-        /* more than one queued operation can be posted for
-         * resumption now, do not free one with its event still posted */
         if (conn_op_ctx->event.posted) {
             ngx_delete_posted_event(&conn_op_ctx->event);
         }
@@ -6987,6 +6961,10 @@ ngx_stream_lua_tcp_queue_conn_op_cleanup(void *data)
 
     } else if (conn_op_ctx->event.timer_set) {
         ngx_del_timer(&conn_op_ctx->event);
+    }
+
+    if (u->socket_pool->next_connect_op == &conn_op_ctx->queue) {
+        u->socket_pool->next_connect_op = ngx_queue_next(&conn_op_ctx->queue);
     }
 
     ngx_queue_remove(&conn_op_ctx->queue);
