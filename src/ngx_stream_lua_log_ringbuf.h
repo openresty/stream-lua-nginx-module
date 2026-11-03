@@ -1,12 +1,4 @@
 
-/*
- * !!! DO NOT EDIT DIRECTLY !!!
- * This file was automatically generated from the following template:
- *
- * src/subsys/ngx_subsys_lua_log_ringbuf.h.tt2
- */
-
-
 #ifndef _NGX_STREAM_LUA_RINGBUF_H_INCLUDED_
 #define _NGX_STREAM_LUA_RINGBUF_H_INCLUDED_
 
