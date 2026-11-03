@@ -3720,7 +3720,7 @@ ngx_stream_lua_parse_addr(lua_State *L, u_char *text, size_t len,
 #endif
 
     if (len == 7 && memcmp(text, "0.0.0.0", 7) == 0) {
-        inaddr = INADDR_NONE;
+        inaddr = INADDR_ANY;
         socklen = sizeof(struct sockaddr_in);
         family = AF_INET;
 
