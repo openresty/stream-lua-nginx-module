@@ -53,7 +53,8 @@ ngx_stream_lua_ffi_var_get(ngx_stream_lua_request_t *r, u_char *name_data,
                             | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_CERT
                             | NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY
 #endif
-                            | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO))
+                            | NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO
+                            | NGX_STREAM_LUA_CONTEXT_SSL_VERIFY))
         {
             cctx = ngx_stream_lua_ssl_get_ctx(r->connection->ssl->connection);
             session = cctx->connection->data;
