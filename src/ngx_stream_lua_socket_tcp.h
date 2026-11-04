@@ -45,6 +45,10 @@ typedef struct ngx_stream_lua_socket_tcp_upstream_s
         ngx_stream_lua_socket_tcp_upstream_t;
 
 
+typedef struct ngx_stream_lua_socket_pool_item_s
+        ngx_stream_lua_socket_pool_item_t;
+
+
 typedef
     int (*ngx_stream_lua_socket_tcp_retval_handler)(ngx_stream_lua_request_t *r,
         ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L);
@@ -60,7 +64,11 @@ typedef struct {
     ngx_str_t                                       host;
     ngx_stream_lua_cleanup_pt                      *cleanup;
     ngx_stream_lua_socket_tcp_upstream_t           *u;
+    ngx_stream_lua_socket_pool_item_t              *item;
     in_port_t                                       port;
+
+    /* waiting for a slot; otherwise this operation owns one */
+    unsigned                                        queued:1;
 } ngx_stream_lua_socket_tcp_conn_op_ctx_t;
 
 
@@ -75,19 +83,19 @@ typedef struct {
     ngx_int_t                          size;
     ngx_queue_t                        cache_connect_op;
     ngx_queue_t                        wait_connect_op;
+    ngx_queue_t                        posted_connect_op;
 
-    /* connections == active connections + pending connect operations,
-     * while active connections == out-of-pool reused connections
-     *                             + in-pool connections */
+    /* slots held by active sockets, cached connections, and posted connects */
     ngx_int_t                          connections;
+
+    /* connect operations still waiting for a slot */
+    ngx_int_t                          waiting;
 
     /* queues of ngx_stream_lua_socket_pool_item_t: */
     ngx_queue_t                        cache;
     ngx_queue_t                        free;
 
     ngx_int_t                          backlog;
-
-    ngx_queue_t                       *next_connect_op;
 
     u_char                             key[1];
 
@@ -183,7 +191,7 @@ typedef struct {
 } ngx_stream_lua_socket_compiled_pattern_t;
 
 
-typedef struct {
+struct ngx_stream_lua_socket_pool_item_s {
     ngx_stream_lua_socket_pool_t            *socket_pool;
 
     ngx_queue_t                      queue;
@@ -195,7 +203,8 @@ typedef struct {
 
     ngx_uint_t                       reused;
 
-} ngx_stream_lua_socket_pool_item_t;
+    ngx_stream_lua_socket_tcp_conn_op_ctx_t *owner;
+};
 
 
 void ngx_stream_lua_inject_socket_tcp_api(ngx_log_t *log, lua_State *L);
