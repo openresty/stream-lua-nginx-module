@@ -478,8 +478,17 @@ receive stream response error: timeout
         ngx.sleep(0.2)
         for i = 1, 2 do
             local ok, err = ngx.say("hello")
+            if ok then
+                ok, err = ngx.flush(true)
+            end
+
             if not ok then
-                ngx.log(ngx.WARN, "say failed: ", err)
+                if err ~= "nginx output filter error" and err ~= "client aborted" then
+                    ngx.log(ngx.ERR, "unexpected output error: ", err)
+                    return
+                end
+
+                ngx.log(ngx.WARN, "say detected client abort")
                 return
             end
         end
@@ -493,7 +502,7 @@ receive stream response error: timeout
 [error]
 [alert]
 --- error_log
-say failed: nginx output filter error
+say detected client abort
 
 
 
@@ -504,8 +513,17 @@ say failed: nginx output filter error
         ngx.sleep(0.2)
         for i = 1, 2 do
             local ok, err = ngx.print("hello")
+            if ok then
+                ok, err = ngx.flush(true)
+            end
+
             if not ok then
-                ngx.log(ngx.WARN, "print failed: ", err)
+                if err ~= "nginx output filter error" and err ~= "client aborted" then
+                    ngx.log(ngx.ERR, "unexpected output error: ", err)
+                    return
+                end
+
+                ngx.log(ngx.WARN, "print detected client abort")
                 return
             end
         end
@@ -519,7 +537,7 @@ receive stream response error: timeout
 [error]
 [alert]
 --- error_log
-print failed: nginx output filter error
+print detected client abort
 
 
 

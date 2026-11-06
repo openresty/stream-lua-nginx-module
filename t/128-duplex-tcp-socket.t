@@ -33,7 +33,7 @@ __DATA__
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\nget foo\r\nget bar\r\n"
+        local req = "version\r\nget __nil\r\nget __nil\r\n"
         -- req = "OK"
         local send_idx = 1
 
@@ -77,12 +77,12 @@ __DATA__
 --- config
     server_tokens off;
 
---- stream_response
-connected: 1
-received: OK
+--- stream_response_like
+^connected: 1
+received: VERSION [^\r\n]+
 received: END
 received: END
-setkeepalive: 1 nil
+setkeepalive: 1 nil$
 
 --- no_error_log
 [error]
@@ -104,7 +104,7 @@ setkeepalive: 1 nil
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
         -- req = "OK"
         local send_idx = 1
 
@@ -168,7 +168,7 @@ setkeepalive: 1 nil
 
 --- stream_response_like chop
 ^connected: 1
-(?:received: OK|failed to send request: timeout
+(?:received: END|failed to send request: timeout
 partial read: )
 read timed out: [1-9]\d*
 close: 1 nil$
@@ -472,7 +472,7 @@ close: nil closed
             local res, err = sock:receive(1)
             ngx.say("receive: ", res, " ", err)
 
-            local bytes, err = sock:send("flush_all")
+            local bytes, err = sock:send("get __nil")
             ngx.say("send: ", bytes, " ", err)
 
             local ok, err = sock:close()
@@ -541,7 +541,7 @@ close: 1 nil
             local res, err = sock:receive(1)
             ngx.say("receive: ", res, " ", err)
 
-            local bytes, err = sock:send("flush_all")
+            local bytes, err = sock:send("get __nil")
             ngx.say("send: ", bytes, " ", err)
 
             local ok, err = sock:close()

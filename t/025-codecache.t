@@ -779,7 +779,7 @@ qr/\[alert\] \S+ stream lua_code_cache is off; this will hurt performance/,
 
 
 
-=== TEST 22: cosocket connection pool timeout (after Lua VM destroys)
+=== TEST 22: cosocket connection pool cleanup when the Lua VM is destroyed
 --- stream_config eval
     "lua_package_path '$::HtmlDir/?.lua;./?.lua;;';"
 --- stream_server_config
@@ -803,7 +803,7 @@ function go(port)
 
     ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-    local req = "flush_all\r\n"
+    local req = "get __nil\r\n"
 
     local bytes, err = sock:send(req)
     if not bytes then
@@ -820,7 +820,7 @@ function go(port)
         ngx.say("failed to receive a line: ", err, " [", part, "]")
     end
 
-    local ok, err = sock:setkeepalive(1)
+    local ok, err = sock:setkeepalive(0)
     if not ok then
         ngx.say("failed to set reusable: ", err)
     end
@@ -828,7 +828,7 @@ end
 --- stream_response
 connected: 1, reused: 0
 request sent: 11
-received: OK
+received: END
 --- no_error_log
 [error]
 stream lua tcp socket keepalive max idle timeout
@@ -866,7 +866,7 @@ function go(port)
 
     ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-    local req = "flush_all\r\n"
+    local req = "get __nil\r\n"
 
     local bytes, err = sock:send(req)
     if not bytes then
@@ -892,7 +892,7 @@ end
 --- stream_response
 connected: 1, reused: 0
 request sent: 11
-received: OK
+received: END
 --- no_error_log
 [error]
 --- error_log eval

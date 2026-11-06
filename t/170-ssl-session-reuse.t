@@ -18,7 +18,6 @@ if ($openssl_version =~ m/\bBoringSSL\b/) {
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
-$ENV{TEST_NGINX_SERVER_SSL_PORT} ||= 12345;
 $ENV{TEST_NGINX_CERT_DIR} ||= dirname(realpath(abs_path(__FILE__)));
 
 #log_level 'warn';
@@ -111,7 +110,7 @@ close: 1 nil
 === TEST 2: no SNI, no verify
 --- stream_config
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        listen $TEST_NGINX_RAND_PORT_1 ssl;
         ssl_certificate ../html/test.crt;
         ssl_certificate_key ../html/test.key;
 
@@ -131,7 +130,7 @@ close: 1 nil
             local ffi = require "ffi"
             local sock = ngx.socket.tcp()
             sock:settimeout(2000)
-            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return

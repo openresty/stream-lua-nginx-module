@@ -900,17 +900,21 @@ proxy_ssl_verify_by_lua: handler return value: 0, cert verify callback exit code
     proxy_ssl_certificate_key     ../../cert/mtls_client.key;
     proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
     proxy_ssl_session_reuse       off;
-    proxy_connect_timeout         100ms;
+    proxy_connect_timeout         1s;
 
     proxy_ssl_verify_by_lua_block {
-        ngx.sleep(0.2)
+        ngx.log(ngx.INFO, "proxy_ssl_verify_by_lua: callback started")
+        ngx.sleep(2)
+        ngx.log(ngx.INFO, "proxy_ssl_verify_by_lua: callback resumed")
     }
---- error_log
+--- grep_error_log eval: qr/proxy_ssl_verify_by_lua: (?:callback started|cert verify callback aborted|callback resumed)/
+--- grep_error_log_out
+proxy_ssl_verify_by_lua: callback started
 proxy_ssl_verify_by_lua: cert verify callback aborted
 --- no_error_log
 [error]
 [alert]
---- wait: 0.5
+--- wait: 2.1
 
 
 

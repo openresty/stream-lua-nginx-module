@@ -32,7 +32,7 @@ __DATA__
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
 
         local bytes, err = sock:send(req)
         if not bytes then
@@ -56,7 +56,7 @@ __DATA__
 --- stream_response
 connected: 1
 request sent: 11
-received: OK
+received: END
 close: 1 nil
 --- no_error_log
 [error]

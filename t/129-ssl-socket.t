@@ -18,7 +18,6 @@ if ($openssl_version =~ m/\bBoringSSL\b/) {
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
 $ENV{TEST_NGINX_RESOLVER} ||= '8.8.8.8';
-$ENV{TEST_NGINX_SERVER_SSL_PORT} ||= 12345;
 $ENV{TEST_NGINX_CERT_DIR} ||= dirname(realpath(abs_path(__FILE__)));
 
 #log_level 'warn';
@@ -115,7 +114,7 @@ close: 1 nil
 --- grep_error_log eval: qr/lua ssl (?:set|save|free) session: [0-9A-F]+/
 --- grep_error_log_out eval
 qr/^lua ssl save session: ([0-9A-F]+)
-lua ssl free session: ([0-9A-F]+)
+lua ssl free session: \1
 $/
 --- no_error_log
 lua ssl server name:
@@ -129,7 +128,7 @@ SSL reused session
 === TEST 2: no SNI, no verify
 --- stream_config
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        listen $TEST_NGINX_RAND_PORT_1 ssl;
         ssl_certificate ../html/test.crt;
         ssl_certificate_key ../html/test.key;
 
@@ -147,7 +146,7 @@ SSL reused session
         do
             local sock = ngx.socket.tcp()
             sock:settimeout(2000)
-            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_RAND_PORT_1)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -2802,7 +2801,7 @@ Date:   Tue Jan 28 00:53:15 2025 +0400
 --- SKIP
 --- stream_config
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl reuseport default_server;
+        listen $TEST_NGINX_RAND_PORT_1 ssl reuseport default_server;
         ssl_certificate ../../cert/test.crt;
         ssl_certificate_key ../../cert/test.key;
         ssl_session_cache builtin:1000;
@@ -2829,7 +2828,7 @@ Date:   Tue Jan 28 00:53:15 2025 +0400
     }
 
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        listen $TEST_NGINX_RAND_PORT_1 ssl;
         ssl_certificate ../../cert/test2.crt;
         ssl_certificate_key ../../cert/test2.key;
         ssl_session_cache builtin:1000;
@@ -2867,7 +2866,7 @@ Date:   Tue Jan 28 00:53:15 2025 +0400
             for i = 1, 2 do
                 local sock = ngx.socket.tcp()
                 sock:settimeout(2000)
-                local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+                local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_RAND_PORT_1)
                 if not ok then
                     ngx.say("failed to connect: ", err)
                     return
@@ -2944,7 +2943,7 @@ see TEST 35
 env PATH;
 --- stream_config
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl reuseport default_server;
+        listen $TEST_NGINX_RAND_PORT_1 ssl reuseport default_server;
         ssl_certificate ../../cert/test.crt;
         ssl_certificate_key ../../cert/test.key;
         ssl_session_cache builtin:1000;
@@ -2971,7 +2970,7 @@ env PATH;
     }
 
     server {
-        listen $TEST_NGINX_SERVER_SSL_PORT ssl;
+        listen $TEST_NGINX_RAND_PORT_1 ssl;
         ssl_certificate ../../cert/test2.crt;
         ssl_certificate_key ../../cert/test2.key;
         ssl_session_cache builtin:1000;
@@ -3006,12 +3005,12 @@ env PATH;
     content_by_lua_block {
         do
             -- openssl s_client -cert client_cert.pem -key client_key.pem -servername openresty.org  -connect openresty.org:443 -sess_out sess.pem
-            -- ("127.0.0.1", $TEST_NGINX_SERVER_SSL_PORT)
+            -- ("127.0.0.1", $TEST_NGINX_RAND_PORT_1)
             -- server_name = "test.com"
             -- server_name = "test2.com"
             local prefix = ngx.config.prefix()
 
-            local cmd = [[bash -c "{ sleep 0.3; echo ping; } | /usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test.com -connect 127.0.0.1:$TEST_NGINX_SERVER_SSL_PORT -sess_out sess.pem"]]
+            local cmd = [[bash -c "{ sleep 0.3; echo ping; } | /usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test.com -connect 127.0.0.1:$TEST_NGINX_RAND_PORT_1 -sess_out sess.pem"]]
             cmd = string.format(cmd, prefix, prefix)
             local handle, err = io.popen(cmd)
             if not handle then
@@ -3019,7 +3018,7 @@ env PATH;
             end
 
             ngx.sleep(0.2)
-            local cmd = [[/usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test2.com -connect 127.0.0.1:$TEST_NGINX_SERVER_SSL_PORT -sess_in sess.pem]]
+            local cmd = [[/usr/bin/openssl s_client -cert %s/../cert/test.crt -key %s/../cert/test.key -servername test2.com -connect 127.0.0.1:$TEST_NGINX_RAND_PORT_1 -sess_in sess.pem]]
             cmd = string.format(cmd, prefix, prefix)
             local handle, err = io.popen(cmd)
             if not handle then

@@ -117,13 +117,19 @@ ngx_http_lua_sema_handler would use the freed memory.
             ngx.log(ngx.INFO, "ngx.sem post start")
             sem:post()
             ngx.log(ngx.INFO, "ngx.sem post end")
+
             ngx.say("hello")
+            local ok, err = ngx.flush(true)
+            if not ok then
+                ngx.log(ngx.ERR, "flush failed: ", err)
+                return
+            end
             ngx.exit(200)
             ngx.say("not reach here")
         }
 --- request
 GET /t
---- stream_response_like
+--- stream_response
 hello
 --- grep_error_log eval: qr/(ngx.sem .*?,|close stream connection|semaphore handler: wait queue: empty, resource count: 1)/
 --- grep_error_log_out

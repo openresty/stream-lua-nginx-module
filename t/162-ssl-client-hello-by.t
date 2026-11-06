@@ -270,9 +270,9 @@ my timer run!
                 return
             end
 
-            local bytes, err = sock:send("flush_all\r\n")
+            local bytes, err = sock:send("get __nil\r\n")
             if not bytes then
-                ngx.log(ngx.ERR, "failed to send flush_all command: ", err)
+                ngx.log(ngx.ERR, "failed to send get __nil command: ", err)
                 return
             end
 
@@ -338,7 +338,7 @@ close: 1 nil
 
 --- error_log
 lua ssl server name: "test.com"
-received memc reply: OK
+received memc reply: END
 
 --- no_error_log
 [error]
@@ -1661,10 +1661,10 @@ client socket file:
                 return
             end
 
-            local req = "\0\1\0\0\0\1\0\0flush_all\r\n"
+            local req = "\0\1\0\0\0\1\0\0get __nil\r\n"
             local ok, err = sock:send(req)
             if not ok then
-                ngx.log(ngx.ERR, "failed to send flush_all to memc: ", err)
+                ngx.log(ngx.ERR, "failed to send get __nil to memc: ", err)
                 return
             end
 
@@ -1720,13 +1720,13 @@ ssl handshake: userdata
 --- grep_error_log eval: qr/received memc reply of \d+ bytes/
 --- grep_error_log_out eval
 [
-'received memc reply of 12 bytes
+'received memc reply of 13 bytes
 ',
-'received memc reply of 12 bytes
+'received memc reply of 13 bytes
 ',
-'received memc reply of 12 bytes
+'received memc reply of 13 bytes
 ',
-'received memc reply of 12 bytes
+'received memc reply of 13 bytes
 ',
 ]
 
