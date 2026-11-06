@@ -23,6 +23,7 @@ Table of Contents
 * [TODO](#todo)
 * [Nginx Compatibility](#nginx-compatibility)
 * [Installation](#installation)
+* [Test Suite](#test-suite)
 * [Community](#community)
     * [English Mailing List](#english-mailing-list)
     * [Chinese Mailing List](#chinese-mailing-list)
@@ -611,6 +612,20 @@ make install
 You may use `--without-http` if you do not wish to use this module with the
 "http" subsystem. ngx_stream_lua will work perfectly fine without the "http"
 subsystem.
+
+[Back to TOC](#table-of-contents)
+
+Test Suite
+==========
+
+The coroutine cleanup regression in `t/197-coroutine-request-cleanup.t`
+checks that client disconnects and `ngx.exit` cancel pending sleep timers
+owned by ordinary coroutines in both the preread and content phases,
+including nesting across coroutine context list parts. It uses a local
+stream listener and shared-dictionary/semaphore barriers, so no Redis or
+memcached service is required. A debug build checks the exact timer cleanup
+log; an ASan build also detects dangling timer nodes after session memory
+is freed.
 
 [Back to TOC](#table-of-contents)
 
