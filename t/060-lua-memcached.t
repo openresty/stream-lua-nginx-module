@@ -9,6 +9,8 @@ plan tests => repeat_each() * (blocks() * 3 + 1);
 our $HtmlDir = html_dir;
 
 $ENV{TEST_NGINX_MEMCACHED_PORT} ||= 11211;
+# Isolate keys from other files and concurrent runs of this file.
+$ENV{TEST_NGINX_MEMCACHED_PREFIX} = "stream_lua_nginx_060_memcached_$$";
 
 my $pwd = `pwd`;
 chomp $pwd;
@@ -34,8 +36,8 @@ __DATA__
 
         local memc = Memcached.Connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
 
-        memc:set("some_key", "hello 1234")
-        local data = memc:get("some_key")
+        memc:set("$TEST_NGINX_MEMCACHED_PREFIX:1:some_key", "hello 1234", 600)
+        local data = memc:get("$TEST_NGINX_MEMCACHED_PREFIX:1:some_key")
         ngx.say("some_key: ", data)
     }
 --- stream_response
@@ -53,13 +55,13 @@ some_key: hello 1234
         local memcached = require "resty.memcached"
         local memc, err = memcached.connect("127.0.0.1", $TEST_NGINX_MEMCACHED_PORT)
 
-        local ok, err = memc:set("some_key", "hello 1234")
+        local ok, err = memc:set("$TEST_NGINX_MEMCACHED_PREFIX:2:some_key", "hello 1234", 600)
         if not ok then
             ngx.log(ngx.ERR, "failed to set some_key: ", err)
             ngx.exit(500)
         end
 
-        local data, err = memc:get("some_key")
+        local data, err = memc:get("$TEST_NGINX_MEMCACHED_PREFIX:2:some_key")
         if not data and err then
             ngx.log(ngx.ERR, "failed to get some_key: ", err)
             ngx.exit(500)

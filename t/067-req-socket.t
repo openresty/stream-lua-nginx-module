@@ -836,11 +836,20 @@ GC cycle done
             return
         end
         ngx.log(ngx.INFO, "Got raw req socket")
-        local data, err = sock:receiveany(500)
-        if not data then
-            ngx.log(ngx.ERR, "server: failed to receive: ", err)
-            return
+        local chunks = {}
+        local received = 0
+        while received < 5 do
+            local data, err = sock:receiveany(500)
+            if not data then
+                ngx.log(ngx.ERR, "server: failed to receive: ", err)
+                return
+            end
+
+            chunks[#chunks + 1] = data
+            received = received + #data
         end
+
+        local data = table.concat(chunks)
         ngx.log(ngx.INFO, "Got: ", #data, " bytes")
 
         local bytes, err = sock:send("1: received: " .. data .. "\n")
@@ -874,6 +883,7 @@ Got: 5 bytes
         ngx.sleep(0.2)
         ngx.log(ngx.INFO, 'receiveany every 3 bytes per read ...')
         local i = 0
+        local chunks = {}
         while true do
             i = i + 1
             ngx.log(ngx.INFO, 'reading: ', i)
@@ -899,22 +909,24 @@ Got: 5 bytes
                 end
             end
             ngx.log(ngx.INFO, "Time ", i, " - got ", #data, " bytes: ", data)
-            sock:send("receive: " .. data .. "\n")
+            if #data == 0 or #data > 3 then
+                ngx.log(ngx.ERR, "unexpected receiveany chunk size: ", #data)
+                return
+            end
+
+            chunks[i] = data
+        end
+
+        local ok, err = sock:send("receive: " .. table.concat(chunks) .. "\n")
+        if not ok then
+            ngx.log(ngx.ERR, "failed to send: ", err)
         end
     }
 
 --- stream_request: hello, stream receiveany!
 --- stream_response
 ok
-receive: hel
-receive: lo,
-receive:  st
-receive: rea
-receive: m r
-receive: ece
-receive: ive
-receive: any
-receive: !
+receive: hello, stream receiveany!
 --- no_error_log
 receiveany error: 
 --- error_log

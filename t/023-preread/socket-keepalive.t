@@ -1,18 +1,6 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-our $SkipReason;
-
-BEGIN {
-    use Test::Nginx::Util;
-
-    my $nginx_version = Test::Nginx::Util::get_nginx_version();
-
-    if (eval "$nginx_version >= 1.25.5") {
-        $SkipReason = "Nginx version greater than 1.25.5 have changed behavior, current version $nginx_version";
-    }
-}
-
-use Test::Nginx::Socket::Lua::Stream $SkipReason ? (skip_all => $SkipReason) : ();
+use Test::Nginx::Socket::Lua::Stream;
 
 repeat_each(2);
 
@@ -62,7 +50,7 @@ function go(port)
 
     ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-    local req = "flush_all\r\n"
+    local req = "set abc 0 60 5\r\nhello\r\n"
 
     local bytes, err = sock:send(req)
     if not bytes then
@@ -86,11 +74,11 @@ function go(port)
 end
 --- stream_response_like
 ^connected: 1, reused: \d+
-request sent: 11
-received: OK
+request sent: 23
+received: STORED
 connected: 1, reused: [1-9]\d*
-request sent: 11
-received: OK
+request sent: 23
+received: STORED
 --- no_error_log eval
 ["[error]",
 "lua tcp socket keepalive: free connection pool for "]
@@ -134,7 +122,7 @@ function go(port, keepalive)
 
     ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-    local req = "flush_all\r\n"
+    local req = "set abc 0 60 5\r\nhello\r\n"
 
     local bytes, err = sock:send(req)
     if not bytes then
@@ -163,11 +151,11 @@ function go(port, keepalive)
 end
 --- stream_response_like
 ^connected: 1, reused: \d+
-request sent: 11
-received: OK
+request sent: 23
+received: STORED
 connected: 1, reused: [1-9]\d*
-request sent: 11
-received: OK
+request sent: 23
+received: STORED
 --- no_error_log
 [error]
 --- error_log eval

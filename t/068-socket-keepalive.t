@@ -33,7 +33,7 @@ __DATA__
             end
             ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-            local bytes, err = sock:send("flush_all\r\n")
+            local bytes, err = sock:send("get __nil\r\n")
             if not bytes then
                 ngx.say("failed to send request: ", err)
                 return
@@ -61,10 +61,10 @@ __DATA__
 --- stream_response
 connected: 1, reused: 0
 request sent: 11
-received: OK
+received: END
 connected: 1, reused: 1
 request sent: 11
-received: OK
+received: END
 --- error_log eval
 qq{
 lua tcp socket get keepalive peer: using connection
@@ -92,7 +92,7 @@ lua tcp socket keepalive create connection pool for key "127\.0\.0\.1:$ENV{TEST_
             end
             ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-            local bytes, err = sock:send("flush_all\r\n")
+            local bytes, err = sock:send("get __nil\r\n")
             if not bytes then
                 ngx.say("failed to send request: ", err)
                 return
@@ -125,10 +125,10 @@ lua tcp socket keepalive create connection pool for key "127\.0\.0\.1:$ENV{TEST_
 --- stream_response
 connected: 1, reused: 0
 request sent: 11
-received: OK
+received: END
 connected: 1, reused: 1
 request sent: 11
-received: OK
+received: END
 --- error_log eval
 [
 "lua tcp socket get keepalive peer: using connection",
@@ -1311,7 +1311,7 @@ ok
 
             ngx.say("connected: ", ok, ", reused: ", sock:getreusedtimes())
 
-            local req = "flush_all\r\n"
+            local req = "get __nil\r\n"
             local bytes, err = sock:send(req)
             if not bytes then
                 ngx.say("failed to send request: ", err)
@@ -1358,10 +1358,10 @@ ok
 --- stream_response
 connected: 1, reused: 0
 request sent: 11
-received: OK
+received: END
 connected: 1, reused: 1
 request sent: 11
-received: OK
+received: END
 reused: 1
 reused: 0
 --- error_log eval
@@ -1615,7 +1615,7 @@ too many waiting connect operations
         end
         ngx.log(ngx.WARN, "continue to handle cosocket")
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
         local bytes, err = sock3:send(req)
         if not bytes then
             ngx.say("failed to send request: ", err)
@@ -1638,7 +1638,7 @@ too many waiting connect operations
     }
 --- stream_response
 request sent: 11
-received: OK
+received: END
 setkeepalive: OK
 --- no_error_log
 [error]

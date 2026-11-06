@@ -110,7 +110,7 @@ close: 1 nil
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
 
         local bytes, err = sock:send(req)
         if not bytes then
@@ -143,7 +143,7 @@ close: 1 nil
 --- stream_response
 connected: 1
 request sent: 11
-received: OK
+received: END
 request sent again: 11
 close: 1 nil
 --- no_error_log
@@ -169,7 +169,7 @@ close: 1 nil
 
         ngx.sleep(0.5)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
         local bytes, err = sock:send(req)
         if not bytes then
             ngx.say("failed to send request: ", err)
@@ -206,7 +206,7 @@ close: 1 nil
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
 
         local bytes, err = sock:send(req)
         if not bytes then
@@ -233,7 +233,7 @@ close: 1 nil
 --- stream_response
 connected: 1
 request sent: 11
-received: OK
+received: END
 close: 1 nil
 --- no_error_log
 [error]
@@ -320,7 +320,7 @@ failed to set keepalive: (?:unread data in buffer|connection in dubious state)
 
         ngx.say("connected: ", ok)
 
-        local req = "flush_all\r\n"
+        local req = "get __nil\r\n"
 
         local bytes, err = sock:send(req)
         if not bytes then
@@ -330,7 +330,10 @@ failed to set keepalive: (?:unread data in buffer|connection in dubious state)
 
         ngx.say("request sent: ", bytes)
 
-        local data, err = sock:receive(1)
+        -- Matching E first requires reading the following N before the
+        -- mismatch returns E, leaving N unread even with one-byte reads.
+        local reader = sock:receiveuntil("EX")
+        local data, err = reader(1)
         if not data then
             ngx.say("failed to read the 1st byte: ", err)
             return
@@ -347,7 +350,7 @@ failed to set keepalive: (?:unread data in buffer|connection in dubious state)
 --- stream_response eval
 qq{connected: 1
 request sent: 11
-read: O
+read: E
 failed to set keepalive: unread data in buffer
 }
 --- no_error_log
