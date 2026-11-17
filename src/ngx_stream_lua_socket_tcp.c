@@ -56,6 +56,8 @@ static void ngx_stream_lua_socket_tcp_finalize(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u);
 static void ngx_stream_lua_socket_tcp_finalize_read_part(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u);
+static void ngx_stream_lua_socket_tcp_detach_pattern(
+    ngx_stream_lua_socket_tcp_upstream_t *u);
 static void ngx_stream_lua_socket_tcp_finalize_write_part(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u,
     int do_shutdown);
@@ -3676,6 +3678,20 @@ ngx_stream_lua_socket_tcp_send_retval_handler(ngx_stream_lua_request_t *r,
 }
 
 
+static void
+ngx_stream_lua_socket_tcp_detach_pattern(
+    ngx_stream_lua_socket_tcp_upstream_t *u)
+{
+    ngx_stream_lua_socket_compiled_pattern_t        *cp;
+
+    if (u->input_filter_ctx != NULL && u->input_filter_ctx != u) {
+        cp = u->input_filter_ctx;
+        cp->upstream = NULL;
+        u->input_filter_ctx = NULL;
+    }
+}
+
+
 static int
 ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L)
@@ -3689,6 +3705,9 @@ ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_lua_request_t *r,
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "stream lua tcp socket receive return value handler");
+
+    /* The iterator may be collected as soon as this read returns to Lua. */
+    ngx_stream_lua_socket_tcp_detach_pattern(u);
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
 
@@ -4748,16 +4767,7 @@ ngx_stream_lua_socket_tcp_finalize_read_part(ngx_stream_lua_request_t *r,
         ngx_memzero(&u->buffer, sizeof(ngx_buf_t));
     }
 
-    /*
-     * mirror tcp_finalize: detach cp so its __gc is safe, and drop our
-     * reference to cp as well, since cp may be freed by the Lua GC before
-     * the socket is finalized.
-     */
-    if (u->input_filter_ctx != NULL && u->input_filter_ctx != u) {
-        ((ngx_stream_lua_socket_compiled_pattern_t *)
-        u->input_filter_ctx)->upstream = NULL;
-        u->input_filter_ctx = NULL;
-    }
+    ngx_stream_lua_socket_tcp_detach_pattern(u);
 
     if (u->raw_downstream || u->body_downstream) {
         if (r->connection->read->timer_set) {
@@ -5549,13 +5559,9 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
         return 3;
     }
 
-    cp->upstream = u;
-
     cp->pattern.data =
         (u_char *) lua_tolstring(L, lua_upvalueindex(2),
                                  &cp->pattern.len);
-
-    u->input_filter_ctx = cp;
 
     ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
 
@@ -5572,6 +5578,9 @@ ngx_stream_lua_socket_receiveuntil_iterator(lua_State *L)
         u->buf_in = u->bufs_in;
         u->buffer = *u->buf_in->buf;
     }
+
+    cp->upstream = u;
+    u->input_filter_ctx = cp;
 
     u->length = (size_t) bytes;
     u->rest = u->length;
