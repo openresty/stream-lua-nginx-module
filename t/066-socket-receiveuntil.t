@@ -953,7 +953,7 @@ close: 1 nil
 
         local reader = sock:receiveuntil("--abc")
 
-        for i = 1, 7 do
+        for i = 1, 6 do
             line, err, part = reader(4)
             if line then
                 ngx.say("read: ", line)
@@ -980,7 +980,6 @@ read: hell
 read: o, w
 read: orld
 read:  --
-read: 
 failed to read a line: nil [nil]
 failed to read a line: closed [
 ]
@@ -1026,7 +1025,7 @@ close: 1 nil
 
         local reader = sock:receiveuntil("--abc")
 
-        for i = 1, 7 do
+        for i = 1, 6 do
             line, err, part = reader(4)
             if line then
                 ngx.say("read: ", line)
@@ -1053,7 +1052,6 @@ read: hell
 read: o, w
 read: orld
 read:  --
-read: 
 failed to read a line: nil [nil]
 failed to read a line: closed [
 ]
@@ -1474,5 +1472,758 @@ close: 1 nil
 read: nil timeout []
 reader collected: true
 close: 1 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 24: add pending bytes
+--- stream_server_config
+    lua_socket_buffer_size 1;
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        local reader = sock:receiveuntil("--abc")
+
+        for i = 1, 4 do
+            local line, err, part = reader(2)
+            if line then
+                ngx.say("read: ", line)
+
+            else
+                ngx.say("failed to read a line: ", err, " [", part, "]")
+            end
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- -----abc;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: --
+read: -
+failed to read a line: nil [nil]
+failed to read a line: closed [
+]
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 25: ambiguous boundary patterns (--abc), mixed by other reading calls consume boundary
+--- stream_server_config
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        local reader = sock:receiveuntil("--abc")
+
+        for i = 1, 5 do
+            local line, err, part = reader(2)
+            if not line then
+                ngx.say("failed to read a line: ", err, " [", part, "]")
+                break
+
+            else
+                ngx.say("read: ", line)
+            end
+
+            local data, err, part = sock:receive(1)
+            if not data then
+                ngx.say("failed to read a byte: ", err, " [", part, "]")
+                break
+
+            else
+                ngx.say("read one byte: ", data)
+            end
+        end
+
+        local line, err, part = reader(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ----abc----abc-;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: --
+read one byte: -
+read: -a
+read one byte: b
+read: c-
+read one byte: -
+read:\x20
+read one byte: -
+failed to read a line: nil [nil]
+failed to read a line: closed [
+]
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 26: ambiguous boundary patterns (--abc), mixed by other reading calls (including receiveuntil) consume boundary
+--- stream_server_config
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        local reader1 = sock:receiveuntil("--abc")
+        local reader2 = sock:receiveuntil("-ab")
+
+        local line, err, part = reader1(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local data, err, part = sock:receive(1)
+        if not data then
+            ngx.say("failed to read a byte: ", err, " [", part, "]")
+
+        else
+            ngx.say("read one byte: ", data)
+        end
+
+        local line, err, part = reader1(1)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader2(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader1()
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader1()
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ------abd----abc;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: --
+read one byte: -
+read: -
+read: -
+read: d--
+failed to read a line: closed [
+]
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 27: ambiguous boundary patterns (--abc), mixed by other reading calls consume boundary, small buffer
+--- stream_server_config
+    lua_socket_buffer_size 3;
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        local reader = sock:receiveuntil("--abc")
+
+        for i = 1, 5 do
+            local line, err, part = reader(2)
+            if not line then
+                ngx.say("failed to read a line: ", err, " [", part, "]")
+                break
+
+            else
+                ngx.say("read: ", line)
+            end
+
+            local data, err, part = sock:receive(1)
+            if not data then
+                ngx.say("failed to read a byte: ", err, " [", part, "]")
+                break
+
+            else
+                ngx.say("read one byte: ", data)
+            end
+        end
+
+        local line, err, part = reader(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ----abc----abc-;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: --
+read one byte: -
+read: -a
+read one byte: b
+read: c-
+read one byte: -
+read:\x20
+read one byte: -
+failed to read a line: nil [nil]
+failed to read a line: closed [
+]
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 28: ambiguous boundary patterns (--abc), mixed by other reading calls (including receiveuntil) consume boundary, small buffer
+--- stream_server_config
+    lua_socket_buffer_size 3;
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        local reader1 = sock:receiveuntil("--abc")
+        local reader2 = sock:receiveuntil("-ab")
+
+        local line, err, part = reader1(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local data, err, part = sock:receive(1)
+        if not data then
+            ngx.say("failed to read a byte: ", err, " [", part, "]")
+
+        else
+            ngx.say("read one byte: ", data)
+        end
+
+        local line, err, part = reader1(1)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader2(2)
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader1()
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        local line, err, part = reader1()
+        if not line then
+            ngx.say("failed to read a line: ", err, " [", part, "]")
+
+        else
+            ngx.say("read: ", line)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ------abd----abc;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: --
+read one byte: -
+read: -
+read: -
+read: d--
+failed to read a line: closed [
+]
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 29: ambiguous boundary patterns (ab1ab2), ends half way
+--- stream_server_config
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        if true then
+            local reader = sock:receiveuntil("ab1ab2")
+
+            local line, err, part = reader(2)
+            if not line then
+                ngx.say("failed to read a line: ", err, " [", part, "]")
+
+            else
+                ngx.say("read: ", line)
+            end
+        end
+
+        collectgarbage("collect")
+
+        local data, err, part = sock:receive(3)
+        if not data then
+            ngx.say("failed to read three bytes: ", err, " [", part, "]")
+
+        else
+            ngx.say("read three bytes: ", data)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ab1ab1;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: ab1
+read three bytes: ab1
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 30: ambiguous boundary patterns (ab1ab2), ends half way, small buffer
+--- stream_server_config
+    lua_socket_buffer_size 3;
+
+    content_by_lua_block {
+        -- collectgarbage("collect")
+
+        local sock = ngx.socket.tcp()
+        local port = $TEST_NGINX_SERVER_PORT
+
+        local ok, err = sock:connect("127.0.0.1", port)
+        if not ok then
+            ngx.say("failed to connect: ", err)
+            return
+        end
+
+        ngx.say("connected: ", ok)
+
+        local req = "GET /foo HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+
+        local bytes, err = sock:send(req)
+        if not bytes then
+            ngx.say("failed to send request: ", err)
+            return
+        end
+        ngx.say("request sent: ", bytes)
+
+        local read_headers = sock:receiveuntil("\r\n\r\n")
+        local headers, err, part = read_headers()
+        if not headers then
+            ngx.say("failed to read headers: ", err, " [", part, "]")
+        end
+
+        if true then
+            local reader = sock:receiveuntil("ab1ab2")
+
+            local line, err, part = reader(2)
+            if not line then
+                ngx.say("failed to read a line: ", err, " [", part, "]")
+
+            else
+                ngx.say("read: ", line)
+            end
+        end
+
+        collectgarbage("collect")
+
+        local data, err, part = sock:receive(3)
+        if not data then
+            ngx.say("failed to read three bytes: ", err, " [", part, "]")
+
+        else
+            ngx.say("read three bytes: ", data)
+        end
+
+        ok, err = sock:close()
+        ngx.say("close: ", ok, " ", err)
+    }
+
+--- config
+    server_tokens off;
+    location = /foo {
+        echo -- ab1ab1;
+        more_clear_headers Date;
+    }
+--- stream_response eval
+qq{connected: 1
+request sent: 57
+read: ab1
+read three bytes: ab1
+close: 1 nil
+}
+--- no_error_log
+[error]
+
+
+
+=== TEST 31: switch readers after a timeout and iterator collection
+--- stream_server_config
+    lua_socket_log_errors off;
+    lua_socket_buffer_size 1;
+
+    content_by_lua_block {
+        jit.off()
+        jit.flush()
+
+        for _, mode in ipairs({ "receive", "receiveany", "receiveuntil" }) do
+            local sock = ngx.socket.tcp()
+            local ok, err = sock:connect("127.0.0.1", $TEST_NGINX_SERVER_PORT)
+            if not ok then
+                ngx.say("failed to connect: ", err)
+                return
+            end
+
+            local bytes, err = sock:send("GET /slow HTTP/1.0\r\n\r\n")
+            if not bytes then
+                ngx.say("failed to send: ", err)
+                return
+            end
+
+            local headers = sock:receiveuntil("\r\n\r\n")
+            local data, err = headers()
+            if not data then
+                ngx.say("failed to read headers: ", err)
+                return
+            end
+
+            sock:settimeout(100)
+            local weak = setmetatable({}, { __mode = "v" })
+
+            local function read_until_timeout()
+                local reader = sock:receiveuntil("abcabd")
+                weak[1] = reader
+                local data, err, partial = reader()
+                ngx.say(mode, ": ", data, " ", err, " [", partial, "]")
+            end
+
+            read_until_timeout()
+            for _ = 1, 4 do
+                collectgarbage("collect")
+            end
+
+            ngx.say("reader collected: ", weak[1] == nil)
+
+            if mode == "receiveuntil" then
+                local reader = sock:receiveuntil("c", { inclusive = true })
+                data, err = reader()
+
+            else
+                data, err = sock[mode](sock, 3)
+            end
+
+            ngx.say("restored: [", data, "] ", err)
+
+            ok, err = sock:close()
+            ngx.say("close: ", ok, " ", err)
+        end
+    }
+--- config
+    location = /slow {
+        lua_http10_buffering off;
+        content_by_lua_block {
+            ngx.print("abc")
+            ngx.flush(true)
+            ngx.sleep(0.3)
+        }
+    }
+--- stream_response
+receive: nil timeout []
+reader collected: true
+restored: [abc] nil
+close: 1 nil
+receiveany: nil timeout []
+reader collected: true
+restored: [abc] nil
+close: 1 nil
+receiveuntil: nil timeout []
+reader collected: true
+restored: [abc] nil
+close: 1 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 32: request socket retains a pending delimiter after timeout and GC
+--- stream_server_config
+    lua_socket_log_errors off;
+    lua_socket_buffer_size 1;
+
+    content_by_lua_block {
+        local sock, err = ngx.req.socket()
+        if not sock then
+            ngx.say("failed to get request socket: ", err)
+            return
+        end
+
+        sock:settimeout(100)
+
+        local reader = sock:receiveuntil("abcabd")
+        local data, err, partial = reader()
+        ngx.say("read: ", data, " ", err, " [", partial, "]")
+
+        reader = nil
+        collectgarbage("collect")
+
+        data, err = sock:receive(3)
+        ngx.say("restored: [", data, "] ", err)
+    }
+--- stream_request chop
+abc
+--- stream_response
+read: nil timeout []
+restored: [abc] nil
 --- no_error_log
 [error]

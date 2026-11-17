@@ -58,6 +58,9 @@ static void ngx_stream_lua_socket_tcp_finalize_read_part(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u);
 static void ngx_stream_lua_socket_tcp_detach_pattern(
     ngx_stream_lua_socket_tcp_upstream_t *u);
+static ngx_int_t ngx_stream_lua_socket_tcp_restore_pattern(
+    ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u,
+    ngx_stream_lua_socket_compiled_pattern_t *cp);
 static void ngx_stream_lua_socket_tcp_finalize_write_part(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u,
     int do_shutdown);
@@ -159,7 +162,8 @@ static int ngx_stream_lua_socket_tcp_upstream_destroy(lua_State *L);
 static int ngx_stream_lua_socket_downstream_destroy(lua_State *L);
 static ngx_int_t ngx_stream_lua_socket_push_input_data(
     ngx_stream_lua_request_t *r, ngx_stream_lua_ctx_t *ctx,
-    ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L);
+    ngx_stream_lua_socket_tcp_upstream_t *u, lua_State *L,
+    ngx_stream_lua_socket_compiled_pattern_t *cp);
 static ngx_int_t ngx_stream_lua_socket_add_pending_data(
     ngx_stream_lua_request_t *r, ngx_stream_lua_socket_tcp_upstream_t *u,
     u_char *pos, size_t len, u_char *pat, int prefix, int old_state);
@@ -3702,9 +3706,15 @@ ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_lua_request_t *r,
     ngx_event_t                 *ev;
 
     ngx_stream_lua_loc_conf_t           *llcf;
+    ngx_stream_lua_socket_compiled_pattern_t        *cp;
 
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "stream lua tcp socket receive return value handler");
+
+    cp = NULL;
+    if (u->input_filter_ctx != NULL && u->input_filter_ctx != u) {
+        cp = u->input_filter_ctx;
+    }
 
     /* The iterator may be collected as soon as this read returns to Lua. */
     ngx_stream_lua_socket_tcp_detach_pattern(u);
@@ -3747,11 +3757,9 @@ ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_lua_request_t *r,
         dd("u->bufs_in: %p", u->bufs_in);
 
         if (u->bufs_in) {
-            rc = ngx_stream_lua_socket_push_input_data(r, ctx, u, L);
+            rc = ngx_stream_lua_socket_push_input_data(r, ctx, u, L, cp);
             if (rc == NGX_ERROR) {
-                lua_pushnil(L);
-                lua_pushliteral(L, "no memory");
-                return 2;
+                goto no_memory;
             }
 
             (void) ngx_stream_lua_socket_read_error_retval_handler(r, u, L);
@@ -3766,14 +3774,21 @@ ngx_stream_lua_socket_tcp_receive_retval_handler(ngx_stream_lua_request_t *r,
         return n + 1;
     }
 
-    rc = ngx_stream_lua_socket_push_input_data(r, ctx, u, L);
+    rc = ngx_stream_lua_socket_push_input_data(r, ctx, u, L, cp);
     if (rc == NGX_ERROR) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "no memory");
-        return 2;
+        goto no_memory;
     }
 
     return 1;
+
+no_memory:
+
+    u->ft_type = 0;
+    u->no_close = 0;
+    ngx_stream_lua_socket_tcp_finalize_read_part(r, u);
+    lua_pushnil(L);
+    lua_pushliteral(L, "no memory");
+    return 2;
 }
 
 
@@ -5750,6 +5765,7 @@ ngx_stream_lua_socket_read_until(void *data, ssize_t bytes)
     u_char                                   c;
     u_char                                  *pat;
     size_t                                   pat_len;
+    size_t                                   pending_len;
     int                                      i;
     int                                      state;
     int                                      old_state = 0; /* just to make old
@@ -5878,11 +5894,12 @@ ngx_stream_lua_socket_read_until(void *data, ssize_t bytes)
 
         /* matched */
 
-        dd("adding pending data: %.*s", (int) (old_state + 1 - state),
-           (char *) pat);
+        pending_len = old_state + 1 - state;
+
+        dd("adding pending data: %.*s", (int) pending_len, (char *) pat);
 
         rc = ngx_stream_lua_socket_add_pending_data(r, u, b->pos, i, pat,
-                                                    old_state + 1 - state,
+                                                    pending_len,
                                                     old_state);
 
         if (rc != NGX_OK) {
@@ -5893,14 +5910,14 @@ ngx_stream_lua_socket_read_until(void *data, ssize_t bytes)
         i++;
 
         if (u->length) {
-            if (u->rest <= (size_t) state) {
+            if (u->rest <= pending_len) {
                 u->rest = 0;
                 cp->state = state;
                 b->pos += i;
                 return NGX_OK;
 
             } else {
-                u->rest -= state;
+                u->rest -= pending_len;
             }
         }
 
@@ -6777,9 +6794,59 @@ ngx_stream_lua_socket_downstream_destroy(lua_State *L)
 
 
 static ngx_int_t
+ngx_stream_lua_socket_tcp_restore_pattern(ngx_stream_lua_request_t *r,
+    ngx_stream_lua_socket_tcp_upstream_t *u,
+    ngx_stream_lua_socket_compiled_pattern_t *cp)
+{
+    ngx_stream_lua_ctx_t                *ctx;
+    ngx_chain_t                         *cl;
+    ngx_buf_t                           *b;
+    size_t                               size;
+
+    if (cp->state <= 0) {
+        return NGX_OK;
+    }
+
+    b = &u->buffer;
+
+    if (b->pos - b->start >= cp->state) {
+        b->pos -= cp->state;
+        u->buf_in->buf->pos = b->pos;
+        u->buf_in->buf->last = b->pos;
+
+    } else {
+        ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+        size = ngx_buf_size(b);
+
+        cl = ngx_stream_lua_chain_get_free_buf(r->connection->log, r->pool,
+                                               &ctx->free_recv_bufs,
+                                               cp->state + size);
+        if (cl == NULL) {
+            return NGX_ERROR;
+        }
+
+        cl->buf->last = ngx_copy(cl->buf->last, cp->pattern.data, cp->state);
+        cl->buf->last = ngx_copy(cl->buf->last, b->pos, size);
+
+        u->buf_in->next = ctx->free_recv_bufs;
+        ctx->free_recv_bufs = u->buf_in;
+        u->bufs_in = cl;
+        u->buf_in = cl;
+        u->buffer = *cl->buf;
+        cl->buf->last = cl->buf->pos;
+    }
+
+    /* The next reader will match the restored bytes from the beginning. */
+    cp->state = 0;
+
+    return NGX_OK;
+}
+
+
+static ngx_int_t
 ngx_stream_lua_socket_push_input_data(ngx_stream_lua_request_t *r,
     ngx_stream_lua_ctx_t *ctx, ngx_stream_lua_socket_tcp_upstream_t *u,
-    lua_State *L)
+    lua_State *L, ngx_stream_lua_socket_compiled_pattern_t *cp)
 {
     ngx_chain_t             *cl;
     ngx_chain_t            **ll;
@@ -6847,6 +6914,13 @@ ngx_stream_lua_socket_push_input_data(ngx_stream_lua_request_t *r,
     if (u->bufs_in) {
         u->buf_in->buf->last = u->buffer.pos;
         u->buf_in->buf->pos = u->buffer.pos;
+    }
+
+    /* Keep pending delimiter bytes available even if the iterator is GC'ed. */
+    if (cp != NULL
+        && (!u->ft_type || (u->ft_type & NGX_STREAM_LUA_SOCKET_FT_TIMEOUT)))
+    {
+        return ngx_stream_lua_socket_tcp_restore_pattern(r, u, cp);
     }
 
     return NGX_OK;

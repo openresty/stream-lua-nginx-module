@@ -618,6 +618,14 @@ subsystem.
 Test Suite
 ==========
 
+The receiveuntil regressions in `t/066-socket-receiveuntil.t` and
+`t/084-inclusive-receiveuntil.t` cover partial delimiters across chunked
+reads, timeout retries, iterator collection, and switching to `receive`,
+`receiveany`, or another iterator. Pending delimiter bytes are restored to
+the receive buffer before returning to Lua, so switching readers or
+collecting an iterator does not discard unread data. These tests require
+a local memcached service on port 11211.
+
 The coroutine cleanup regression in `t/197-coroutine-request-cleanup.t`
 checks that client disconnects and `ngx.exit` cancel pending sleep timers
 owned by ordinary coroutines in both the preread and content phases,

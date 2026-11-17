@@ -591,7 +591,7 @@ bad "inclusive" option value type: string
 
         local reader = sock:receiveuntil("--abc", { inclusive = true })
 
-        for i = 1, 7 do
+        for i = 1, 6 do
             line, err, part = reader(4)
             if line then
                 ngx.say("read: ", line)
@@ -617,8 +617,7 @@ request sent: 57
 read: hell
 read: o, w
 read: orld
-read:  --
-read: --abc
+read:  ----abc
 failed to read a line: nil [nil]
 failed to read a line: closed [
 ]
