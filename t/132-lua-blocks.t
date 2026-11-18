@@ -9,7 +9,7 @@ use Test::Nginx::Socket::Lua::Stream;
 repeat_each(2);
 #repeat_each(1);
 
-plan tests => repeat_each() * ((blocks() * 3) + 1);
+plan tests => repeat_each() * ((blocks() * 3) + 3);
 
 #no_diff();
 no_long_string();
@@ -207,13 +207,12 @@ close: 1 nil
         glob = glob .. ", init worker }here{"
     }
 --- stream_server_config
-#access_by_lua_block {
-    #local s = ngx.var.a
-    #s = s .. '}access{\n'
-    #ngx.var.a = s
-    #}
+    access_by_lua_block {
+        local s = '}access{\n'
+        ngx.ctx.a = s
+    }
     content_by_lua_block {
-        s = [[}content{]]
+        local s = ngx.ctx.a .. [[}content{]]
         ngx.ctx.a = s
         ngx.say(s)
         ngx.say("glob: ", glob)
@@ -224,6 +223,7 @@ close: 1 nil
 
 --- config
 --- stream_response
+}access{
 }content{
 glob: init by lua }here{, init worker }here{
 
@@ -369,8 +369,6 @@ done
 
 
 === TEST 17: double quotes in long brackets
-TODO
---- SKIP
 --- stream_server_config
     access_by_lua_block { print([[Hey, it is "!]]) } content_by_lua_block { ngx.say([["]]) }
 
@@ -385,8 +383,6 @@ Hey, it is "!
 
 
 === TEST 18: single quotes in long brackets
-TODO
---- SKIP
 --- stream_server_config
     access_by_lua_block { print([[Hey, it is '!]]) } content_by_lua_block { ngx.say([[']]) }
 
