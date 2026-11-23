@@ -58,6 +58,10 @@ ngx_stream_lua_ngx_get_phase(lua_State *L)
         lua_pushliteral(L, "ssl_cert");
         break;
 
+    case NGX_STREAM_LUA_CONTEXT_SSL_VERIFY:
+        lua_pushliteral(L, "ssl_verify");
+        break;
+
     case NGX_STREAM_LUA_CONTEXT_PREREAD:
         lua_pushliteral(L, "preread");
         break;

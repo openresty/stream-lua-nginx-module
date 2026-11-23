@@ -154,6 +154,7 @@
 #define NGX_STREAM_LUA_CONTEXT_SSL_CLIENT_HELLO                     0x0080
 #define NGX_STREAM_LUA_CONTEXT_PROXY_SSL_VERIFY                     0x0100
 #define NGX_STREAM_LUA_CONTEXT_PROXY_SSL_CERT                       0x0200
+#define NGX_STREAM_LUA_CONTEXT_SSL_VERIFY                           0x0400
 
 
 #define NGX_STREAM_LUA_FFI_NO_REQ_CTX         -100
@@ -288,6 +289,12 @@ struct ngx_stream_lua_srv_conf_s {
         ngx_stream_lua_srv_conf_handler_pt           ssl_client_hello_handler;
         ngx_str_t                                    ssl_client_hello_src;
         u_char                                      *ssl_client_hello_src_key;
+
+        ngx_stream_lua_srv_conf_handler_pt           ssl_verify_handler;
+        ngx_str_t                                    ssl_verify_src;
+        u_char                                      *ssl_verify_src_key;
+
+        ngx_flag_t  skip_openssl_default_verify;
     } srv;
 
 #ifdef HAVE_PROXY_SSL_PATCH
