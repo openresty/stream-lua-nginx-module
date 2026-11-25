@@ -240,6 +240,20 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       0,
       (void *) ngx_stream_lua_init_worker_by_file },
 
+    { ngx_string("lua_init_worker_timeout"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_msec_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, init_worker_timeout),
+      NULL },
+
+    { ngx_string("lua_init_worker_abort_on_error"),
+      NGX_STREAM_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_STREAM_MAIN_CONF_OFFSET,
+      offsetof(ngx_stream_lua_main_conf_t, init_worker_abort_on_error),
+      NULL },
+
     /* preread_by_lua_file rel/or/abs/path/to/script */
     { ngx_string("preread_by_lua_file"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
@@ -796,6 +810,9 @@ ngx_stream_lua_create_main_conf(ngx_conf_t *cf)
     lmcf->pool = cf->pool;
     lmcf->max_pending_timers = NGX_CONF_UNSET;
     lmcf->max_running_timers = NGX_CONF_UNSET;
+    lmcf->init_worker_timeout = NGX_CONF_UNSET_MSEC;
+    lmcf->init_worker_abort_on_error = NGX_CONF_UNSET;
+    ngx_queue_init(&lmcf->deferred_timers);
 #if (NGX_PCRE)
     lmcf->regex_cache_max_entries = NGX_CONF_UNSET;
     lmcf->regex_match_limit = NGX_CONF_UNSET;
@@ -841,6 +858,14 @@ ngx_stream_lua_init_main_conf(ngx_conf_t *cf, void *conf)
 
     if (lmcf->max_running_timers == NGX_CONF_UNSET) {
         lmcf->max_running_timers = 256;
+    }
+
+    if (lmcf->init_worker_timeout == NGX_CONF_UNSET_MSEC) {
+        lmcf->init_worker_timeout = 0;
+    }
+
+    if (lmcf->init_worker_abort_on_error == NGX_CONF_UNSET) {
+        lmcf->init_worker_abort_on_error = 0;
     }
 
 #if (NGX_STREAM_LUA_HAVE_SA_RESTART)

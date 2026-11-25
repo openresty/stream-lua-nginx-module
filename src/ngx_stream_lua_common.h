@@ -239,6 +239,10 @@ struct ngx_stream_lua_main_conf_s {
     ngx_stream_lua_main_conf_handler_pt          init_worker_handler;
     ngx_str_t                                    init_worker_src;
 
+    ngx_msec_t           init_worker_timeout;
+    ngx_flag_t           init_worker_abort_on_error;
+    ngx_queue_t          deferred_timers;
+
     ngx_stream_lua_balancer_peer_data_t          *balancer_peer_data;
                     /* neither yielding nor recursion is possible in
                      * balancer_by_lua*, so there cannot be any races among
