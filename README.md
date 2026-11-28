@@ -170,6 +170,9 @@ behavior.
 * [lua_ssl_trusted_certificate](https://github.com/openresty/lua-nginx-module#lua_ssl_trusted_certificate)
 * [lua_ssl_verify_depth](https://github.com/openresty/lua-nginx-module#lua_ssl_verify_depth)
 * [lua_ssl_key_log](https://github.com/openresty/lua-nginx-module#lua_ssl_key_log)
+  On Unix, the key log file must be owned by the effective user of the nginx
+  master process and allow access only to its owner. New files use mode 0600
+  subject to the process umask.
 * [lua_ssl_conf_command](https://github.com/openresty/lua-nginx-module#lua_ssl_conf_command)
 * [lua_upstream_skip_openssl_default_verify](https://github.com/openresty/lua-nginx-module#lua_upstream_skip_openssl_default_verify)
 * [lua_check_client_abort](https://github.com/openresty/lua-nginx-module#lua_check_client_abort)
