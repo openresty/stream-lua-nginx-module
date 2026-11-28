@@ -2699,6 +2699,9 @@ ngx_stream_lua_socket_prepare_error_retvals(ngx_stream_lua_request_t *r,
     } else if (ft_type & NGX_STREAM_LUA_SOCKET_FT_NOMEM) {
         lua_pushliteral(L, "no memory");
 
+    } else if (ft_type & NGX_STREAM_LUA_SOCKET_FT_LINE_TOO_LONG) {
+        lua_pushliteral(L, "line too long");
+
     } else if (ft_type & NGX_STREAM_LUA_SOCKET_FT_CLIENTABORT) {
         lua_pushliteral(L, "client aborted");
 
@@ -2943,6 +2946,17 @@ ngx_stream_lua_socket_tcp_receive_helper(ngx_stream_lua_request_t *r,
 
     u->read_waiting = 0;
     u->read_co_ctx = NULL;
+
+    u->line_bytes = 0;
+    if (u->input_filter == ngx_stream_lua_socket_read_line
+        && u->conf->line_read_timeout)
+    {
+        u->read_deadline = ngx_current_msec + u->conf->line_read_timeout;
+        u->read_deadline_set = 1;
+
+    } else {
+        u->read_deadline_set = 0;
+    }
 
     rc = ngx_stream_lua_socket_tcp_read(r, u);
 
@@ -3248,8 +3262,14 @@ ngx_stream_lua_socket_read_line(void *data, ssize_t bytes)
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, u->request->connection->log, 0,
                    "stream lua tcp socket read line");
 
-    rc = ngx_stream_lua_read_line(&u->buffer, u->buf_in, bytes,
+    rc = ngx_stream_lua_read_line(&u->buffer, u->buf_in, &u->line_bytes,
+                                  u->conf->max_line_size, bytes,
                                   u->request->connection->log);
+    if (rc == NGX_DECLINED) {
+        u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_LINE_TOO_LONG;
+        return NGX_ERROR;
+    }
+
     if (rc == NGX_ERROR) {
         u->ft_type |= NGX_STREAM_LUA_SOCKET_FT_CLOSED;
         return NGX_ERROR;
@@ -3287,6 +3307,8 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
     ngx_connection_t            *c;
     ngx_buf_t                   *b;
     ngx_event_t                 *rev;
+    ngx_msec_int_t               remaining;
+    ngx_msec_t                   timeout;
     size_t                       size;
     ssize_t                      n;
     unsigned                     read;
@@ -3303,6 +3325,14 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
 
     b = &u->buffer;
     read = 0;
+
+    if (u->read_deadline_set
+        && (ngx_msec_int_t) (u->read_deadline - ngx_current_msec) <= 0)
+    {
+        ngx_stream_lua_socket_handle_read_error(r, u,
+                                              NGX_STREAM_LUA_SOCKET_FT_TIMEOUT);
+        return NGX_ERROR;
+    }
 
     for ( ;; ) {
 
@@ -3338,6 +3368,7 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
 
 
                 u->read_consumed = 1;
+                u->read_deadline_set = 0;
 
                 ngx_stream_lua_socket_handle_read_success(r, u);
                 return NGX_OK;
@@ -3471,7 +3502,23 @@ ngx_stream_lua_socket_tcp_read(ngx_stream_lua_request_t *r,
 #endif
 
     if (rev->active) {
-        ngx_add_timer(rev, u->read_timeout);
+        timeout = u->read_timeout;
+
+        if (u->read_deadline_set) {
+            remaining = (ngx_msec_int_t) (u->read_deadline
+                                          - ngx_current_msec);
+            if (remaining <= 0) {
+                ngx_stream_lua_socket_handle_read_error(r, u,
+                                              NGX_STREAM_LUA_SOCKET_FT_TIMEOUT);
+                return NGX_ERROR;
+            }
+
+            if ((ngx_msec_t) remaining < timeout) {
+                timeout = (ngx_msec_t) remaining;
+            }
+        }
+
+        ngx_add_timer(rev, timeout);
 
     } else if (rev->timer_set) {
         ngx_del_timer(rev);

@@ -159,6 +159,8 @@ behavior.
 * [lua_shared_dict](https://github.com/openresty/lua-nginx-module#lua_shared_dict)
 * [lua_socket_connect_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_connect_timeout)
 * [lua_socket_buffer_size](https://github.com/openresty/lua-nginx-module#lua_socket_buffer_size)
+* [lua_socket_max_line_size](#lua_socket_max_line_size)
+* [lua_socket_line_read_timeout](#lua_socket_line_read_timeout)
 * [lua_socket_pool_size](https://github.com/openresty/lua-nginx-module#lua_socket_pool_size)
 * [lua_socket_keepalive_timeout](https://github.com/openresty/lua-nginx-module#lua_socket_keepalive_timeout)
 * [lua_socket_log_errors](https://github.com/openresty/lua-nginx-module#lua_socket_log_errors)
@@ -191,6 +193,38 @@ purpose instead.
 **Note:** the lingering close directive that used to exist in older version of
 `stream_lua_nginx_module` has been removed and can now be simulated with the
 newly added [tcpsock:shutdown](#tcpsockshutdown) API if necessary.
+
+lua_socket_max_line_size
+------------------------
+
+**syntax:** *lua_socket_max_line_size size*
+
+**default:** *lua_socket_max_line_size 0*
+
+**context:** *stream, server*
+
+Sets the maximum number of bytes that a single TCP cosocket `receive()` or
+`receive("*l")` operation may consume before its terminating newline. The
+limit includes carriage returns even though line mode omits them from the
+returned string. Exceeding the limit returns `nil`, `"line too long"`, and the
+bounded partial line, then closes the socket's read side. A value of `0`
+disables the limit.
+
+[Back to TOC](#table-of-contents)
+
+lua_socket_line_read_timeout
+----------------------------
+
+**syntax:** *lua_socket_line_read_timeout time*
+
+**default:** *lua_socket_line_read_timeout 0*
+
+**context:** *stream, server*
+
+Sets a total time limit for a single TCP cosocket `receive()` or
+`receive("*l")` operation. A value of `0` disables the total time limit.
+The socket read timeout still limits how long the operation can wait for
+more data. Partial reads do not extend the total time limit.
 
 [Back to TOC](#table-of-contents)
 

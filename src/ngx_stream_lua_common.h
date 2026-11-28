@@ -329,9 +329,11 @@ struct ngx_stream_lua_srv_conf_s {
     ngx_msec_t                       connect_timeout;
     ngx_msec_t                       send_timeout;
     ngx_msec_t                       read_timeout;
+    ngx_msec_t                       line_read_timeout;
 
     size_t                           send_lowat;
     size_t                           buffer_size;
+    size_t                           max_line_size;
 
     ngx_uint_t                       pool_size;
 
