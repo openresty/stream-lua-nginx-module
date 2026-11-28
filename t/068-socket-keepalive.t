@@ -4279,3 +4279,26 @@ binary reused: 0, 0
 [error]
 [alert]
 [crit]
+
+
+
+=== TEST 91: oversized pool sizes are rejected by connect and setkeepalive
+--- stream_server_config
+    content_by_lua_block {
+        local sock = ngx.socket.tcp()
+        local ok, err = pcall(sock.connect, sock, "127.0.0.1",
+                              $TEST_NGINX_MEMCACHED_PORT,
+                              { pool_size = 65536 })
+        ngx.say("connect: ", ok and "accepted" or err)
+
+        sock = assert(ngx.socket.connect("127.0.0.1",
+                                         $TEST_NGINX_MEMCACHED_PORT))
+        ok, err = pcall(sock.setkeepalive, sock, 0, 65536)
+        ngx.say("setkeepalive: ", ok and "accepted" or err)
+        assert(sock:close())
+    }
+--- stream_response_like
+connect: .+bad "pool_size" option value: out of range
+setkeepalive: .+bad "pool_size" option value: out of range
+--- no_error_log
+[error]
