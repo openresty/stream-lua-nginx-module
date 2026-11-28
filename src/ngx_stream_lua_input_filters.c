@@ -111,7 +111,7 @@ ngx_stream_lua_read_line(ngx_buf_t *src, ngx_chain_t *buf_in,
 
         c = *src->pos++;
 
-        if (c != '\n') {
+        if (max && c != '\n') {
             if (*length >= max) {
                 buf_in->buf->last = dst;
                 return NGX_DECLINED;

@@ -2887,9 +2887,11 @@ ngx_stream_lua_socket_tcp_receive_helper(ngx_stream_lua_request_t *r,
     u->read_waiting = 0;
     u->read_co_ctx = NULL;
 
-    if (u->input_filter == ngx_stream_lua_socket_read_line) {
-        u->line_bytes = 0;
-        u->read_deadline = ngx_current_msec + u->read_timeout;
+    u->line_bytes = 0;
+    if (u->input_filter == ngx_stream_lua_socket_read_line
+        && u->conf->line_read_timeout)
+    {
+        u->read_deadline = ngx_current_msec + u->conf->line_read_timeout;
         u->read_deadline_set = 1;
 
     } else {

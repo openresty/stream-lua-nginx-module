@@ -375,6 +375,14 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       offsetof(ngx_stream_lua_srv_conf_t, max_line_size),
       NULL },
 
+    { ngx_string("lua_socket_line_read_timeout"),
+      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
+          |NGX_CONF_TAKE1,
+      ngx_conf_set_msec_slot,
+      NGX_STREAM_SRV_CONF_OFFSET,
+      offsetof(ngx_stream_lua_srv_conf_t, line_read_timeout),
+      NULL },
+
     { ngx_string("lua_socket_pool_size"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF
           |NGX_CONF_TAKE1,
@@ -931,6 +939,7 @@ ngx_stream_lua_create_srv_conf(ngx_conf_t *cf)
     conf->send_lowat = NGX_CONF_UNSET_SIZE;
     conf->buffer_size = NGX_CONF_UNSET_SIZE;
     conf->max_line_size = NGX_CONF_UNSET_SIZE;
+    conf->line_read_timeout = NGX_CONF_UNSET_MSEC;
     conf->pool_size = NGX_CONF_UNSET_UINT;
 
     conf->log_socket_errors = NGX_CONF_UNSET;
@@ -1134,8 +1143,10 @@ ngx_stream_lua_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                               (size_t) ngx_pagesize);
 
     ngx_conf_merge_size_value(conf->max_line_size,
-                              prev->max_line_size,
-                              64 * 1024);
+                              prev->max_line_size, 0);
+
+    ngx_conf_merge_msec_value(conf->line_read_timeout,
+                              prev->line_read_timeout, 0);
 
     ngx_conf_merge_uint_value(conf->pool_size, prev->pool_size, 30);
 
