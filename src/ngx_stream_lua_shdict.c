@@ -621,6 +621,7 @@ ngx_stream_lua_shdict_push_helper(lua_State *L, int flags)
     int                              n;
     ngx_str_t                        key;
     uint32_t                         hash;
+    uint32_t                         value_len;
     ngx_int_t                        rc;
     ngx_str_t                        value;
     int                              value_type;
@@ -868,6 +869,7 @@ push_node:
     dd("setting list length to %d", sd->value_len + 1);
 
     sd->value_len = sd->value_len + 1;
+    value_len = sd->value_len;
 
     dd("setting list node value length to %d", (int) value.len);
 
@@ -888,7 +890,7 @@ push_node:
 
     ngx_shmtx_unlock(&ctx->shpool->mutex);
 
-    lua_pushnumber(L, sd->value_len);
+    lua_pushnumber(L, value_len);
     return 1;
 }
 
@@ -914,6 +916,7 @@ ngx_stream_lua_shdict_pop_helper(lua_State *L, int flags)
     ngx_str_t                        name;
     ngx_str_t                        key;
     uint32_t                         hash;
+    uint32_t                         value_len;
     ngx_int_t                        rc;
     ngx_str_t                        value;
     int                              value_type;
@@ -994,11 +997,12 @@ ngx_stream_lua_shdict_pop_helper(lua_State *L, int flags)
     }
 
     if (sd->value_len <= 0) {
+        value_len = sd->value_len;
         ngx_shmtx_unlock(&ctx->shpool->mutex);
 
         return luaL_error(L, "bad lua list length found for key %s "
                           "in shared_dict %s: %lu", key.data, name.data,
-                          (unsigned long) sd->value_len);
+                          (unsigned long) value_len);
     }
 
     queue = ngx_stream_lua_shdict_get_list_head(sd, key.len);
@@ -1090,6 +1094,7 @@ ngx_stream_lua_shdict_llen(lua_State *L)
     int                          n;
     ngx_str_t                    key;
     uint32_t                     hash;
+    uint32_t                     value_len;
     ngx_int_t                    rc;
     ngx_shm_zone_t              *zone;
 
@@ -1159,9 +1164,10 @@ ngx_stream_lua_shdict_llen(lua_State *L)
         ngx_queue_remove(&sd->queue);
         ngx_queue_insert_head(&ctx->sh->lru_queue, &sd->queue);
 
+        value_len = sd->value_len;
         ngx_shmtx_unlock(&ctx->shpool->mutex);
 
-        lua_pushnumber(L, (lua_Number) sd->value_len);
+        lua_pushnumber(L, (lua_Number) value_len);
         return 1;
     }
 
