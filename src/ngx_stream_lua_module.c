@@ -20,6 +20,7 @@
 
 
 #include "ngx_stream_lua_directive.h"
+#include "ngx_stream_lua_socket_tcp.h"
 #include "ngx_stream_lua_contentby.h"
 #include "ngx_stream_lua_util.h"
 #include "ngx_stream_lua_initby.h"
@@ -80,6 +81,11 @@ static char *ngx_stream_lua_malloc_trim(ngx_conf_t *cf, ngx_command_t *cmd,
 #if (NGX_PCRE2)
 extern void ngx_stream_lua_regex_cleanup(void *data);
 #endif
+
+
+static ngx_conf_num_bounds_t  ngx_stream_lua_pool_size_bounds = {
+    ngx_conf_check_num_bounds, 0, NGX_STREAM_LUA_SOCKET_POOL_MAX_SIZE
+};
 
 
 static ngx_conf_post_t  ngx_stream_lua_lowat_post =
@@ -373,7 +379,7 @@ static ngx_command_t ngx_stream_lua_cmds[] = {
       ngx_conf_set_num_slot,
       NGX_STREAM_SRV_CONF_OFFSET,
       offsetof(ngx_stream_lua_srv_conf_t, pool_size),
-      NULL },
+      &ngx_stream_lua_pool_size_bounds },
 
     { ngx_string("lua_socket_read_timeout"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF

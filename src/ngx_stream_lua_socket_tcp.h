@@ -19,6 +19,9 @@
 #include "ngx_stream_lua_common.h"
 
 
+/* Bound one pool's slot metadata on both 32-bit and 64-bit platforms. */
+#define NGX_STREAM_LUA_SOCKET_POOL_MAX_SIZE  65535
+
 #define NGX_STREAM_LUA_SOCKET_FT_ERROR         0x0001
 #define NGX_STREAM_LUA_SOCKET_FT_TIMEOUT       0x0002
 #define NGX_STREAM_LUA_SOCKET_FT_CLOSED        0x0004

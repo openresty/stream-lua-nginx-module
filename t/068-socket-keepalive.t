@@ -2,7 +2,7 @@
 
 use Test::Nginx::Socket::Lua::Stream;
 
-plan tests => repeat_each() * (blocks() * 4 + 33);
+plan tests => repeat_each() * (blocks() * 4 + 30);
 
 our $HtmlDir = html_dir;
 
@@ -4298,7 +4298,36 @@ binary reused: 0, 0
         assert(sock:close())
     }
 --- stream_response_like
-connect: .+bad "pool_size" option value: out of range
-setkeepalive: .+bad "pool_size" option value: out of range
+\Aconnect: [^\n]+\(bad "pool_size" option value: out of range\)
+setkeepalive: [^\n]+\(bad "pool_size" option value: out of range\)
 --- no_error_log
 [error]
+
+
+
+=== TEST 92: setkeepalive ignores the size of an existing pool
+--- stream_server_config
+    lua_socket_pool_size 65535;
+    content_by_lua_block {
+        local port = $TEST_NGINX_MEMCACHED_PORT
+        local sock = ngx.socket.tcp()
+        assert(sock:connect("127.0.0.1", port, { pool_size = 1 }))
+        assert(sock:setkeepalive(0, 65536))
+
+        assert(sock:connect("127.0.0.1", port))
+        ngx.say("reused: ", sock:getreusedtimes())
+        assert(sock:close())
+    }
+--- stream_response
+reused: 1
+--- no_error_log
+[error]
+
+
+
+=== TEST 93: reject an oversized configured pool at startup
+--- stream_server_config
+    lua_socket_pool_size 65536;
+--- must_die
+--- error_log
+value must be between 0 and 65535
