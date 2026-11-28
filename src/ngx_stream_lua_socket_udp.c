@@ -1304,6 +1304,8 @@ static void
 ngx_stream_lua_socket_udp_finalize(ngx_stream_lua_request_t *r,
     ngx_stream_lua_socket_udp_upstream_t *u)
 {
+    ngx_stream_lua_ctx_t  *ctx;
+
     ngx_log_debug0(NGX_LOG_DEBUG_STREAM, r->connection->log, 0,
                    "stream lua finalize socket");
 
@@ -1327,7 +1329,30 @@ ngx_stream_lua_socket_udp_finalize(ngx_stream_lua_request_t *r,
                        "lua close socket connection");
 
         ngx_close_connection(u->udp_connection.connection);
-        u->udp_connection.connection = NULL;
+    }
+
+    /*
+     * The stream subsystem owns raw downstream connections, but the Lua
+     * handle must not retain request-owned pointers after finalization.
+     */
+    u->udp_connection.connection = NULL;
+
+    if (u->raw_downstream) {
+        ctx = ngx_stream_lua_get_module_ctx(r, ngx_stream_lua_module);
+        if (ctx && ctx->downstream == u) {
+            ctx->downstream = NULL;
+        }
+
+        if (u->co_ctx) {
+            if (u->co_ctx->data == u) {
+                u->co_ctx->cleanup = NULL;
+                u->co_ctx->data = NULL;
+            }
+
+            u->co_ctx = NULL;
+        }
+
+        u->request = NULL;
     }
 
     if (u->waiting) {
