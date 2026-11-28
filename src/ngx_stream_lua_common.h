@@ -332,6 +332,7 @@ struct ngx_stream_lua_srv_conf_s {
 
     size_t                           send_lowat;
     size_t                           buffer_size;
+    size_t                           max_line_size;
 
     ngx_uint_t                       pool_size;
 

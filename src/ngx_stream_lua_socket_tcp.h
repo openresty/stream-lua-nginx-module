@@ -28,6 +28,7 @@
 #define NGX_STREAM_LUA_SOCKET_FT_PARTIALWRITE  0x0040
 #define NGX_STREAM_LUA_SOCKET_FT_CLIENTABORT   0x0080
 #define NGX_STREAM_LUA_SOCKET_FT_SSL           0x0100
+#define NGX_STREAM_LUA_SOCKET_FT_LINE_TOO_LONG 0x0200
 
 #if (NGX_HAVE_TRANSPARENT_PROXY)
 #define NGX_STREAM_LUA_SOCKET_OPTION_TRANSPARENT    1
@@ -122,6 +123,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     ngx_msec_t                       read_timeout;
     ngx_msec_t                       send_timeout;
     ngx_msec_t                       connect_timeout;
+    ngx_msec_t                       read_deadline;
 
     ngx_stream_upstream_resolved_t          *resolved;
 
@@ -131,6 +133,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
 
     size_t                           length;
     size_t                           rest;
+    size_t                           line_bytes;
 
     ngx_err_t                        socket_errno;
 
@@ -163,6 +166,7 @@ struct ngx_stream_lua_socket_tcp_upstream_s {
     unsigned                         write_closed:1;
     unsigned                         conn_closed:1;
     unsigned                         read_consumed:1;
+    unsigned                         read_deadline_set:1;
 #if (NGX_STREAM_SSL)
     unsigned                         ssl_verify:1;
     unsigned                         ssl_session_reuse:1;

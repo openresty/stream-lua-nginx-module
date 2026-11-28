@@ -84,7 +84,7 @@ ngx_stream_lua_read_any(ngx_buf_t *src, ngx_chain_t *buf_in, size_t *max,
 
 ngx_int_t
 ngx_stream_lua_read_line(ngx_buf_t *src, ngx_chain_t *buf_in,
-    ssize_t bytes, ngx_log_t *log)
+    size_t *length, size_t max, ssize_t bytes, ngx_log_t *log)
 {
     u_char                      *dst;
     u_char                       c;
@@ -110,6 +110,15 @@ ngx_stream_lua_read_line(ngx_buf_t *src, ngx_chain_t *buf_in,
     while (bytes--) {
 
         c = *src->pos++;
+
+        if (c != '\n') {
+            if (*length >= max) {
+                buf_in->buf->last = dst;
+                return NGX_DECLINED;
+            }
+
+            (*length)++;
+        }
 
         switch (c) {
         case '\n':

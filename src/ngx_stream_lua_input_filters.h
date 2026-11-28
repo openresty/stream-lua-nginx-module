@@ -29,7 +29,7 @@ ngx_int_t ngx_stream_lua_read_any(ngx_buf_t *src, ngx_chain_t *buf_in,
     size_t *max, ssize_t bytes, ngx_log_t *log);
 
 ngx_int_t ngx_stream_lua_read_line(ngx_buf_t *src, ngx_chain_t *buf_in,
-    ssize_t bytes, ngx_log_t *log);
+    size_t *length, size_t max, ssize_t bytes, ngx_log_t *log);
 
 
 #endif /* _NGX_STREAM_LUA_INPUT_FILTERS_H_INCLUDED_ */
