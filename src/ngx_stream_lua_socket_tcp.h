@@ -97,6 +97,7 @@ typedef struct {
 
     ngx_int_t                          backlog;
 
+    size_t                             key_len;
     u_char                             key[1];
 
 } ngx_stream_lua_socket_pool_t;

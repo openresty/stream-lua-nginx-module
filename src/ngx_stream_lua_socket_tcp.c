@@ -622,6 +622,7 @@ ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
     sp->connections = 0;
     sp->waiting = 0;
     sp->lua_vm = ngx_stream_lua_get_lua_vm(r, NULL);
+    sp->key_len = key.len;
 
     ngx_queue_init(&sp->cache_connect_op);
     ngx_queue_init(&sp->wait_connect_op);
@@ -6667,9 +6668,22 @@ ngx_stream_lua_socket_free_pool(ngx_log_t *log,
     lua_pushlightuserdata(L, ngx_stream_lua_lightudata_mask(
                           socket_pool_key));
     lua_rawget(L, LUA_REGISTRYINDEX);
-    lua_pushstring(L, (char *) spool->key);
-    lua_pushnil(L);
-    lua_rawset(L, -3);
+    lua_pushlstring(L, (char *) spool->key, spool->key_len);
+    lua_pushvalue(L, -1);
+    lua_rawget(L, -3);
+
+    /* Do not let stale teardown remove a newer pool with the same key. */
+    if (lua_type(L, -1) == LUA_TUSERDATA
+        && lua_touserdata(L, -1) == spool)
+    {
+        lua_pop(L, 1);
+        lua_pushnil(L);
+        lua_rawset(L, -3);
+
+    } else {
+        lua_pop(L, 2);
+    }
+
     lua_pop(L, 1);
 }
 

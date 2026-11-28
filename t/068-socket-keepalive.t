@@ -4230,3 +4230,52 @@ extra: timeout
 lua tcp socket resumed connect operation reuses an idle connection, releasing its spare slot
 --- no_error_log
 [error]
+
+
+
+=== TEST 90: binary pool teardown preserves a colliding prefix pool
+--- stream_server_config
+    lua_socket_log_errors off;
+
+    content_by_lua_block {
+        local port = $TEST_NGINX_SERVER_PORT
+        local binary_key = "A\0B"
+        local prefix_opts = {pool = "A", pool_size = 1, backlog = 0}
+        local binary_opts = {pool = binary_key, pool_size = 1, backlog = 0}
+
+        local prefix = assert(ngx.socket.connect("127.0.0.1", port,
+                                                 prefix_opts))
+        local binary = assert(ngx.socket.connect("127.0.0.1", port,
+                                                 binary_opts))
+
+        assert(binary:close())
+        binary = nil
+        collectgarbage("collect")
+        collectgarbage("collect")
+
+        assert(prefix:setkeepalive())
+        prefix = nil
+
+        local same_prefix = assert(ngx.socket.connect("127.0.0.1", port,
+                                                      prefix_opts))
+        ngx.say("prefix reused: ", same_prefix:getreusedtimes())
+        assert(same_prefix:close())
+
+        local replacement_opts = {pool = binary_key, pool_size = 2,
+                                  backlog = 0}
+        local binary_one = assert(ngx.socket.connect("127.0.0.1", port,
+                                                     replacement_opts))
+        local binary_two = assert(ngx.socket.connect("127.0.0.1", port,
+                                                     replacement_opts))
+        ngx.say("binary reused: ", binary_one:getreusedtimes(), ", ",
+                binary_two:getreusedtimes())
+        assert(binary_one:close())
+        assert(binary_two:close())
+    }
+--- stream_response
+prefix reused: 1
+binary reused: 0, 0
+--- no_error_log
+[error]
+[alert]
+[crit]
