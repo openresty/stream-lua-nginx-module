@@ -123,6 +123,8 @@ static int ngx_stream_lua_socket_cleanup_compiled_pattern(lua_State *L);
 static void ngx_stream_lua_req_socket_rev_handler(ngx_stream_lua_request_t *r);
 static int ngx_stream_lua_socket_tcp_getreusedtimes(lua_State *L);
 static int ngx_stream_lua_socket_tcp_setkeepalive(lua_State *L);
+static ngx_int_t ngx_stream_lua_socket_tcp_parse_pool_size(lua_State *L,
+    int index, ngx_int_t *pool_size);
 static void ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
     ngx_stream_lua_request_t *r, ngx_str_t key, ngx_int_t pool_size,
     ngx_int_t backlog, ngx_stream_lua_socket_pool_t **spool);
@@ -563,6 +565,27 @@ ngx_stream_lua_socket_tcp(lua_State *L)
 }
 
 
+static ngx_int_t
+ngx_stream_lua_socket_tcp_parse_pool_size(lua_State *L, int index,
+    ngx_int_t *pool_size)
+{
+    lua_Number  value;
+
+    value = lua_tonumber(L, index);
+
+    if (value != value
+        || value < -NGX_STREAM_LUA_SOCKET_POOL_MAX_SIZE
+        || value > NGX_STREAM_LUA_SOCKET_POOL_MAX_SIZE)
+    {
+        return NGX_ERROR;
+    }
+
+    *pool_size = (ngx_int_t) lua_tointeger(L, index);
+
+    return NGX_OK;
+}
+
+
 static void
 ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
     ngx_stream_lua_request_t *r, ngx_str_t key, ngx_int_t pool_size,
@@ -570,7 +593,7 @@ ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
     ngx_stream_lua_socket_pool_t **spool)
 {
     u_char                              *p;
-    size_t                               size, key_len;
+    size_t                               max_size, size, key_len;
     ngx_int_t                            i;
 
     ngx_stream_lua_socket_pool_t                *sp;
@@ -581,10 +604,39 @@ ngx_stream_lua_socket_tcp_create_socket_pool(lua_State *L,
                    "%i, backlog: %i",
                    pool_size, backlog);
 
+    if (pool_size <= 0
+        || pool_size > NGX_STREAM_LUA_SOCKET_POOL_MAX_SIZE)
+    {
+        luaL_error(L, "socket pool size is out of range");
+        return;
+    }
+
+    max_size = (size_t) -1;
+
+    if (key.len > max_size - sizeof(void *)) {
+        luaL_error(L, "socket pool key is too long");
+        return;
+    }
+
     key_len = ngx_align(key.len + 1, sizeof(void *));
 
-    size = sizeof(ngx_stream_lua_socket_pool_t) - 1 + key_len
-           + sizeof(ngx_stream_lua_socket_pool_item_t) * pool_size;
+    size = sizeof(ngx_stream_lua_socket_pool_t) - 1;
+
+    if (key_len > max_size - size) {
+        luaL_error(L, "socket pool allocation size overflow");
+        return;
+    }
+
+    size += key_len;
+
+    if ((size_t) pool_size
+        > (max_size - size) / sizeof(ngx_stream_lua_socket_pool_item_t))
+    {
+        luaL_error(L, "socket pool allocation size overflow");
+        return;
+    }
+
+    size += sizeof(ngx_stream_lua_socket_pool_item_t) * (size_t) pool_size;
 
     /* before calling this function, the Lua stack is:
      * -1 key
@@ -1057,6 +1109,7 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
     int                          key_index;
     ngx_int_t                    backlog;
     ngx_int_t                    pool_size;
+    ngx_int_t                    rc;
     ngx_str_t                    key;
     const char                  *msg;
 
@@ -1099,7 +1152,13 @@ ngx_stream_lua_socket_tcp_connect(lua_State *L)
         lua_getfield(L, n, "pool_size");
 
         if (lua_isnumber(L, -1)) {
-            pool_size = (ngx_int_t) lua_tointeger(L, -1);
+            rc = ngx_stream_lua_socket_tcp_parse_pool_size(L, -1,
+                                                           &pool_size);
+            if (rc != NGX_OK) {
+                msg = lua_pushfstring(L, "bad \"pool_size\" option value: "
+                                      "out of range");
+                return luaL_argerror(L, n, msg);
+            }
 
             if (pool_size <= 0) {
                 msg = lua_pushfstring(L, "bad \"pool_size\" option value: %i",
@@ -6230,10 +6289,7 @@ ngx_stream_lua_socket_tcp_setkeepalive(lua_State *L)
     }
 
     if (n >= 3 && !lua_isnil(L, 3)) {
-        pool_size = luaL_checkinteger(L, 3);
-
-    } else {
-        pool_size = llcf->pool_size;
+        (void) luaL_checknumber(L, 3);
     }
 
     lua_rawgeti(L, 1, SOCKET_CTX_INDEX);
@@ -6332,6 +6388,17 @@ ngx_stream_lua_socket_tcp_setkeepalive(lua_State *L)
 
     if (spool == NULL) {
         /* create a new socket pool for the current peer key */
+
+        if (n >= 3 && !lua_isnil(L, 3)) {
+            rc = ngx_stream_lua_socket_tcp_parse_pool_size(L, 3, &pool_size);
+            if (rc != NGX_OK) {
+                return luaL_argerror(L, n, "bad \"pool_size\" option value: "
+                                     "out of range");
+            }
+
+        } else {
+            pool_size = llcf->pool_size;
+        }
 
         if (pool_size <= 0) {
             msg = lua_pushfstring(L, "bad \"pool_size\" option value: %i",
