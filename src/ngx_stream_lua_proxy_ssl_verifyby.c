@@ -212,9 +212,19 @@ ngx_stream_lua_proxy_ssl_verify_by_lua(ngx_conf_t *cf, ngx_command_t *cmd,
 }
 
 
+void
+ngx_stream_lua_ffi_proxy_ssl_free_verify_cert(void *cdata)
+{
+    X509  *cert = cdata;
+
+    X509_free(cert);
+}
+
+
 int
 ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
 {
+    X509                               *cert;
     lua_State                          *L;
     ngx_int_t                           rc;
     ngx_connection_t                   *c;
@@ -247,6 +257,7 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
                            cctx->exit_code);
 
             dd("lua proxy ssl verify done, finally");
+            X509_STORE_CTX_set_error(x509_store, cctx->verify_result);
             return cctx->exit_code;
         }
 
@@ -275,7 +286,6 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
 
     cctx->connection = c;
     cctx->request = r;
-    cctx->x509_store = x509_store;
     cctx->exit_code = 1;  /* successful by default */
     cctx->done = 0;
     cctx->entered_proxy_ssl_verify_handler = 1;
@@ -300,10 +310,22 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
                        "proxy_ssl_verify_by_lua: openssl default verify");
 
         rc = X509_verify_cert(x509_store);
-        if (rc == 0) {
+        if (rc <= 0) {
             goto failed;
         }
     }
+
+    /* OpenSSL owns the store context only for this callback invocation. */
+    cctx->verify_result = X509_STORE_CTX_get_error(x509_store);
+    cert = X509_STORE_CTX_get0_cert(x509_store);
+    cln = ngx_pool_cleanup_add(c->pool, 0);
+    if (cln == NULL || cert == NULL || !X509_up_ref(cert)) {
+        goto failed;
+    }
+
+    cln->data = cert;
+    cln->handler = ngx_stream_lua_ffi_proxy_ssl_free_verify_cert;
+    cctx->verify_cert = cert;
 
     /* TODO honor lua_code_cache off */
     L = ngx_stream_lua_get_lua_vm(r, NULL);
@@ -325,6 +347,7 @@ ngx_stream_lua_proxy_ssl_verify_handler(X509_STORE_CTX *x509_store, void *arg)
                        rc, cctx->exit_code);
 
         c->log->action = "proxy pass SSL handshaking";
+        X509_STORE_CTX_set_error(x509_store, cctx->verify_result);
         return cctx->exit_code;
     }
 
@@ -543,7 +566,6 @@ ngx_stream_lua_ffi_proxy_ssl_set_verify_result(ngx_stream_lua_request_t *r,
     ngx_ssl_conn_t                  *ssl_conn;
     ngx_connection_t                *c;
     ngx_stream_lua_ssl_ctx_t        *cctx;
-    X509_STORE_CTX                  *x509_store;
 
     u = r->session->upstream;
     if (u == NULL) {
@@ -573,9 +595,7 @@ ngx_stream_lua_ffi_proxy_ssl_set_verify_result(ngx_stream_lua_request_t *r,
         return NGX_ERROR;
     }
 
-    x509_store = cctx->x509_store;
-
-    X509_STORE_CTX_set_error(x509_store, verify_result);
+    cctx->verify_result = verify_result;
 
     return NGX_OK;
 }
@@ -589,7 +609,6 @@ ngx_stream_lua_ffi_proxy_ssl_get_verify_result(ngx_stream_lua_request_t *r,
     ngx_ssl_conn_t                  *ssl_conn;
     ngx_connection_t                *c;
     ngx_stream_lua_ssl_ctx_t        *cctx;
-    X509_STORE_CTX                  *x509_store;
 
     u = r->session->upstream;
     if (u == NULL) {
@@ -619,18 +638,7 @@ ngx_stream_lua_ffi_proxy_ssl_get_verify_result(ngx_stream_lua_request_t *r,
         return NGX_ERROR;
     }
 
-    x509_store = cctx->x509_store;
-
-    return X509_STORE_CTX_get_error(x509_store);
-}
-
-
-void
-ngx_stream_lua_ffi_proxy_ssl_free_verify_cert(void *cdata)
-{
-    X509  *cert = cdata;
-
-    X509_free(cert);
+    return cctx->verify_result;
 }
 
 
@@ -642,7 +650,6 @@ ngx_stream_lua_ffi_proxy_ssl_get_verify_cert(ngx_stream_lua_request_t *r,
     ngx_ssl_conn_t                  *ssl_conn;
     ngx_connection_t                *c;
     ngx_stream_lua_ssl_ctx_t        *cctx;
-    X509_STORE_CTX                  *x509_store;
     X509                            *x509;
 
     u = r->session->upstream;
@@ -673,12 +680,10 @@ ngx_stream_lua_ffi_proxy_ssl_get_verify_cert(ngx_stream_lua_request_t *r,
         return NULL;
     }
 
-    x509_store = cctx->x509_store;
+    x509 = cctx->verify_cert;
 
-    x509 = X509_STORE_CTX_get0_cert(x509_store);
-
-    if (!X509_up_ref(x509)) {
-        *err = "get verify result failed";
+    if (x509 == NULL || !X509_up_ref(x509)) {
+        *err = "get verify cert failed";
         return NULL;
     }
 

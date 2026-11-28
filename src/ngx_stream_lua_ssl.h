@@ -33,7 +33,8 @@ typedef struct {
     ngx_str_t                session_id;
 
 #ifdef HAVE_LUA_PROXY_SSL
-    X509_STORE_CTX          *x509_store;
+    X509                    *verify_cert;
+    int                      verify_result;
     ngx_pool_t              *pool;
 #endif
 

@@ -980,3 +980,73 @@ close: 1 nil
 --- no_error_log
 [error]
 [alert]
+
+
+
+=== TEST 24: asynchronous verification retains the certificate and accepts the final result
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        ssl_certificate ../../cert/mtls_server.crt;
+        ssl_certificate_key ../../cert/mtls_server.key;
+        return "verified\n";
+    }
+--- stream_server_config
+    proxy_pass unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl on;
+    proxy_ssl_session_reuse off;
+    proxy_ssl_verify on;
+    proxy_ssl_name example.com;
+    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
+    lua_upstream_skip_openssl_default_verify on;
+
+    proxy_ssl_verify_by_lua_block {
+        local verify = require "ngx.ssl.proxysslverify"
+        local leaf = assert(verify.get_verify_cert())
+        assert(verify.set_verify_result(23))
+        ngx.sleep(0.001)
+        assert(verify.get_verify_cert() == leaf)
+        assert(verify.get_verify_result() == 23)
+        assert(verify.set_verify_result(0))
+        ngx.log(ngx.INFO, "accepted leaf certificate")
+    }
+--- stream_response
+verified
+--- error_log
+accepted leaf certificate
+--- no_error_log
+[error]
+[alert]
+[emerg]
+
+
+
+=== TEST 25: proxy rejects a certificate rejected by a resumed Lua verifier
+--- stream_config
+    server {
+        listen unix:$TEST_NGINX_HTML_DIR/nginx.sock ssl;
+        ssl_certificate ../../cert/mtls_server.crt;
+        ssl_certificate_key ../../cert/mtls_server.key;
+        return "upstream data\n";
+    }
+--- stream_server_config
+    proxy_pass unix:$TEST_NGINX_HTML_DIR/nginx.sock;
+    proxy_ssl on;
+    proxy_ssl_session_reuse off;
+    proxy_ssl_verify on;
+    proxy_ssl_name example.com;
+    proxy_ssl_trusted_certificate ../../cert/mtls_ca.crt;
+    lua_upstream_skip_openssl_default_verify on;
+
+    proxy_ssl_verify_by_lua_block {
+        local verify = require "ngx.ssl.proxysslverify"
+        ngx.sleep(0.001)
+        assert(verify.set_verify_result(23))
+    }
+--- stream_response
+--- error_log
+upstream SSL certificate verify error: (23:certificate revoked)
+--- no_error_log
+lua entry thread aborted
+[alert]
+[emerg]
